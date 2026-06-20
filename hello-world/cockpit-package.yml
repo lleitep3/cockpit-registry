@@ -1,0 +1,68 @@
+name: "hello-world"
+version: "1.0.0"
+description: "A simple hello-world package that adds a hello command to AICockpit"
+author: "AICockpit Team"
+license: "MIT"
+homepage: "https://github.com/lleite/cockpit-packages"
+repository: "https://github.com/lleite/cockpit-packages"
+
+type: "utility"
+category: "examples"
+
+requirements:
+  cockpit: ">=0.2.0"
+
+features:
+  modules:
+    - path: "modules/cmd.go"
+      name: "hello"
+      description: "Simple hello-world command"
+  
+  kb:
+    - path: "kb/guides/usage.md"
+      type: "guide"
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - claude-code
+    - github-copilot
+  
+  provider_features:
+    devin:
+      - modules
+      - kb
+    goose:
+      - modules
+      - kb
+    claude-code:
+      - modules
+      - kb
+    github-copilot:
+      - modules
+      - kb
+  
+  method: "symlink"
+
+metadata:
+  tags:
+    - hello-world
+    - example
+    - simple
+  
+  keywords:
+    - hello
+    - world
+    - example
+  
+  maintainers:
+    - name: "AICockpit Team"
+      email: "team@aicockpit.dev"
+  
+  status: "stable"
+  
+  support:
+    issues: "https://github.com/lleite/cockpit-packages/issues"
+    discussions: "https://github.com/lleite/cockpit-packages/discussions"
+    documentation: "https://docs.aicockpit.dev/packages/hello-world"
