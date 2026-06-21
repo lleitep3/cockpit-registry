@@ -1,0 +1,85 @@
+name: "kb-search"
+version: "1.0.0"
+description: "Deploys KB search skills to all active AI providers so they automatically search the local Knowledge Base before responding"
+author: "AICockpit Team"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: "skill"
+category: "productivity"
+
+requirements:
+  cockpit: ">=0.3.0"
+
+features:
+  skills:
+    - path: "skills/antigravity/SKILL.md"
+      name: "kb-search-antigravity"
+      description: "KB search skill for Antigravity (Google DeepMind)"
+    - path: "skills/devin/SKILL.md"
+      name: "kb-search-devin"
+      description: "KB search skill for Devin (Cognition AI)"
+    - path: "skills/goose/SKILL.md"
+      name: "kb-search-goose"
+      description: "KB search skill for Goose (Block)"
+
+  kb:
+    - path: "kb/guides/kb-overview.md"
+      type: "guide"
+    - path: "kb/guides/adding-documents.md"
+      type: "guide"
+    - path: "kb/references/document-format.md"
+      type: "reference"
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+
+  provider_features:
+    antigravity:
+      - skills
+      - kb
+    devin:
+      - skills
+      - kb
+    goose:
+      - skills
+      - kb
+
+  method: "copy"
+
+  post_install:
+    - script: "scripts/deploy-skills.sh"
+      description: "Deploy KB search skills to each active AI provider"
+
+  pre_uninstall:
+    - script: "scripts/remove-skills.sh"
+      description: "Remove KB search skills from AI providers"
+
+metadata:
+  tags:
+    - kb
+    - knowledge-base
+    - search
+    - productivity
+    - skills
+
+  keywords:
+    - knowledge
+    - base
+    - search
+    - skill
+    - documentation
+
+  maintainers:
+    - name: "AICockpit Team"
+      email: "team@aicockpit.dev"
+
+  status: "stable"
+
+  support:
+    issues: "https://github.com/lleitep3/cockpit-registry/issues"
+    documentation: "https://github.com/lleitep3/cockpit-registry/tree/main/kb-search"

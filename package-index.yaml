@@ -7,14 +7,15 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-21T16:00:00Z"
+updated_at: "2026-06-21T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 2
+  total_packages: 3
   categories:
     - examples
     - productivity
+    - skills
 
 # Packages in this registry
 packages:
@@ -97,3 +98,44 @@ packages:
 
     # Release date
     released_at: "2026-06-21T16:00:00Z"
+
+  - name: "kb-search"
+    version: "1.0.0"
+    description: "Deploys KB search skills to all active AI providers so they automatically search the local Knowledge Base before responding"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "skills"
+    tags:
+      - kb
+      - knowledge-base
+      - search
+      - productivity
+      - skills
+    path: "kb-search"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/kb-search"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T18:00:00Z"
