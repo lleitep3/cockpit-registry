@@ -1,5 +1,5 @@
 name: "caveman"
-version: "1.0.0"
+version: "1.1.0"
 description: "Deploys the caveman skill to all active AI providers — cuts ~75% of output tokens by responding like caveman while keeping full technical accuracy"
 author: "AICockpit Team"
 license: "MIT"
@@ -14,15 +14,12 @@ requirements:
 
 features:
   skills:
-    - path: "skills/antigravity/SKILL.md"
-      name: "caveman-antigravity"
-      description: "Caveman skill for Antigravity (Google DeepMind)"
-    - path: "skills/devin/SKILL.md"
-      name: "caveman-devin"
-      description: "Caveman skill for Devin (Cognition AI)"
-    - path: "skills/goose/SKILL.md"
-      name: "caveman-goose"
-      description: "Caveman skill for Goose (Block)"
+    - path: "skills/caveman"
+      name: "caveman"
+      description: "Ultra-compressed communication mode (~75% token reduction)"
+
+  gold_rules:
+    - "When the user says 'caveman mode', 'talk like caveman', 'less tokens', or '/caveman', activate caveman mode: respond terse like smart caveman, drop filler/articles, keep all technical accuracy."
 
 installation:
   supported_providers:
@@ -39,14 +36,6 @@ installation:
       - skills
 
   method: "copy"
-
-  post_install:
-    - script: "scripts/deploy-skills.sh"
-      description: "Deploy caveman skills to each active AI provider"
-
-  pre_uninstall:
-    - script: "scripts/remove-skills.sh"
-      description: "Remove caveman skills from AI providers"
 
 metadata:
   tags:

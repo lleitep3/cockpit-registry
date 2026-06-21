@@ -60,7 +60,7 @@ packages:
     released_at: "2026-06-20T10:00:00Z"
 
   - name: "rtk"
-    version: "1.0.0"
+    version: "1.1.0"
     description: "Installs RTK (Rust Token Killer) and configures token-optimized CLI rules for all active AI providers"
     author: "AICockpit Team"
     license: "MIT"
@@ -100,7 +100,7 @@ packages:
     released_at: "2026-06-21T16:00:00Z"
 
   - name: "kb-search"
-    version: "1.0.0"
+    version: "1.1.0"
     description: "Deploys KB search skills to all active AI providers so they automatically search the local Knowledge Base before responding"
     author: "AICockpit Team"
     license: "MIT"
@@ -141,7 +141,7 @@ packages:
     released_at: "2026-06-21T18:00:00Z"
 
   - name: "caveman"
-    version: "1.0.0"
+    version: "1.1.0"
     description: "Deploys the caveman skill to all active AI providers — cuts ~75% of output tokens by responding like caveman while keeping full technical accuracy"
     author: "AICockpit Team"
     license: "MIT"

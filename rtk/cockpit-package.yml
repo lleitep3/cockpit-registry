@@ -1,5 +1,5 @@
 name: "rtk"
-version: "1.0.0"
+version: "1.1.0"
 description: "Installs RTK (Rust Token Killer) and configures token-optimized CLI rules for all active AI providers"
 author: "AICockpit Team"
 license: "MIT"
@@ -18,21 +18,18 @@ external-dependencies:
 
 features:
   skills:
-    - path: "skills/antigravity/SKILL.md"
-      name: "rtk-antigravity"
-      description: "RTK usage rules for Antigravity (Google DeepMind)"
-    - path: "skills/devin/SKILL.md"
-      name: "rtk-devin"
-      description: "RTK usage rules for Devin (Cognition AI)"
-    - path: "skills/goose/SKILL.md"
-      name: "rtk-goose"
-      description: "RTK usage rules for Goose (Block)"
+    - path: "skills/rtk"
+      name: "rtk"
+      description: "Always prefix commands with rtk to reduce token consumption"
 
   kb:
     - path: "kb/guides/rtk-overview.md"
       type: "guide"
     - path: "kb/references/rtk-commands.md"
       type: "reference"
+
+  gold_rules:
+    - "Always prefix every terminal command with rtk (e.g. rtk go test ./..., rtk git commit -m \"msg\"). RTK is a transparent proxy — always safe."
 
 installation:
   supported_providers:
@@ -57,10 +54,6 @@ installation:
     - script: "scripts/install-rtk.sh"
       description: "Download and install the rtk binary to ~/.local/bin"
 
-  post_install:
-    - script: "scripts/configure-providers.sh"
-      description: "Run rtk init for each active provider"
-
 configuration:
   defaults:
     install_dir: "~/.local/bin"
@@ -81,8 +74,6 @@ permissions:
   - "Exec(sh)"
   - "Exec(rtk)"
   - "Write(~/.local/bin/rtk)"
-  - "Write(~/.gemini/config/rules/)"
-  - "Write(~/.config/goose/)"
 
 metadata:
   tags:
