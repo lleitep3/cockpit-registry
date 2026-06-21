@@ -1,5 +1,5 @@
 name: "kb-search"
-version: "1.0.0"
+version: "1.1.0"
 description: "Deploys KB search skills to all active AI providers so they automatically search the local Knowledge Base before responding"
 author: "AICockpit Team"
 license: "MIT"
@@ -14,15 +14,9 @@ requirements:
 
 features:
   skills:
-    - path: "skills/antigravity/SKILL.md"
-      name: "kb-search-antigravity"
-      description: "KB search skill for Antigravity (Google DeepMind)"
-    - path: "skills/devin/SKILL.md"
-      name: "kb-search-devin"
-      description: "KB search skill for Devin (Cognition AI)"
-    - path: "skills/goose/SKILL.md"
-      name: "kb-search-goose"
-      description: "KB search skill for Goose (Block)"
+    - path: "skills/kb-search"
+      name: "kb-search"
+      description: "Search the local Knowledge Base before responding"
 
   kb:
     - path: "kb/guides/kb-overview.md"
@@ -31,6 +25,9 @@ features:
       type: "guide"
     - path: "kb/references/document-format.md"
       type: "reference"
+
+  gold_rules:
+    - "Always search the local Knowledge Base before answering questions about this project: cockpit kb search \"<query>\""
 
 installation:
   supported_providers:
@@ -50,14 +47,6 @@ installation:
       - kb
 
   method: "copy"
-
-  post_install:
-    - script: "scripts/deploy-skills.sh"
-      description: "Deploy KB search skills to each active AI provider"
-
-  pre_uninstall:
-    - script: "scripts/remove-skills.sh"
-      description: "Remove KB search skills from AI providers"
 
 metadata:
   tags:
