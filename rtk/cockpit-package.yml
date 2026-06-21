@@ -1,0 +1,110 @@
+name: "rtk"
+version: "1.0.0"
+description: "Installs RTK (Rust Token Killer) and configures token-optimized CLI rules for all active AI providers"
+author: "AICockpit Team"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: "tool"
+category: "productivity"
+
+requirements:
+  cockpit: ">=0.3.0"
+
+external-dependencies:
+  system:
+    - curl
+
+features:
+  skills:
+    - path: "skills/antigravity/SKILL.md"
+      name: "rtk-antigravity"
+      description: "RTK usage rules for Antigravity (Google DeepMind)"
+    - path: "skills/devin/SKILL.md"
+      name: "rtk-devin"
+      description: "RTK usage rules for Devin (Cognition AI)"
+    - path: "skills/goose/SKILL.md"
+      name: "rtk-goose"
+      description: "RTK usage rules for Goose (Block)"
+
+  kb:
+    - path: "kb/guides/rtk-overview.md"
+      type: "guide"
+    - path: "kb/references/rtk-commands.md"
+      type: "reference"
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+
+  provider_features:
+    antigravity:
+      - skills
+      - kb
+    devin:
+      - skills
+      - kb
+    goose:
+      - skills
+      - kb
+
+  method: "copy"
+
+  pre_install:
+    - script: "scripts/install-rtk.sh"
+      description: "Download and install the rtk binary to ~/.local/bin"
+
+  post_install:
+    - script: "scripts/configure-providers.sh"
+      description: "Run rtk init for each active provider"
+
+configuration:
+  defaults:
+    install_dir: "~/.local/bin"
+    rtk_version: "latest"
+
+  options:
+    - name: "install_dir"
+      type: "string"
+      description: "Directory to install the rtk binary"
+      default: "~/.local/bin"
+    - name: "rtk_version"
+      type: "string"
+      description: "RTK version to install (latest or specific tag)"
+      default: "latest"
+
+permissions:
+  - "Exec(curl)"
+  - "Exec(sh)"
+  - "Exec(rtk)"
+  - "Write(~/.local/bin/rtk)"
+  - "Write(~/.gemini/config/rules/)"
+  - "Write(~/.config/goose/)"
+
+metadata:
+  tags:
+    - rtk
+    - token-optimization
+    - productivity
+    - cli
+
+  keywords:
+    - rtk
+    - token
+    - killer
+    - proxy
+    - cli
+    - savings
+
+  maintainers:
+    - name: "AICockpit Team"
+      email: "team@aicockpit.dev"
+
+  status: "stable"
+
+  support:
+    issues: "https://github.com/lleitep3/cockpit-registry/issues"
+    documentation: "https://github.com/lleitep3/cockpit-registry/tree/main/rtk"
