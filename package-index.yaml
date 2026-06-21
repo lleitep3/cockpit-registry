@@ -7,13 +7,14 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-20T14:00:00Z"
+updated_at: "2026-06-21T16:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 1
+  total_packages: 2
   categories:
     - examples
+    - productivity
 
 # Packages in this registry
 packages:
@@ -56,3 +57,43 @@ packages:
     
     # Release date
     released_at: "2026-06-20T10:00:00Z"
+
+  - name: "rtk"
+    version: "1.0.0"
+    description: "Installs RTK (Rust Token Killer) and configures token-optimized CLI rules for all active AI providers"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - rtk
+      - token-optimization
+      - productivity
+      - cli
+    path: "rtk"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/rtk"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T16:00:00Z"
