@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-21T18:00:00Z"
+updated_at: "2026-06-21T19:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 3
+  total_packages: 4
   categories:
     - examples
     - productivity
@@ -139,3 +139,43 @@ packages:
 
     # Release date
     released_at: "2026-06-21T18:00:00Z"
+
+  - name: "caveman"
+    version: "1.0.0"
+    description: "Deploys the caveman skill to all active AI providers — cuts ~75% of output tokens by responding like caveman while keeping full technical accuracy"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - tokens
+      - productivity
+      - skills
+      - caveman
+      - compression
+    path: "caveman"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/caveman"
+    homepage: "https://github.com/JuliusBrussee/caveman"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T19:00:00Z"
