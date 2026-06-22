@@ -14,7 +14,7 @@ requirements:
 
 features:
   skills:
-    - path: "skills/kb-search"
+    - path: ".cockpit/skills/kb-search"
       name: "kb-search"
       description: "Search the local Knowledge Base before responding"
 

@@ -14,7 +14,7 @@ requirements:
 
 features:
   skills:
-    - path: "skills/caveman"
+    - path: ".cockpit/skills/caveman"
       name: "caveman"
       description: "Ultra-compressed communication mode (~75% token reduction)"
 
