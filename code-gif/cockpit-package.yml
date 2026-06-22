@@ -1,0 +1,57 @@
+name: "code-gif"
+version: "1.0.0"
+description: "Equips the AI with the ability to generate Mac-styled terminal GIFs directly from text inputs using Python"
+author: "AICockpit Team"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: "tool"
+category: "productivity"
+
+requirements:
+  cockpit: ">=0.3.0"
+
+external-dependencies:
+  system:
+    - python3
+    - pip
+
+features:
+  skills:
+    - path: "skills/code-gif"
+      name: "code-gif"
+      description: "Generates animated terminal GIFs with a Mac window layout"
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+
+  provider_features:
+    antigravity:
+      - skills
+    devin:
+      - skills
+    goose:
+      - skills
+
+  method: "copy"
+
+  pre_install:
+    - script: "scripts/setup_deps.sh"
+      description: "Installs the Pillow dependency for Python"
+
+permissions:
+  - "Exec(python3)"
+  - "Exec(pip)"
+  - "Write(~/.local/share/aicockpit/scripts/)"
+
+metadata:
+  tags:
+    - gif
+    - generator
+    - terminal
+    - mac
+  status: "stable"
