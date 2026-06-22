@@ -179,3 +179,8 @@ packages:
 
     # Release date
     released_at: "2026-06-21T19:00:00Z"
+  - name: "code-gif"
+    version: "1.0.0"
+    path: "code-gif"
+    description: "Equips the AI with the ability to generate Mac-styled terminal GIFs directly from text inputs using Python"
+    category: "productivity"
