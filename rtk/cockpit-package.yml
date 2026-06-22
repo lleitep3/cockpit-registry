@@ -18,7 +18,7 @@ external-dependencies:
 
 features:
   skills:
-    - path: "skills/rtk"
+    - path: ".cockpit/skills/rtk"
       name: "rtk"
       description: "Always prefix commands with rtk to reduce token consumption"
 
