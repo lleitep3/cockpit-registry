@@ -1,0 +1,31 @@
+#!/bin/bash
+QUERY="$1"
+
+API_KEY=$(cockpit vault get kb-graphify.api-key 2>/dev/null)
+PROVIDER=$(cockpit vault get kb-graphify.provider 2>/dev/null)
+
+if [ -z "$API_KEY" ]; then
+    echo "Warning: No API key found for kb-graphify. Please run 'cockpit pkg configure kb-graphify'." >&2
+    exit 1
+fi
+
+if [ -z "$PROVIDER" ]; then
+    PROVIDER="groq"
+fi
+
+if [ "$PROVIDER" = "groq" ]; then
+    export OPENAI_API_KEY="$API_KEY"
+    export OPENAI_BASE_URL="https://api.groq.com/openai/v1"
+    # Provide a default model, user could also set this in vault later
+    export OPENAI_MODEL="llama-3.1-8b-instant"
+    export BACKEND_ARGS="--backend openai --model llama-3.1-8b-instant"
+elif [ "$PROVIDER" = "openai" ]; then
+    export OPENAI_API_KEY="$API_KEY"
+elif [ "$PROVIDER" = "gemini" ]; then
+    export GEMINI_API_KEY="$API_KEY"
+elif [ "$PROVIDER" = "anthropic" ]; then
+    export ANTHROPIC_API_KEY="$API_KEY"
+fi
+
+OUT_DIR="$HOME/.cockpit/graphify-out"
+eval graphify query $BACKEND_ARGS "\"$QUERY\"" --graph "$OUT_DIR/graphify-out/graph.json"
