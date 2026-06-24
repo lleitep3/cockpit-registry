@@ -1,0 +1,37 @@
+name: "article-creator"
+version: "1.0.0"
+description: "Cria artigos didáticos ricos em HTML a partir de arquivos Markdown estruturados."
+author: "AICockpit"
+license: "MIT"
+
+requirements:
+  cockpit: "0.1.0"
+
+features:
+  modules:
+    - path: "bin/article"
+      name: "article"
+      description: "Compila artigos Markdown em um curso HTML estruturado."
+  skills:
+    - path: "skills/SKILL.md"
+      name: "article-creator"
+      description: "Criação de artigos em Markdown"
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - antigravity
+
+  provider_features:
+    devin:
+      - modules
+      - skills
+    goose:
+      - modules
+      - skills
+    antigravity:
+      - modules
+      - skills
+
+  method: "symlink"
