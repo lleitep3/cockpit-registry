@@ -31,3 +31,8 @@ features:
     - path: "bin/validate"
       name: "validate"
       description: "Verifies configuration"
+
+extensions:
+  kb:
+    search: "bin/kb-search"
+    index: "bin/kb-index"
