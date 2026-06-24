@@ -226,3 +226,83 @@ packages:
 
     # Release date
     released_at: "2026-06-24T08:59:00Z"
+
+  - name: "kb-graphify"
+    version: "0.1.0"
+    description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
+    author: "AICockpit"
+    license: "MIT"
+    category: "skills"
+    tags:
+      - kb
+      - semantic
+      - knowledge-base
+      - graphify
+      - llm
+    path: "kb-graphify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/kb-graphify"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-06-24T09:15:00Z"
+
+  - name: "pkg-playwright"
+    version: "0.1.0"
+    description: "Native Playwright integration for AICockpit"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - playwright
+      - browser
+      - automation
+      - headless
+    path: "pkg-playwright"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/pkg-playwright"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+      node: ">=18.0.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T09:15:00Z"
