@@ -184,3 +184,45 @@ packages:
     path: "code-gif"
     description: "Equips the AI with the ability to generate Mac-styled terminal GIFs directly from text inputs using Python"
     category: "productivity"
+
+  - name: "video"
+    version: "0.1.0"
+    description: "Video processing utilities including token-saving frame slicing with ffmpeg"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - video
+      - token-optimization
+      - productivity
+      - ffmpeg
+      - slice
+    path: "video"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/video"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - rules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T08:59:00Z"
