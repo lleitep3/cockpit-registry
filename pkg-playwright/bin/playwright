@@ -1,0 +1,129 @@
+#!/usr/bin/env node
+
+const { chromium } = require('playwright');
+const express = require('express');
+const path = require('path');
+const os = require('os');
+const fs = require('fs');
+
+async function startServer(url, browserTypeStr, profilePath) {
+    console.log(`Starting Playwright server with browser: ${browserTypeStr}`);
+    
+    // Default profile path if not provided
+    if (!profilePath) {
+        const homeDir = os.homedir();
+        profilePath = path.join(homeDir, '.cockpit', 'browser_profile');
+    }
+
+    // Ensure the profile directory exists
+    if (!fs.existsSync(profilePath)) {
+        fs.mkdirSync(profilePath, { recursive: true });
+    }
+
+    console.log(`Using profile at: ${profilePath}`);
+
+    // Launch persistent context
+    // We use chromium by default
+    const context = await chromium.launchPersistentContext(profilePath, {
+        headless: false,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+
+    const page = await context.newPage();
+
+    if (url) {
+        console.log(`Navigating to: ${url}`);
+        await page.goto(url);
+    }
+
+    // Set up Express server to receive commands
+    const app = express();
+    app.use(express.json());
+
+    app.post('/execute', async (req, res) => {
+        const { action, selector, value } = req.body;
+        console.log(`Received command: action=${action}, selector=${selector}`);
+
+        try {
+            switch (action) {
+                case 'navigate':
+                    await page.goto(value);
+                    res.json({ status: 'success', message: `Navigated to ${value}` });
+                    break;
+                case 'click':
+                    await page.click(selector);
+                    res.json({ status: 'success', message: `Clicked on ${selector}` });
+                    break;
+                case 'type':
+                    await page.fill(selector, value);
+                    res.json({ status: 'success', message: `Typed into ${selector}` });
+                    break;
+                case 'screenshot':
+                    const buffer = await page.screenshot({ fullPage: true });
+                    res.json({ status: 'success', data: buffer.toString('base64') });
+                    break;
+                default:
+                    res.status(400).json({ status: 'error', message: `Unknown action: ${action}` });
+            }
+        } catch (error) {
+            console.error('Error executing command:', error);
+            res.status(500).json({ status: 'error', message: error.message });
+        }
+    });
+
+    const port = 4567;
+    app.listen(port, () => {
+        console.log(`Playwright API server running at http://localhost:${port}`);
+        console.log('Browser is open and waiting for commands.');
+    });
+
+    // Handle process termination to close browser cleanly
+    process.on('SIGINT', async () => {
+        console.log("Shutting down...");
+        await context.close();
+        process.exit(0);
+    });
+}
+
+function printUsage() {
+    console.log('Usage:');
+    console.log('  playwright start [--browser <chrome|firefox>] [--url <url>] [--profile <path>]');
+}
+
+async function main() {
+    const args = process.argv.slice(2);
+    if (args.length === 0) {
+        printUsage();
+        process.exit(1);
+    }
+
+    const command = args[0];
+    if (command !== 'start') {
+        printUsage();
+        process.exit(1);
+    }
+
+    let url = '';
+    let browser = 'chrome';
+    let profile = '';
+
+    for (let i = 1; i < args.length; i++) {
+        if (args[i] === '--url' && i + 1 < args.length) {
+            url = args[i + 1];
+            i++;
+        } else if (args[i] === '--browser' && i + 1 < args.length) {
+            browser = args[i + 1];
+            i++;
+        } else if (args[i] === '--profile' && i + 1 < args.length) {
+            profile = args[i + 1];
+            i++;
+        }
+    }
+
+    await startServer(url, browser, profile);
+}
+
+main().catch(err => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+});

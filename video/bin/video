@@ -1,0 +1,100 @@
+#!/bin/bash
+# video package command wrapper
+
+# Default values
+INTERVAL=5
+OUTPUT=""
+
+show_help() {
+    echo "Video Utilities for AICockpit"
+    echo ""
+    echo "Usage: cockpit video <subcommand> [options]"
+    echo ""
+    echo "Subcommands:"
+    echo "  slice <path/to/video>   Slice a video into JPEG images"
+    echo ""
+    echo "Options for slice:"
+    echo "  -i, --interval <sec>    Seconds between frames (default: 5)"
+    echo "  -o, --output <dir>      Output directory for images"
+    echo "  -h, --help              Show this help message"
+}
+
+SUBCOMMAND="$1"
+if [ -z "$SUBCOMMAND" ]; then
+    show_help
+    exit 1
+fi
+
+case "$SUBCOMMAND" in
+    slice)
+        shift
+        # Parse slice sub-arguments
+        VIDEO_PATH=""
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                -i|--interval)
+                    INTERVAL="$2"
+                    shift 2
+                    ;;
+                -o|--output)
+                    OUTPUT="$2"
+                    shift 2
+                    ;;
+                -h|--help)
+                    echo "Usage: cockpit video slice <path/to/video> [options]"
+                    echo ""
+                    echo "Options:"
+                    echo "  -i, --interval <sec>    Seconds between frames (default: 5)"
+                    echo "  -o, --output <dir>      Output directory for images"
+                    exit 0
+                    ;;
+                *)
+                    if [ -z "$VIDEO_PATH" ]; then
+                        VIDEO_PATH="$1"
+                        shift
+                    else
+                        echo "Error: Unknown argument $1"
+                        exit 1
+                    fi
+                    ;;
+            esac
+        done
+
+        if [ -z "$VIDEO_PATH" ]; then
+            echo "Error: Video file path is required."
+            exit 1
+        fi
+
+        if [ ! -f "$VIDEO_PATH" ]; then
+            echo "Error: Video file does not exist: $VIDEO_PATH"
+            exit 1
+        fi
+
+        if ! command -v ffmpeg &> /dev/null; then
+            echo "Error: ffmpeg not found in PATH. Please install ffmpeg."
+            exit 1
+        fi
+
+        if [ -z "$OUTPUT" ]; then
+            VIDEO_BASE=$(basename "$VIDEO_PATH")
+            VIDEO_NAME="${VIDEO_BASE%.*}"
+            OUTPUT="$HOME/.cockpit/workspace/video-slice/$VIDEO_NAME/slices"
+        fi
+
+        mkdir -p "$OUTPUT"
+
+        echo "Slicing video '$VIDEO_PATH' every $INTERVAL seconds..."
+        ffmpeg -y -i "$VIDEO_PATH" -vf "fps=1/$INTERVAL" -q:v 2 "$OUTPUT/frame_%04d.jpg" 2>/dev/null
+
+        FRAME_COUNT=$(find "$OUTPUT" -maxdepth 1 -name "frame_*.jpg" | wc -l)
+
+        echo "Successfully sliced video!"
+        echo "Output directory: $OUTPUT"
+        echo "Frames generated: $FRAME_COUNT"
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$SUBCOMMAND'"
+        show_help
+        exit 1
+        ;;
+esac

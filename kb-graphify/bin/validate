@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+PROVIDER=$(cockpit vault get kb-graphify.provider 2>/dev/null || true)
+API_KEY=$(cockpit vault get kb-graphify.api-key 2>/dev/null || true)
+
+if [ -z "$PROVIDER" ] || [ -z "$API_KEY" ]; then
+    echo "kb-graphify is not configured properly."
+    echo "Please run: cockpit pkg configure kb-graphify"
+    exit 1
+fi
+
+echo "kb-graphify configuration is valid. Provider: $PROVIDER"
+exit 0
