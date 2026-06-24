@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-21T19:00:00Z"
+updated_at: "2026-06-24T11:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 4
+  total_packages: 9
   categories:
     - examples
     - productivity
@@ -306,3 +306,43 @@ packages:
 
     # Release date
     released_at: "2026-06-24T09:15:00Z"
+
+  - name: "article-creator"
+    version: "1.0.0"
+    description: "Cria artigos didáticos ricos em HTML a partir de arquivos Markdown estruturados"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - article
+      - markdown
+      - html
+      - productivity
+    path: "article-creator"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/article-creator"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "symlink"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T11:00:00Z"
