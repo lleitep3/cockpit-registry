@@ -1,0 +1,34 @@
+#!/bin/bash
+set -e
+
+echo "=== kb-graphify Configuration ==="
+echo "Select the AI provider to use for graph extraction:"
+echo "1) groq (recommended for free tier, fast)"
+echo "2) openai"
+echo "3) gemini"
+echo "4) anthropic"
+read -p "Enter provider number (1-4) [1]: " PROVIDER_NUM
+
+PROVIDER="groq"
+case $PROVIDER_NUM in
+    2) PROVIDER="openai" ;;
+    3) PROVIDER="gemini" ;;
+    4) PROVIDER="anthropic" ;;
+    *) PROVIDER="groq" ;;
+esac
+
+echo "Selected provider: $PROVIDER"
+
+read -p "Enter your API Key for $PROVIDER: " -s API_KEY
+echo ""
+
+if [ -z "$API_KEY" ]; then
+    echo "Error: API key cannot be empty."
+    exit 1
+fi
+
+echo "Saving configuration securely..."
+cockpit vault set kb-graphify.provider --value "$PROVIDER"
+cockpit vault set kb-graphify.api-key --value "$API_KEY"
+
+echo "Configuration successful!"
