@@ -11,6 +11,14 @@ requirements:
 installation:
   type: local
   method: copy
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+  provider_features:
+    antigravity: []
+    devin: []
+    goose: []
   post_install:
     - script: "uv tool install \"graphifyy[all]\" --force"
       description: "Install the graphifyy python package globally using uv"
