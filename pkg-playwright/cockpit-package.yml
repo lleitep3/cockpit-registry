@@ -18,5 +18,14 @@ features:
 installation:
   type: local
   method: copy
-  hooks:
-    post-install: "npm install"
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+  provider_features:
+    antigravity: []
+    devin: []
+    goose: []
+  post_install:
+    - script: "npm install"
+      description: "Install node dependencies"
