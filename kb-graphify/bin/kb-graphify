@@ -1,0 +1,36 @@
+#!/bin/bash
+
+show_help() {
+    echo "KB Graphify utilities for AICockpit"
+    echo ""
+    echo "Usage: cockpit kb-graphify <subcommand> [options]"
+    echo ""
+    echo "Subcommands:"
+    echo "  configure   Configure the kb-graphify provider and API key"
+    echo "  validate    Validate the current configuration"
+}
+
+SUBCOMMAND="$1"
+if [ -z "$SUBCOMMAND" ] || [ "$SUBCOMMAND" = "-h" ] || [ "$SUBCOMMAND" = "--help" ]; then
+    show_help
+    exit 0
+fi
+
+# Get the directory of the script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+case "$SUBCOMMAND" in
+    configure)
+        shift
+        "$DIR/configure" "$@"
+        ;;
+    validate)
+        shift
+        "$DIR/validate" "$@"
+        ;;
+    *)
+        echo "Error: Unknown subcommand '$SUBCOMMAND'"
+        show_help
+        exit 1
+        ;;
+esac

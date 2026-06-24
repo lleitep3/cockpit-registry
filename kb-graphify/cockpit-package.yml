@@ -25,12 +25,9 @@ installation:
 
 features:
   modules:
-    - path: "bin/configure"
-      name: "configure"
-      description: "Interactive setup for provider and tokens"
-    - path: "bin/validate"
-      name: "validate"
-      description: "Verifies configuration"
+    - path: "bin/kb-graphify"
+      name: "kb-graphify"
+      description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
 
 extensions:
   kb:
