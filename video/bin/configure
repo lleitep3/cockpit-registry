@@ -1,0 +1,8 @@
+#!/bin/bash
+if ! command -v ffmpeg &> /dev/null; then
+    echo "Warning: ffmpeg is not found in PATH."
+    echo "Please install ffmpeg (e.g., sudo apt install ffmpeg) to use this package."
+else
+    echo "ffmpeg is already installed. No configuration required for video package."
+fi
+exit 0

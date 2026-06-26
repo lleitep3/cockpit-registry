@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "hello-world package is valid."
+exit 0
