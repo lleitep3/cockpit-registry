@@ -1,0 +1,6 @@
+# Global fallback — anything without a specific owner defaults to the maintainer
+* @lleitep3
+
+# Core infrastructure and validation scripts are restricted to the maintainer
+.github/ @lleitep3
+scripts/ @lleitep3

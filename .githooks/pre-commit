@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# Pre-commit hook for cockpit-registry
+# Runs validate-registry.sh and optionally validate-pr.sh if packages/ changes are staged
+
+echo "Running pre-commit validations..."
+
+# Run registry validation
+echo "Validating registry..."
+./scripts/validate-registry.sh
+VALIDATE_EXIT_CODE=$?
+
+if [ $VALIDATE_EXIT_CODE -ne 0 ]; then
+    echo "Registry validation failed with exit code $VALIDATE_EXIT_CODE"
+    exit $VALIDATE_EXIT_CODE
+fi
+
+# Check if there are staged changes under packages/
+STAGED_PACKAGES=$(git diff --cached --name-only | grep "^packages/" || true)
+
+if [ -n "$STAGED_PACKAGES" ]; then
+    echo "Staged changes detected in packages/, running PR validation..."
+    ./scripts/validate-pr.sh
+    PR_VALIDATE_EXIT_CODE=$?
+    
+    if [ $PR_VALIDATE_EXIT_CODE -ne 0 ]; then
+        echo "PR validation failed with exit code $PR_VALIDATE_EXIT_CODE"
+        exit $PR_VALIDATE_EXIT_CODE
+    fi
+fi
+
+echo "All validations passed!"
+exit 0

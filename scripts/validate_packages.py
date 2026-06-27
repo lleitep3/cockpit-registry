@@ -120,18 +120,21 @@ def validate_registry():
                             else:
                                 print_ok(f"  Feature '{feature_type}' path verified: {fpath}")
 
-    # Check for unregistered package directories in the repository
-    for entry in os.listdir(repo_root):
-        entry_path = os.path.join(repo_root, entry)
-        if not os.path.isdir(entry_path):
-            continue
-        if entry.startswith(".") or entry in ("scripts", "node_modules"):
-            continue
-        manifest_path = os.path.join(entry_path, "cockpit-package.yml")
-        if os.path.exists(manifest_path):
-            if entry not in registered_paths:
-                print_err(f"Orphan package directory found: '{entry}' contains cockpit-package.yml but is not registered in package-index.yaml")
-                errors += 1
+    # Check for unregistered package directories in the packages/ directory
+    packages_root = os.path.join(repo_root, "packages")
+    if os.path.isdir(packages_root):
+        for entry in os.listdir(packages_root):
+            entry_path = os.path.join(packages_root, entry)
+            if not os.path.isdir(entry_path):
+                continue
+            if entry.startswith("."):
+                continue
+            manifest_path = os.path.join(entry_path, "cockpit-package.yml")
+            if os.path.exists(manifest_path):
+                registered_path = f"packages/{entry}"
+                if registered_path not in registered_paths:
+                    print_err(f"Orphan package directory found: 'packages/{entry}' contains cockpit-package.yml but is not registered in package-index.yaml")
+                    errors += 1
 
     if errors > 0:
         print_err(f"Validation failed with {errors} errors.")
