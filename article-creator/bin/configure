@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "No configuration required for article-creator."
+exit 0

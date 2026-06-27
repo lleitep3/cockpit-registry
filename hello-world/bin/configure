@@ -1,0 +1,3 @@
+#!/bin/bash
+echo "No configuration required for hello-world."
+exit 0
