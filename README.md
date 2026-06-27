@@ -62,17 +62,23 @@ cockpit-registry/
 ├── package-index.yaml          # Registry index (lists all packages)
 ├── README.md                   # This file
 ├── LICENSE                     # License file
-├── hello-world/                # Package directory
-│   ├── cockpit-package.yml     # Package manifest
-│   ├── README.md               # Package documentation
-│   ├── LICENSE                 # Package license
-│   ├── modules/                # CLI modules
-│   │   ├── cmd.go
-│   │   └── cmd_test.go
-│   └── kb/                     # Knowledge base
-│       └── guides/
-│           └── usage.md
-└── [other-packages]/
+├── .github/                    # GitHub workflows
+│   └── workflows/
+│       └── validate-packages.yml
+├── packages/                   # Package directory root
+│   ├── hello-world/            # Package directory
+│   │   ├── cockpit-package.yml # Package manifest
+│   │   ├── README.md           # Package documentation
+│   │   ├── LICENSE             # Package license
+│   │   ├── modules/            # CLI modules
+│   │   │   ├── cmd.go
+│   │   │   └── cmd_test.go
+│   │   └── kb/                 # Knowledge base
+│   │       └── guides/
+│   │           └── usage.md
+│   └── [other-packages]/       # Additional packages
+│       └── ...
+└── docs/                       # Optional registry documentation
     └── ...
 ```
 
@@ -154,12 +160,12 @@ To create a new package for this registry:
 ### 1. Create Package Directory
 
 ```bash
-mkdir -p my-package/{modules,skills,agents,kb}
+mkdir -p packages/my-package/{modules,skills,agents,kb}
 ```
 
 ### 2. Create Package Manifest
 
-Create `my-package/cockpit-package.yml`:
+Create `packages/my-package/cockpit-package.yml`:
 
 ```yaml
 name: "my-package"
@@ -211,7 +217,7 @@ Implement your agents, skills, modules, etc. in the appropriate directories.
 
 ### 4. Add Documentation
 
-Create `my-package/README.md` with usage instructions and examples.
+Create `packages/my-package/README.md` with usage instructions and examples.
 
 ### 5. Add Tests
 
@@ -232,8 +238,8 @@ packages:
     tags:
       - my-package
       - example
-    path: "my-package"
-    url: "https://github.com/lleite/cockpit-registry/tree/main/my-package"
+    path: "packages/my-package"
+    url: "https://github.com/lleite/cockpit-registry/tree/main/packages/my-package"
     supported_providers:
       - devin
       - goose
@@ -249,9 +255,13 @@ packages:
 
 1. Fork this repository
 2. Create a feature branch
-3. Add your package
-4. Update `package-index.yaml`
-5. Submit a pull request
+3. Install git hooks (recommended): `./scripts/install-hooks.sh`
+4. Add your package
+5. Update `package-index.yaml`
+6. Run local validations (optional):
+   - `./scripts/validate-registry.sh` - validates all packages
+   - `./scripts/validate-pr.sh` - validates PR changes
+7. Submit a pull request
 
 ## Contributing
 
@@ -259,11 +269,39 @@ We welcome contributions! To contribute a package:
 
 1. **Fork** this repository
 2. **Create** a new branch for your package
-3. **Implement** your package following the structure above
-4. **Test** thoroughly (minimum 90% coverage)
-5. **Document** with README and usage guides
-6. **Update** `package-index.yaml`
-7. **Submit** a pull request
+3. **Install git hooks** (recommended): `./scripts/install-hooks.sh`
+4. **Implement** your package following the structure above
+5. **Test** thoroughly (minimum 90% coverage)
+6. **Document** with README and usage guides
+7. **Update** `package-index.yaml`
+8. **Run local validations** (optional):
+   - `./scripts/validate-registry.sh` - validates all packages
+   - `./scripts/validate-pr.sh` - validates PR changes
+9. **Submit** a pull request
+
+### Development Tools
+
+#### Git Hooks
+
+Install git hooks to automatically run validations before each commit:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+#### Manual Validation
+
+You can run validations manually at any time:
+
+```bash
+# Validate all packages in the registry
+./scripts/validate-registry.sh
+
+# Validate PR changes (requires git context)
+./scripts/validate-pr.sh
+```
+
+These tools help ensure your contributions meet the repository standards before submitting.
 
 ### Package Requirements
 
