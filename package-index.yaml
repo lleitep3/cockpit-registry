@@ -7,7 +7,7 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-24T11:00:00Z"
+updated_at: "2026-06-27T14:40:54Z"
 
 # Registry metadata
 metadata:
@@ -29,8 +29,8 @@ packages:
       - hello-world
       - example
       - simple
-    path: "hello-world"
-    url: "https://github.com/lleite/cockpit-registry/tree/main/hello-world"
+    path: "packages/hello-world"
+    url: "https://github.com/lleite/cockpit-registry/tree/main/packages/hello-world"
     homepage: "https://github.com/lleite/cockpit-registry"
     repository: "https://github.com/lleite/cockpit-registry"
     
@@ -70,8 +70,8 @@ packages:
       - token-optimization
       - productivity
       - cli
-    path: "rtk"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/rtk"
+    path: "packages/rtk"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/rtk"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -111,8 +111,8 @@ packages:
       - search
       - productivity
       - skills
-    path: "kb-search"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/kb-search"
+    path: "packages/kb-search"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-search"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -152,8 +152,8 @@ packages:
       - skills
       - caveman
       - compression
-    path: "caveman"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/caveman"
+    path: "packages/caveman"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/caveman"
     homepage: "https://github.com/JuliusBrussee/caveman"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -181,7 +181,7 @@ packages:
     released_at: "2026-06-21T19:00:00Z"
   - name: "code-gif"
     version: "1.0.0"
-    path: "code-gif"
+    path: "packages/code-gif"
     description: "Equips the AI with the ability to generate Mac-styled terminal GIFs directly from text inputs using Python"
     category: "productivity"
 
@@ -197,8 +197,8 @@ packages:
       - productivity
       - ffmpeg
       - slice
-    path: "video"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/video"
+    path: "packages/video"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/video"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -239,8 +239,8 @@ packages:
       - knowledge-base
       - graphify
       - llm
-    path: "kb-graphify"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/kb-graphify"
+    path: "packages/kb-graphify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-graphify"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -278,8 +278,8 @@ packages:
       - browser
       - automation
       - headless
-    path: "pkg-playwright"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/pkg-playwright"
+    path: "packages/pkg-playwright"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-playwright"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 
@@ -318,8 +318,8 @@ packages:
       - markdown
       - html
       - productivity
-    path: "article-creator"
-    url: "https://github.com/lleitep3/cockpit-registry/tree/main/article-creator"
+    path: "packages/article-creator"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/article-creator"
     homepage: "https://github.com/lleitep3/cockpit-registry"
     repository: "https://github.com/lleitep3/cockpit-registry"
 

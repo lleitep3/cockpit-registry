@@ -62,17 +62,23 @@ cockpit-registry/
 ├── package-index.yaml          # Registry index (lists all packages)
 ├── README.md                   # This file
 ├── LICENSE                     # License file
-├── hello-world/                # Package directory
-│   ├── cockpit-package.yml     # Package manifest
-│   ├── README.md               # Package documentation
-│   ├── LICENSE                 # Package license
-│   ├── modules/                # CLI modules
-│   │   ├── cmd.go
-│   │   └── cmd_test.go
-│   └── kb/                     # Knowledge base
-│       └── guides/
-│           └── usage.md
-└── [other-packages]/
+├── .github/                    # GitHub workflows
+│   └── workflows/
+│       └── validate-packages.yml
+├── packages/                   # Package directory root
+│   ├── hello-world/            # Package directory
+│   │   ├── cockpit-package.yml # Package manifest
+│   │   ├── README.md           # Package documentation
+│   │   ├── LICENSE             # Package license
+│   │   ├── modules/            # CLI modules
+│   │   │   ├── cmd.go
+│   │   │   └── cmd_test.go
+│   │   └── kb/                 # Knowledge base
+│   │       └── guides/
+│   │           └── usage.md
+│   └── [other-packages]/       # Additional packages
+│       └── ...
+└── docs/                       # Optional registry documentation
     └── ...
 ```
 
@@ -154,12 +160,12 @@ To create a new package for this registry:
 ### 1. Create Package Directory
 
 ```bash
-mkdir -p my-package/{modules,skills,agents,kb}
+mkdir -p packages/my-package/{modules,skills,agents,kb}
 ```
 
 ### 2. Create Package Manifest
 
-Create `my-package/cockpit-package.yml`:
+Create `packages/my-package/cockpit-package.yml`:
 
 ```yaml
 name: "my-package"
@@ -211,7 +217,7 @@ Implement your agents, skills, modules, etc. in the appropriate directories.
 
 ### 4. Add Documentation
 
-Create `my-package/README.md` with usage instructions and examples.
+Create `packages/my-package/README.md` with usage instructions and examples.
 
 ### 5. Add Tests
 
@@ -232,8 +238,8 @@ packages:
     tags:
       - my-package
       - example
-    path: "my-package"
-    url: "https://github.com/lleite/cockpit-registry/tree/main/my-package"
+    path: "packages/my-package"
+    url: "https://github.com/lleite/cockpit-registry/tree/main/packages/my-package"
     supported_providers:
       - devin
       - goose
