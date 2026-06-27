@@ -1,7 +1,0 @@
-#!/bin/bash
-if ! command -v ffmpeg &> /dev/null; then
-    echo "ffmpeg is not installed or not in PATH."
-    exit 1
-fi
-echo "video configuration is valid. ffmpeg found."
-exit 0

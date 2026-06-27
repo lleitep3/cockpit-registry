@@ -255,9 +255,13 @@ packages:
 
 1. Fork this repository
 2. Create a feature branch
-3. Add your package
-4. Update `package-index.yaml`
-5. Submit a pull request
+3. Install git hooks (recommended): `./scripts/install-hooks.sh`
+4. Add your package
+5. Update `package-index.yaml`
+6. Run local validations (optional):
+   - `./scripts/validate-registry.sh` - validates all packages
+   - `./scripts/validate-pr.sh` - validates PR changes
+7. Submit a pull request
 
 ## Contributing
 
@@ -265,11 +269,39 @@ We welcome contributions! To contribute a package:
 
 1. **Fork** this repository
 2. **Create** a new branch for your package
-3. **Implement** your package following the structure above
-4. **Test** thoroughly (minimum 90% coverage)
-5. **Document** with README and usage guides
-6. **Update** `package-index.yaml`
-7. **Submit** a pull request
+3. **Install git hooks** (recommended): `./scripts/install-hooks.sh`
+4. **Implement** your package following the structure above
+5. **Test** thoroughly (minimum 90% coverage)
+6. **Document** with README and usage guides
+7. **Update** `package-index.yaml`
+8. **Run local validations** (optional):
+   - `./scripts/validate-registry.sh` - validates all packages
+   - `./scripts/validate-pr.sh` - validates PR changes
+9. **Submit** a pull request
+
+### Development Tools
+
+#### Git Hooks
+
+Install git hooks to automatically run validations before each commit:
+
+```bash
+./scripts/install-hooks.sh
+```
+
+#### Manual Validation
+
+You can run validations manually at any time:
+
+```bash
+# Validate all packages in the registry
+./scripts/validate-registry.sh
+
+# Validate PR changes (requires git context)
+./scripts/validate-pr.sh
+```
+
+These tools help ensure your contributions meet the repository standards before submitting.
 
 ### Package Requirements
 
