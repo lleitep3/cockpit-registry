@@ -1,0 +1,171 @@
+#!/bin/bash
+# cockpit-scheduler wrapper
+# Expoe o comando "scheduler" para o AICockpit CLI.
+# Chamadas: cockpit scheduler <subcommand> [flags]
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+
+source "${LIB_DIR}/scheduler.sh"
+
+show_usage() {
+    echo "Usage: cockpit scheduler <subcommand> [flags]"
+    echo ""
+    echo "Subcommands:"
+    echo "  add --command <cmd> --cron <expr>              Agendar com cron"
+    echo "  add --command <cmd> --interval <int> [--repeat N]  Agendar com intervalo"
+    echo "  add-ubuntu-security [--cron <expr>]            Agendar analise diaria de seguranca"
+    echo "  list                                           Listar agendamentos"
+    echo "  remove <id>                                    Remover agendamento"
+    echo "  run [--all]                                    Executar agendamentos pendentes"
+    echo "  install [--mode <cron|systemd>] [--interval N] [--persistent true|false]"
+    echo "                                                 Instalar executor automatico (padrao: systemd, persistent=true)"
+    echo ""
+    echo "Exemplos:"
+    echo "  cockpit scheduler add --command \"echo hello\" --cron \"0 9 * * *\""
+    echo "  cockpit scheduler add --command \"scripts/backup.sh\" --interval 1h --repeat 3"
+    echo "  cockpit scheduler add-ubuntu-security --cron \"0 2 * * *\""
+    echo "  cockpit scheduler install --mode systemd --interval 5"
+}
+
+SUBCOMMAND="${1:-}"
+shift || true
+
+case "${SUBCOMMAND}" in
+    add)
+        COMMAND=""
+        CRON=""
+        INTERVAL=""
+        REPEAT=""
+        DESCRIPTION=""
+
+        while [[ $# -gt 0 ]]; do
+            case "${1}" in
+                --command) COMMAND="${2:-}"; shift 2 ;;
+                --cron) CRON="${2:-}"; shift 2 ;;
+                --interval) INTERVAL="${2:-}"; shift 2 ;;
+                --repeat) REPEAT="${2:-}"; shift 2 ;;
+                --description) DESCRIPTION="${2:-}"; shift 2 ;;
+                *) echo "Opcao desconhecida: ${1}" >&2; exit 1 ;;
+            esac
+        done
+
+        if [[ -z "${COMMAND}" ]]; then
+            echo "Erro: --command e obrigatorio" >&2
+            exit 1
+        fi
+
+        if [[ -n "${CRON}" ]]; then
+            TYPE="cron"
+        elif [[ -n "${INTERVAL}" ]]; then
+            TYPE="repeat"
+        else
+            echo "Erro: informe --cron ou --interval" >&2
+            exit 1
+        fi
+
+        ID=$(add_job "${COMMAND}" "${TYPE}" "${CRON}" "${INTERVAL}" "${REPEAT}" "${DESCRIPTION}")
+        if [[ $? -ne 0 ]]; then
+            exit 1
+        fi
+
+        echo "[+] Agendamento criado com sucesso!"
+        echo "    ID: ${ID}"
+        echo "    Comando: ${COMMAND}"
+        if [[ "${TYPE}" == "cron" ]]; then
+            echo "    Padrao: ${CRON} ($(describe_cron "${CRON}"))"
+        else
+            echo "    Intervalo: ${INTERVAL}"
+            [[ -n "${REPEAT}" ]] && echo "    Repeticoes: ${REPEAT}"
+        fi
+        ;;
+
+    add-ubuntu-security)
+        CRON="0 2 * * *"
+        while [[ $# -gt 0 ]]; do
+            case "${1}" in
+                --cron) CRON="${2:-}"; shift 2 ;;
+                *) echo "Opcao desconhecida: ${1}" >&2; exit 1 ;;
+            esac
+        done
+
+        ID=$(add_job "cockpit ubuntu-security report --html" "cron" "${CRON}" "" "" "Analise diaria de seguranca do Ubuntu")
+        if [[ $? -ne 0 ]]; then
+            exit 1
+        fi
+
+        echo "[+] Agendamento de seguranca criado com sucesso!"
+        echo "    ID: ${ID}"
+        echo "    Comando: cockpit ubuntu-security report --html"
+        echo "    Padrao: ${CRON} ($(describe_cron "${CRON}"))"
+        echo "    Dica: rode 'cockpit scheduler install --mode systemd' para ativar o executor automatico."
+        ;;
+
+    list)
+        list_jobs
+        ;;
+
+    remove)
+        ID="${1:-}"
+        if [[ -z "${ID}" ]]; then
+            echo "Erro: informe o ID do agendamento" >&2
+            exit 1
+        fi
+        remove_job "${ID}"
+        ;;
+
+    run)
+        ALL=""
+        while [[ $# -gt 0 ]]; do
+            case "${1}" in
+                --all) ALL="1"; shift ;;
+                *) echo "Opcao desconhecida: ${1}" >&2; exit 1 ;;
+            esac
+        done
+
+        if [[ -n "${ALL}" ]]; then
+            run_all_jobs
+        else
+            run_due_jobs
+        fi
+        ;;
+
+    install)
+        MODE="systemd"
+        INTERVAL="5"
+        PERSISTENT="true"
+        while [[ $# -gt 0 ]]; do
+            case "${1}" in
+                --mode) MODE="${2:-}"; shift 2 ;;
+                --interval) INTERVAL="${2:-}"; shift 2 ;;
+                --persistent) PERSISTENT="${2:-true}"; shift 2 ;;
+                *) echo "Opcao desconhecida: ${1}" >&2; exit 1 ;;
+            esac
+        done
+
+        case "${MODE}" in
+            cron) install_cron "${INTERVAL}" ;;
+            systemd) install_systemd "${INTERVAL}" "${PERSISTENT}" ;;
+            *) echo "Erro: modo invalido: ${MODE} (use 'cron' ou 'systemd')" >&2; exit 1 ;;
+        esac
+        ;;
+
+    --help|-h|help)
+        show_usage
+        exit 0
+        ;;
+
+    "")
+        echo "Erro: subcomando obrigatorio" >&2
+        show_usage
+        exit 1
+        ;;
+
+    *)
+        echo "Erro: subcomando desconhecido '${SUBCOMMAND}'" >&2
+        show_usage
+        exit 1
+        ;;
+esac
