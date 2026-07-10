@@ -1,0 +1,55 @@
+#!/bin/bash
+# cockpit-scheduler: interactive configuration
+# Sets executor interval and workspace directory, saves to config.json
+
+set -euo pipefail
+
+CONFIG_DIR="${HOME}/.cockpit/packages/cockpit-scheduler"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+
+# Non-interactive flag support: --interval N --workspace /path
+INTERVAL=""
+WORKSPACE=""
+
+while [[ $# -gt 0 ]]; do
+    case "${1}" in
+        --interval) INTERVAL="${2:-}"; shift 2 ;;
+        --workspace) WORKSPACE="${2:-}"; shift 2 ;;
+        -h|--help)
+            echo "Usage: cockpit scheduler configure [--interval <minutes>] [--workspace <path>]"
+            echo ""
+            echo "Options:"
+            echo "  --interval <N>     Executor auto-run interval in minutes (default: 5)"
+            echo "  --workspace <path> Directory for scheduler data (default: ~/.cockpit/workspace/scheduler)"
+            exit 0
+            ;;
+        *) echo "Unknown option: ${1}" >&2; exit 1 ;;
+    esac
+done
+
+# Interactive prompts when not supplied via flags
+if [[ -z "${INTERVAL}" ]]; then
+    echo -n "Executor interval in minutes [5]: "
+    read -r INTERVAL
+    INTERVAL="${INTERVAL:-5}"
+fi
+
+if [[ -z "${WORKSPACE}" ]]; then
+    DEFAULT_WS="${HOME}/.cockpit/workspace/scheduler"
+    echo -n "Workspace directory [${DEFAULT_WS}]: "
+    read -r WORKSPACE
+    WORKSPACE="${WORKSPACE:-${DEFAULT_WS}}"
+fi
+
+mkdir -p "${CONFIG_DIR}"
+
+cat > "${CONFIG_FILE}" <<JSON
+{
+  "executor_interval_minutes": ${INTERVAL},
+  "workspace": "${WORKSPACE}"
+}
+JSON
+
+echo "Configuration saved to ${CONFIG_FILE}"
+echo "  executor_interval_minutes: ${INTERVAL}"
+echo "  workspace: ${WORKSPACE}"
