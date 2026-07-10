@@ -1,0 +1,21 @@
+name: pkg-notify
+version: 0.1.0
+description: "Native and HTML notifications for AI agents"
+author: "AICockpit"
+license: "MIT"
+type: plugin
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  modules:
+    - path: bin/notify
+      name: notify
+      description: "Send native or HTML notifications"
+installation:
+  type: local
+  method: copy
+  supported_providers: [antigravity, devin, goose]
+  provider_features:
+    antigravity: []
+    devin: []
+    goose: []

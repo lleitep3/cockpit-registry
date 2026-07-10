@@ -11,12 +11,13 @@ updated_at: "2026-07-03T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 10
+  total_packages: 11
   categories:
     - examples
     - productivity
     - skills
     - automation
+    - notifications
 
 # Packages in this registry
 packages:
@@ -378,6 +379,46 @@ packages:
     features:
       - modules
       - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-03T18:00:00Z"
+
+  - name: "pkg-notify"
+    version: "0.1.0"
+    description: "Native and HTML notifications for AI agents"
+    author: "AICockpit"
+    license: "MIT"
+    category: "notifications"
+    tags:
+      - notify
+      - notifications
+      - html
+      - native
+      - alert
+    path: "packages/pkg-notify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-notify"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
 
     # Requirements
     requirements:

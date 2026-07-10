@@ -1,0 +1,270 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# pkg-notify: native and HTML notifications for AICockpit
+# Usage: cockpit notify [send|html|status]
+
+WORKSPACE_DIR="${HOME}/.cockpit/workspace/notify"
+HISTORY_FILE="${WORKSPACE_DIR}/history.json"
+CONFIG_FILE="${HOME}/.cockpit/packages/pkg-notify/config.json"
+
+notify_usage() {
+    cat <<EOF
+Usage: cockpit notify <command> [options]
+
+Commands:
+  send  Send a native OS notification
+  html  Generate a temporary HTML page and open it in the browser
+  status Show recent notification history
+
+Examples:
+  cockpit notify send --title "Build done" --message "Tests passed"
+  cockpit notify send --title "Alert" --message "Check server" --action-url "https://example.com"
+  cockpit notify html --title "Report" --message "Details inside"
+  cockpit notify html --title "Report" --message "Details inside" --template "dark"
+  cockpit notify status
+EOF
+}
+
+ensure_workspace() {
+    mkdir -p "${WORKSPACE_DIR}"
+}
+
+detect_os() {
+    case "$(uname -s)" in
+        Linux*) echo "linux" ;;
+        Darwin*) echo "macos" ;;
+        CYGWIN*|MINGW*|MSYS*) echo "windows" ;;
+        *) echo "unknown" ;;
+    esac
+}
+
+open_url() {
+    local url="$1"
+    local os
+    os="$(detect_os)"
+    case "${os}" in
+        linux) xdg-open "${url}" ;;
+        macos) open "${url}" ;;
+        windows) start "${url}" ;;
+        *) echo "Unsupported OS: ${os}" >&2; exit 1 ;;
+    esac
+}
+
+append_history() {
+    local channel="$1"
+    local title="$2"
+    local message="$3"
+    local action_url="${4:-}"
+    local timestamp
+    timestamp="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+
+    ensure_workspace
+
+    local entry
+    entry=$(jq -n \
+        --arg channel "${channel}" \
+        --arg title "${title}" \
+        --arg message "${message}" \
+        --arg action_url "${action_url}" \
+        --arg timestamp "${timestamp}" \
+        '{channel: $channel, title: $title, message: $message, action_url: $action_url, timestamp: $timestamp}')
+
+    if [[ -f "${HISTORY_FILE}" ]]; then
+        jq --argjson entry "${entry}" '. + [$entry]' "${HISTORY_FILE}" > "${HISTORY_FILE}.tmp" && mv "${HISTORY_FILE}.tmp" "${HISTORY_FILE}"
+    else
+        echo "[${entry}]" > "${HISTORY_FILE}"
+    fi
+}
+
+send_native() {
+    local title="$1"
+    local message="$2"
+    local action_url="${3:-}"
+    local os
+    os="$(detect_os)"
+
+    case "${os}" in
+        linux)
+            if ! command -v notify-send >/dev/null 2>&1; then
+                echo "notify-send not found. Install libnotify to send native notifications." >&2
+                exit 1
+            fi
+            if [[ -n "${action_url}" ]]; then
+                notify-send "${title}" "${message}\n${action_url}"
+            else
+                notify-send "${title}" "${message}"
+            fi
+            ;;
+        macos)
+            local script
+            if [[ -n "${action_url}" ]]; then
+                script=$(printf 'display notification "%s" with title "%s"' "${message}" "${title}")
+            else
+                script=$(printf 'display notification "%s" with title "%s"' "${message}" "${title}")
+            fi
+            osascript -e "${script}"
+            ;;
+        windows)
+            if ! command -v powershell >/dev/null 2>&1; then
+                echo "powershell not found." >&2
+                exit 1
+            fi
+            local body
+            if [[ -n "${action_url}" ]]; then
+                body="${message} ${action_url}"
+            else
+                body="${message}"
+            fi
+            powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('${body}', '${title}')"
+            ;;
+        *)
+            echo "Unsupported OS: ${os}" >&2
+            exit 1
+            ;;
+    esac
+
+    append_history "native" "${title}" "${message}" "${action_url}"
+    echo "Native notification sent."
+}
+
+html_template() {
+    local title="$1"
+    local message="$2"
+    local template="${3:-default}"
+    local css
+
+    case "${template}" in
+        dark)
+            css='body { background: #1e1e1e; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+                   .card { background: #2a2a2a; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); padding: 2rem; max-width: 480px; width: 90%; }
+                   h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+                   p { margin: 0; line-height: 1.5; color: #b0b0b0; }
+                   .meta { margin-top: 1.5rem; font-size: 0.75rem; color: #666; }'
+            ;;
+        *)
+            css='body { background: #f5f5f7; color: #111; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+                   .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 2rem; max-width: 480px; width: 90%; }
+                   h1 { margin: 0 0 0.5rem; font-size: 1.5rem; }
+                   p { margin: 0; line-height: 1.5; color: #555; }
+                   .meta { margin-top: 1.5rem; font-size: 0.75rem; color: #999; }'
+            ;;
+    esac
+
+    local timestamp
+    timestamp="$(date +"%Y-%m-%d %H:%M:%S")"
+
+    cat <<EOF
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>$(printf '%s' "${title}" | sed 's/["&]/\&/g')</title>
+    <style>${css}</style>
+</head>
+<body>
+    <div class="card">
+        <h1>$(printf '%s' "${title}" | sed 's/["&]/\&/g')</h1>
+        <p>$(printf '%s' "${message}" | sed 's/$/<br>/g; s/["&]/\&/g')</p>
+        <div class="meta">Generated by pkg-notify at ${timestamp}</div>
+    </div>
+</body>
+</html>
+EOF
+}
+
+send_html() {
+    local title="$1"
+    local message="$2"
+    local template="${3:-default}"
+
+    ensure_workspace
+
+    local file_path
+    file_path="${WORKSPACE_DIR}/notify-$(date +%s)-${RANDOM}.html"
+    html_template "${title}" "${message}" "${template}" > "${file_path}"
+
+    append_history "html" "${title}" "${message}" "${file_path}"
+
+    open_url "file://${file_path}"
+    echo "HTML notification opened: ${file_path}"
+}
+
+show_status() {
+    if [[ ! -f "${HISTORY_FILE}" ]]; then
+        echo "No notifications sent yet."
+        exit 0
+    fi
+
+    echo "Recent notifications:"
+    jq -r '.[-10:] | reverse | .[] | "[\(.timestamp)] [\(.channel)] \(.title) - \(.message)"' "${HISTORY_FILE}"
+}
+
+load_default_channel() {
+    if [[ -f "${CONFIG_FILE}" ]]; then
+        jq -r '.channel // empty' "${CONFIG_FILE}" 2>/dev/null || true
+    fi
+}
+
+main() {
+    if [[ $# -lt 1 ]]; then
+        notify_usage
+        exit 1
+    fi
+
+    local command="$1"
+    shift
+
+    case "${command}" in
+        send)
+            local title=""
+            local message=""
+            local action_url=""
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --title) title="$2"; shift 2 ;;
+                    --message) message="$2"; shift 2 ;;
+                    --action-url) action_url="$2"; shift 2 ;;
+                    *) echo "Unknown option: $1" >&2; exit 1 ;;
+                esac
+            done
+            if [[ -z "${title}" || -z "${message}" ]]; then
+                echo "--title and --message are required for 'send'." >&2
+                exit 1
+            fi
+            send_native "${title}" "${message}" "${action_url}"
+            ;;
+        html)
+            local title=""
+            local message=""
+            local template="default"
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --title) title="$2"; shift 2 ;;
+                    --message) message="$2"; shift 2 ;;
+                    --template) template="$2"; shift 2 ;;
+                    *) echo "Unknown option: $1" >&2; exit 1 ;;
+                esac
+            done
+            if [[ -z "${title}" || -z "${message}" ]]; then
+                echo "--title and --message are required for 'html'." >&2
+                exit 1
+            fi
+            send_html "${title}" "${message}" "${template}"
+            ;;
+        status)
+            show_status
+            ;;
+        --help|-h)
+            notify_usage
+            ;;
+        *)
+            echo "Unknown command: ${command}" >&2
+            notify_usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
