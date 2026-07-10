@@ -1,0 +1,77 @@
+name: cockpit-scheduler
+version: 0.1.0
+description: "Scheduler para agendamento de comandos e scripts no AICockpit com persistencia, cron, repeticoes e executor automatico"
+author: "AICockpit"
+license: "MIT"
+homepage: "https://github.com/lleitep3/aicockpit"
+repository: "https://github.com/lleitep3/aicockpit"
+
+type: plugin
+category: productivity
+
+requirements:
+  cockpit: ">=0.1.0"
+
+external-dependencies:
+  system:
+    - "jq"
+    - "date"
+    - "systemctl"
+    - "crontab"
+
+features:
+  modules:
+    - path: "bin/scheduler"
+      name: "scheduler"
+      description: "Agende comandos e scripts para execucao unica ou recorrente"
+  skills:
+    - path: "skills/scheduler-usage"
+      name: "scheduler-usage"
+      description: "Teaches AI agents how to use the cockpit scheduler command"
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - antigravity
+  provider_features:
+    devin:
+      - modules
+      - skills
+    goose:
+      - modules
+      - skills
+    antigravity:
+      - modules
+      - skills
+  method: copy
+
+configuration:
+  defaults:
+    executor_interval_minutes: 5
+  options:
+    - name: "executor_interval_minutes"
+      type: "integer"
+      description: "Intervalo em minutos entre execucoes do executor automatico"
+      default: 5
+      required: false
+
+metadata:
+  tags:
+    - scheduler
+    - cron
+    - automation
+    - productivity
+    - ubuntu-security
+  keywords:
+    - scheduler
+    - cron
+    - agendamento
+    - automation
+    - scripts
+    - commands
+    - timer
+    - systemd
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/aicockpit/issues"
