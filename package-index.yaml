@@ -309,7 +309,7 @@ packages:
     released_at: "2026-06-24T09:15:00Z"
 
   - name: "article-creator"
-    version: "1.0.0"
+    version: "1.0.1"
     description: "Cria artigos didáticos ricos em HTML a partir de arquivos Markdown estruturados"
     author: "AICockpit"
     license: "MIT"
