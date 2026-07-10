@@ -1,0 +1,63 @@
+#!/bin/bash
+# cockpit-scheduler: validate installation and configuration
+
+set -euo pipefail
+
+ERRORS=0
+
+check() {
+    local label="${1}"
+    local cmd="${2}"
+    if eval "${cmd}" &>/dev/null; then
+        echo "OK:   ${label}"
+    else
+        echo "FAIL: ${label}"
+        ERRORS=$((ERRORS + 1))
+    fi
+}
+
+echo "Validating cockpit-scheduler..."
+echo ""
+
+# Required system dependencies
+check "jq is available"       "command -v jq"
+check "date is available"     "command -v date"
+
+# Optional: systemd or crontab (one must exist for 'install' to work)
+if command -v systemctl &>/dev/null; then
+    echo "OK:   systemctl available (systemd install supported)"
+elif command -v crontab &>/dev/null; then
+    echo "OK:   crontab available (cron install supported)"
+else
+    echo "WARN: neither systemctl nor crontab found — 'scheduler install' will not work"
+fi
+
+# Workspace / config
+CONFIG_FILE="${HOME}/.cockpit/packages/cockpit-scheduler/config.json"
+WORKSPACE="${HOME}/.cockpit/workspace/scheduler"
+
+if [[ -f "${CONFIG_FILE}" ]]; then
+    check "config.json is valid JSON" "jq empty '${CONFIG_FILE}'"
+    WORKSPACE=$(jq -r '.workspace // empty' "${CONFIG_FILE}" 2>/dev/null || echo "${WORKSPACE}")
+    echo "OK:   config.json found at ${CONFIG_FILE}"
+else
+    echo "INFO: No config found — run 'cockpit scheduler configure' to set up (using defaults)"
+fi
+
+# Jobs file (optional — may not exist yet)
+JOBS_FILE="${WORKSPACE}/jobs.json"
+if [[ -f "${JOBS_FILE}" ]]; then
+    check "jobs.json is valid JSON" "jq empty '${JOBS_FILE}'"
+    echo "OK:   jobs.json found at ${JOBS_FILE}"
+else
+    echo "INFO: No jobs file yet — will be created on first 'cockpit scheduler add'"
+fi
+
+echo ""
+if [[ ${ERRORS} -eq 0 ]]; then
+    echo "Validation passed."
+    exit 0
+else
+    echo "Validation failed with ${ERRORS} error(s)."
+    exit 1
+fi
