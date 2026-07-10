@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# pkg-notify validate: check whether the configured channel works on this OS
+
+CONFIG_FILE="${HOME}/.cockpit/packages/pkg-notify/config.json"
+
+detect_os() {
+    case "$(uname -s)" in
+        Linux*) echo "linux" ;;
+        Darwin*) echo "macos" ;;
+        CYGWIN*|MINGW*|MSYS*) echo "windows" ;;
+        *) echo "unknown" ;;
+    esac
+}
+
+os="$(detect_os)"
+echo "Detected OS: ${os}"
+
+channel="native"
+if [[ -f "${CONFIG_FILE}" ]]; then
+    channel="$(jq -r '.channel // "native"' "${CONFIG_FILE}")"
+fi
+echo "Configured channel: ${channel}"
+
+errors=0
+
+case "${channel}" in
+    native)
+        case "${os}" in
+            linux)
+                if command -v notify-send >/dev/null 2>&1; then
+                    echo "OK: notify-send found"
+                else
+                    echo "ERROR: notify-send not found (install libnotify)" >&2
+                    errors=$((errors + 1))
+                fi
+                ;;
+            macos)
+                if command -v osascript >/dev/null 2>&1; then
+                    echo "OK: osascript found"
+                else
+                    echo "ERROR: osascript not found" >&2
+                    errors=$((errors + 1))
+                fi
+                ;;
+            windows)
+                if command -v powershell >/dev/null 2>&1; then
+                    echo "OK: powershell found"
+                else
+                    echo "ERROR: powershell not found" >&2
+                    errors=$((errors + 1))
+                fi
+                ;;
+            *)
+                echo "ERROR: unsupported OS for native notifications" >&2
+                errors=$((errors + 1))
+                ;;
+        esac
+        ;;
+    html)
+        case "${os}" in
+            linux)
+                if command -v xdg-open >/dev/null 2>&1; then
+                    echo "OK: xdg-open found"
+                else
+                    echo "ERROR: xdg-open not found" >&2
+                    errors=$((errors + 1))
+                fi
+                ;;
+            macos)
+                if command -v open >/dev/null 2>&1; then
+                    echo "OK: open found"
+                else
+                    echo "ERROR: open not found" >&2
+                    errors=$((errors + 1))
+                fi
+                ;;
+            windows)
+                echo "OK: start command available via cmd"
+                ;;
+            *)
+                echo "ERROR: unsupported OS for HTML notifications" >&2
+                errors=$((errors + 1))
+                ;;
+        esac
+        ;;
+    *)
+        echo "ERROR: unknown channel '${channel}'" >&2
+        errors=$((errors + 1))
+        ;;
+esac
+
+if [[ ${errors} -gt 0 ]]; then
+    echo "Validation failed with ${errors} error(s)." >&2
+    exit 1
+fi
+
+echo "Validation passed."

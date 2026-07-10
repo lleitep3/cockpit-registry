@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# pkg-notify configure: interactive default channel setup
+
+CONFIG_DIR="${HOME}/.cockpit/packages/pkg-notify"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+
+mkdir -p "${CONFIG_DIR}"
+
+echo "Configure pkg-notify default channel"
+echo "Available channels:"
+echo "  1) native — OS notifications (requires notify-send/osascript/powershell)"
+echo "  2) html   — temporary HTML page opened in browser"
+echo ""
+read -rp "Choose default channel [native/html]: " channel
+
+case "${channel}" in
+    native|html) ;;
+    *)
+        echo "Invalid channel: ${channel}. Choose 'native' or 'html'." >&2
+        exit 1
+        ;;
+esac
+
+jq -n --arg channel "${channel}" '{channel: $channel}' > "${CONFIG_FILE}"
+
+echo "Default channel set to '${channel}' and saved at ${CONFIG_FILE}"
