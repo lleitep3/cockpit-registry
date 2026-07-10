@@ -11,7 +11,7 @@ updated_at: "2026-07-03T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 11
+  total_packages: 12
   categories:
     - examples
     - productivity
@@ -432,3 +432,45 @@ packages:
 
     # Release date
     released_at: "2026-07-03T18:00:00Z"
+
+  - name: "pkg-scheduler"
+    version: "0.1.0"
+    description: "Schedule commands and scripts from the AICockpit CLI"
+    author: "AICockpit"
+    license: "MIT"
+    category: "automation"
+    tags:
+      - scheduler
+      - cron
+      - automation
+      - scripts
+      - commands
+      - timer
+      - systemd
+    path: "packages/pkg-scheduler"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-scheduler"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-10T00:00:00Z"
