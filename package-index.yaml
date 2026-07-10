@@ -7,15 +7,16 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-06-27T14:40:54Z"
+updated_at: "2026-07-03T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 9
+  total_packages: 10
   categories:
     - examples
     - productivity
     - skills
+    - automation
 
 # Packages in this registry
 packages:
@@ -346,3 +347,47 @@ packages:
 
     # Release date
     released_at: "2026-06-24T11:00:00Z"
+
+  - name: "cockpit-scheduler"
+    version: "0.1.0"
+    description: "Scheduler para agendamento de comandos e scripts no AICockpit com persistencia, cron, repeticoes e executor automatico"
+    author: "AICockpit"
+    license: "MIT"
+    category: "automation"
+    tags:
+      - scheduler
+      - cron
+      - automation
+      - scripts
+      - commands
+      - timer
+      - systemd
+      - ubuntu-security
+    path: "packages/cockpit-scheduler"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-scheduler"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-03T18:00:00Z"
