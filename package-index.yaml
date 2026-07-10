@@ -229,7 +229,7 @@ packages:
     released_at: "2026-06-24T08:59:00Z"
 
   - name: "kb-graphify"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
     author: "AICockpit"
     license: "MIT"
