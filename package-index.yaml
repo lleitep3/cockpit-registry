@@ -269,7 +269,7 @@ packages:
     released_at: "2026-06-24T09:15:00Z"
 
   - name: "pkg-playwright"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "Native Playwright integration for AICockpit"
     author: "AICockpit"
     license: "MIT"
