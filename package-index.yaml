@@ -11,12 +11,13 @@ updated_at: "2026-07-03T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 11
+  total_packages: 12
   categories:
     - examples
     - productivity
     - skills
     - automation
+    - notifications
 
 # Packages in this registry
 packages:
@@ -187,7 +188,7 @@ packages:
     category: "productivity"
 
   - name: "video"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "Video processing utilities including token-saving frame slicing with ffmpeg"
     author: "AICockpit"
     license: "MIT"
@@ -229,7 +230,7 @@ packages:
     released_at: "2026-06-24T08:59:00Z"
 
   - name: "kb-graphify"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
     author: "AICockpit"
     license: "MIT"
@@ -269,7 +270,7 @@ packages:
     released_at: "2026-06-24T09:15:00Z"
 
   - name: "pkg-playwright"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "Native Playwright integration for AICockpit"
     author: "AICockpit"
     license: "MIT"
@@ -309,7 +310,7 @@ packages:
     released_at: "2026-06-24T09:15:00Z"
 
   - name: "article-creator"
-    version: "1.0.0"
+    version: "1.0.1"
     description: "Cria artigos didáticos ricos em HTML a partir de arquivos Markdown estruturados"
     author: "AICockpit"
     license: "MIT"
@@ -378,6 +379,46 @@ packages:
     features:
       - modules
       - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-03T18:00:00Z"
+
+  - name: "pkg-notify"
+    version: "0.1.0"
+    description: "Native and HTML notifications for AI agents"
+    author: "AICockpit"
+    license: "MIT"
+    category: "notifications"
+    tags:
+      - notify
+      - notifications
+      - html
+      - native
+      - alert
+    path: "packages/pkg-notify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-notify"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
 
     # Requirements
     requirements:
