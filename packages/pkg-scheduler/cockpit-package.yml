@@ -1,0 +1,21 @@
+name: pkg-scheduler
+version: 0.1.0
+description: "Schedule commands and scripts from the AICockpit CLI"
+author: "AICockpit"
+license: "MIT"
+type: plugin
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  modules:
+    - path: bin/scheduler
+      name: scheduler
+      description: "Schedule, list and run commands"
+installation:
+  type: local
+  method: copy
+  supported_providers: [antigravity, devin, goose]
+  provider_features:
+    antigravity: []
+    devin: []
+    goose: []

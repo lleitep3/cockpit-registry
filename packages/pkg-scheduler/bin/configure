@@ -1,0 +1,91 @@
+#!/bin/bash
+# pkg-scheduler configure
+# Set default scheduler options (run time, workspace directory).
+
+set -uo pipefail
+
+DEFAULT_RUN_TIME="09:00"
+DEFAULT_SCHEDULER_DIR="${HOME}/.cockpit/workspace/scheduler"
+
+CONFIG_FILE="${DEFAULT_SCHEDULER_DIR}/config"
+
+usage() {
+    cat <<'USAGE'
+Usage: cockpit scheduler configure [options]
+
+Configure default scheduler settings.
+
+Options:
+  --time HH:MM         Default run time for daily/weekend jobs (default: 09:00)
+  --workspace PATH      Directory for scheduler data (default: ~/.cockpit/workspace/scheduler)
+  --help,-h             Show this help
+
+Examples:
+  cockpit scheduler configure --time 14:30
+  cockpit scheduler configure --workspace ~/.my-scheduler
+USAGE
+}
+
+TIME=""
+WORKSPACE=""
+
+while [[ $# -gt 0 ]]; do
+    case "${1}" in
+        --time)
+            TIME="${2:-}"
+            shift 2
+            ;;
+        --workspace)
+            WORKSPACE="${2:-}"
+            shift 2
+            ;;
+        --help|-h)
+            usage
+            exit 0
+            ;;
+        *)
+            echo "Error: unknown option '${1}'" >&2
+            usage >&2
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -n "${TIME}" && ! "${TIME}" =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+    echo "Error: --time must be in HH:MM format" >&2
+    exit 1
+fi
+
+if [[ -z "${TIME}" && -z "${WORKSPACE}" ]]; then
+    echo "Nothing to configure. Use --time or --workspace."
+    exit 0
+fi
+
+SCHEDULER_DIR="${WORKSPACE:-${DEFAULT_SCHEDULER_DIR}}"
+mkdir -p "${SCHEDULER_DIR}"
+
+CONFIG_FILE="${SCHEDULER_DIR}/config"
+
+# Preserve existing config values if not being changed
+if [[ -f "${CONFIG_FILE}" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "${key}" || "${key}" =~ ^# ]] && continue
+        value="${value%%#*}"
+        value="${value%"${value##*[![:space:]]}"}"
+        case "${key}" in
+            default_time) [[ -z "${TIME}" ]] && TIME="${value}" ;;
+            workspace_dir) [[ -z "${WORKSPACE}" ]] && WORKSPACE="${value}" ;;
+        esac
+    done < "${CONFIG_FILE}"
+fi
+
+{
+    echo "# pkg-scheduler configuration"
+    echo "default_time=${TIME:-${DEFAULT_RUN_TIME}}"
+    echo "workspace_dir=${WORKSPACE:-${DEFAULT_SCHEDULER_DIR}}"
+} > "${CONFIG_FILE}"
+
+echo "[+] Scheduler configured"
+echo "    Default time: ${TIME:-${DEFAULT_RUN_TIME}}"
+echo "    Workspace:    ${WORKSPACE:-${DEFAULT_SCHEDULER_DIR}}"
+echo "    Config file:  ${CONFIG_FILE}"

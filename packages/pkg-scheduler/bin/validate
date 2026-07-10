@@ -1,0 +1,63 @@
+#!/bin/bash
+# pkg-scheduler validate
+# Verify workspace directory and jobs.json validity.
+
+set -uo pipefail
+
+SCHEDULER_DIR="${COCKPIT_SCHEDULER_DIR:-${HOME}/.cockpit/workspace/scheduler}"
+JOBS_FILE="${SCHEDULER_DIR}/jobs.json"
+CONFIG_FILE="${SCHEDULER_DIR}/config"
+
+# Load workspace_dir from config if present
+if [[ -f "${CONFIG_FILE}" ]]; then
+    while IFS='=' read -r key value; do
+        [[ -z "${key}" || "${key}" =~ ^# ]] && continue
+        value="${value%%#*}"
+        value="${value%"${value##*[![:space:]]}"}"
+        [[ "${key}" == "workspace_dir" ]] && SCHEDULER_DIR="${value}" && JOBS_FILE="${SCHEDULER_DIR}/jobs.json"
+    done < "${CONFIG_FILE}"
+fi
+
+errors=0
+
+if [[ ! -d "${SCHEDULER_DIR}" ]]; then
+    echo "Error: scheduler directory does not exist: ${SCHEDULER_DIR}" >&2
+    errors=$((errors + 1))
+else
+    echo "[OK] scheduler directory exists: ${SCHEDULER_DIR}"
+fi
+
+if [[ -f "${JOBS_FILE}" ]]; then
+    if command -v python3 >/dev/null 2>&1; then
+        if python3 -c "import json; json.load(open('${JOBS_FILE}'))" 2>/dev/null; then
+            echo "[OK] jobs.json is valid JSON"
+        else
+            echo "Error: jobs.json is not valid JSON" >&2
+            errors=$((errors + 1))
+        fi
+    elif command -v python >/dev/null 2>&1; then
+        if python -c "import json; json.load(open('${JOBS_FILE}'))" 2>/dev/null; then
+            echo "[OK] jobs.json is valid JSON"
+        else
+            echo "Error: jobs.json is not valid JSON" >&2
+            errors=$((errors + 1))
+        fi
+    elif command -v jq >/dev/null 2>&1; then
+        if jq . "${JOBS_FILE}" >/dev/null 2>&1; then
+            echo "[OK] jobs.json is valid JSON"
+        else
+            echo "Error: jobs.json is not valid JSON" >&2
+            errors=$((errors + 1))
+        fi
+    else
+        echo "Warning: no JSON validator available (python3, python or jq)" >&2
+    fi
+else
+    echo "[OK] jobs.json not found (will be created on first use)"
+fi
+
+if (( errors > 0 )); then
+    exit 1
+fi
+
+echo "Validation passed."
