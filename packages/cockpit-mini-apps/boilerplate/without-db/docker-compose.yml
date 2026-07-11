@@ -1,0 +1,31 @@
+services:
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - VITE_API_URL=http://localhost:${BACKEND_PORT:-8000}
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      - LOG_FORMAT=${LOG_FORMAT:-pretty}
+      - DEBUG=${DEBUG:-true}
+      - APP_NAME={{PROJECT_NAME_TITLE}}
+    volumes:
+      - ./backend:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped

@@ -11,7 +11,7 @@ updated_at: "2026-07-03T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 12
+  total_packages: 14
   categories:
     - examples
     - productivity
@@ -474,3 +474,48 @@ packages:
 
     # Release date
     released_at: "2026-07-10T00:00:00Z"
+
+  - name: "cockpit-mini-apps"
+    version: "0.1.0"
+    description: "Plataforma base para criação de mini-apps no workspace do cockpit (SvelteKit + FastAPI async + PostgreSQL)"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - mini-apps
+      - poc
+      - boilerplate
+      - sveltekit
+      - fastapi
+      - docker
+      - podman
+      - productivity
+    path: "packages/cockpit-mini-apps"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-mini-apps"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-11T00:00:00Z"
