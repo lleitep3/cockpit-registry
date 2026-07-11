@@ -1,0 +1,83 @@
+name: cockpit-mini-apps
+version: 0.1.0
+description: "Plataforma base para criação de mini-apps no workspace do cockpit (SvelteKit + FastAPI + PostgreSQL)"
+author: "AICockpit"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: plugin
+category: productivity
+
+requirements:
+  cockpit: ">=0.1.0"
+
+external-dependencies:
+  system:
+    - go
+    - podman          # preferred; docker used as fallback if podman not found
+    - podman-compose  # or docker compose (auto-detected)
+
+features:
+  modules:
+    - path: bin/mini-app
+      name: mini-app
+      description: "Cria e gerencia mini-apps no workspace do cockpit"
+  skills:
+    - path: skills/mini-app-builder
+      name: mini-app-builder
+      description: "Ativa o agente para criar mini-apps a partir de uma descrição"
+  kb:
+    - path: kb/architecture.md
+      type: guide
+    - path: kb/frontend-guide.md
+      type: guide
+    - path: kb/backend-guide.md
+      type: guide
+    - path: kb/database-guide.md
+      type: guide
+    - path: kb/docker-guide.md
+      type: guide
+    - path: kb/naming-conventions.md
+      type: guide
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+  provider_features:
+    antigravity:
+      - modules
+      - skills
+      - kb
+    devin:
+      - modules
+      - skills
+      - kb
+    goose:
+      - modules
+      - skills
+      - kb
+  method: copy
+
+metadata:
+  tags:
+    - mini-apps
+    - poc
+    - boilerplate
+    - sveltekit
+    - fastapi
+    - docker
+    - productivity
+  keywords:
+    - mini-app
+    - boilerplate
+    - svelte
+    - fastapi
+    - docker
+    - podman
+    - postgres
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/cockpit-registry/issues"
