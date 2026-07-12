@@ -1,33 +1,24 @@
 #!/bin/bash
-# cockpit-mini-apps: validate installation and dependencies
-
+# Valida estrutura mínima do cockpit-mini-apps
 set -euo pipefail
 
-ERRORS=0
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-check() {
-    local label="${1}"
-    local cmd="${2}"
-    if eval "${cmd}" &>/dev/null; then
-        echo "OK:   ${label}"
-    else
-        echo "FAIL: ${label}"
-        ERRORS=$((ERRORS + 1))
+required=(
+    "boilerplate/with-db/backend"
+    "boilerplate/with-db/frontend"
+    "boilerplate/without-db/backend"
+    "boilerplate/without-db/frontend"
+    "bin/mini-app"
+    "skills/mini-app-builder"
+)
+
+for path in "${required[@]}"; do
+    if [[ ! -e "${PACKAGE_DIR}/${path}" ]]; then
+        echo "ERRO: caminho obrigatório ausente: ${path}"
+        exit 1
     fi
-}
+done
 
-echo "Validating cockpit-mini-apps..."
-echo ""
-
-check "Go is available" "command -v go"
-check "podman or docker available" "command -v podman || command -v docker"
-check "podman-compose or docker compose available" "command -v podman-compose || command -v docker"
-
-echo ""
-if [[ ${ERRORS} -eq 0 ]]; then
-    echo "Validation passed."
-    exit 0
-else
-    echo "Validation failed with ${ERRORS} error(s)."
-    exit 1
-fi
+echo "OK: cockpit-mini-apps válido"

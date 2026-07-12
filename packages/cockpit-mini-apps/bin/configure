@@ -1,18 +1,12 @@
 #!/bin/bash
-# cockpit-mini-apps: configuration script
-
+# Configura mini-app padrão: copia .env.example se não existir
 set -euo pipefail
 
-CONFIG_DIR="${HOME}/.cockpit/packages/cockpit-mini-apps"
-CONFIG_FILE="${CONFIG_DIR}/config.json"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-mkdir -p "${CONFIG_DIR}"
+if [[ -f "${PACKAGE_DIR}/.env.example" && ! -f "${PACKAGE_DIR}/.env" ]]; then
+    cp "${PACKAGE_DIR}/.env.example" "${PACKAGE_DIR}/.env"
+fi
 
-cat > "${CONFIG_FILE}" <<JSON
-{
-  "workspace": "${HOME}/.cockpit/workspace/mini-apps",
-  "default_runtime": "podman"
-}
-JSON
-
-echo "Configuration saved to ${CONFIG_FILE}"
+echo "OK: cockpit-mini-apps configurado"

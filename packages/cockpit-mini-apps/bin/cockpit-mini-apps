@@ -1,0 +1,362 @@
+#!/bin/bash
+# cockpit-mini-apps: native wrapper invoked by the cockpit CLI
+# Creates and manages mini-apps without Docker (without-db) or with Docker (with-db).
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+WORKSPACE_ROOT="${HOME}/.cockpit/workspace/mini-apps"
+
+validate_name() {
+    local name="$1"
+    if [[ -z "${name}" ]]; then
+        echo "❌ Nome não pode ser vazio."
+        exit 1
+    fi
+    if [[ ! "${name}" =~ ^[a-z0-9_-]+$ ]]; then
+        echo "❌ Nome inválido: use apenas letras minúsculas, números, hífen e underscore."
+        exit 1
+    fi
+}
+
+project_dir() {
+    echo "${WORKSPACE_ROOT}/$1"
+}
+
+ensure_workspace() {
+    mkdir -p "${WORKSPACE_ROOT}"
+}
+
+is_port_open() {
+    local port="$1"
+    curl -sf "http://localhost:${port}/health" &>/dev/null || curl -sf "http://localhost:${port}/" &>/dev/null
+}
+
+wait_for_port() {
+    local port="$1"
+    local label="$2"
+    echo "⏳ Aguardando ${label}..."
+    for i in {1..30}; do
+        if is_port_open "${port}"; then
+            return 0
+        fi
+        echo "   tentativa ${i}/30..."
+        sleep 2
+    done
+    return 1
+}
+
+create_env() {
+    local project_dir="$1"
+    local name="$2"
+    local title="${name^}"
+    if [[ -f "${project_dir}/.env.example" ]]; then
+        sed -e "s/{{PROJECT_NAME}}/${name}/g" \
+            -e "s/{{PROJECT_NAME_TITLE}}/${title}/g" \
+            "${project_dir}/.env.example" > "${project_dir}/.env"
+    fi
+}
+
+replace_placeholders() {
+    local project_dir="$1"
+    local name="$2"
+    local title="${name^}"
+    find "${project_dir}" -type f \
+        \( -name "*.svelte" -o -name "*.py" -o -name "*.json" -o -name "*.yml" -o -name "*.yaml" -o -name "*.md" -o -name "*.env*" -o -name "*.ts" -o -name "*.js" \) \
+        -not -path "*/node_modules/*" -not -path "*/.venv/*" \
+        -exec sed -i -e "s/{{PROJECT_NAME}}/${name}/g" -e "s/{{PROJECT_NAME_TITLE}}/${title}/g" {} \;
+}
+
+open_url() {
+    local url="$1"
+    if command -v xdg-open &>/dev/null; then
+        xdg-open "${url}"
+    elif command -v open &>/dev/null; then
+        open "${url}"
+    else
+        echo "Acesse manualmente: ${url}"
+    fi
+}
+
+setup_backend() {
+    local project_dir="$1"
+    local venv_dir="${project_dir}/.venv"
+    if [[ ! -d "${venv_dir}" ]]; then
+        echo "🐍 Criando venv Python..."
+        python3 -m venv "${venv_dir}"
+    fi
+    echo "📥 Instalando dependências Python..."
+    "${venv_dir}/bin/pip" install --quiet -r "${project_dir}/backend/requirements.txt"
+}
+
+setup_frontend() {
+    local project_dir="$1"
+    echo "📥 Instalando dependências Node..."
+    cd "${project_dir}/frontend"
+    if [[ ! -d node_modules ]]; then
+        npm install
+    else
+        npm install --prefer-offline
+    fi
+}
+
+start_native() {
+    local project_dir="$1"
+    local pids_dir="${project_dir}/.pids"
+    mkdir -p "${pids_dir}"
+
+    local backend_port="${BACKEND_PORT:-8000}"
+    local frontend_port="${FRONTEND_PORT:-3000}"
+
+    if [[ -f "${project_dir}/.env" ]]; then
+        # shellcheck source=/dev/null
+        set -a && source "${project_dir}/.env" && set +a
+    fi
+
+    if [[ -f "${pids_dir}/backend.pid" ]] && kill -0 "$(cat "${pids_dir}/backend.pid")" 2>/dev/null; then
+        echo "🔵 Backend já rodando."
+    else
+        echo "🚀 Iniciando backend..."
+        cd "${project_dir}/backend"
+        nohup "${project_dir}/.venv/bin/uvicorn" app.main:app --host 0.0.0.0 --port "${backend_port}" --reload \
+            >"${project_dir}/backend.log" 2>&1 &
+        echo $! >"${pids_dir}/backend.pid"
+    fi
+
+    if ! wait_for_port "${backend_port}" "backend"; then
+        echo "❌ Backend não iniciou. Verifique ${project_dir}/backend.log"
+        exit 1
+    fi
+
+    if [[ -f "${pids_dir}/frontend.pid" ]] && kill -0 "$(cat "${pids_dir}/frontend.pid")" 2>/dev/null; then
+        echo "🟢 Frontend já rodando."
+    else
+        echo "🚀 Iniciando frontend..."
+        cd "${project_dir}/frontend"
+        nohup npm run dev -- --host 0.0.0.0 --port "${frontend_port}" \
+            >"${project_dir}/frontend.log" 2>&1 &
+        echo $! >"${pids_dir}/frontend.pid"
+    fi
+
+    if ! wait_for_port "${frontend_port}" "frontend"; then
+        echo "❌ Frontend não iniciou. Verifique ${project_dir}/frontend.log"
+        exit 1
+    fi
+}
+
+compose_up() {
+    local project_dir="$1"
+    cd "${project_dir}"
+    if command -v podman-compose &>/dev/null; then
+        podman-compose up --build -d
+    else
+        docker compose up --build -d
+    fi
+}
+
+compose_down() {
+    local project_dir="$1"
+    cd "${project_dir}"
+    if command -v podman-compose &>/dev/null; then
+        podman-compose down
+    else
+        docker compose down
+    fi
+}
+
+stop_native() {
+    local project_dir="$1"
+    local pids_dir="${project_dir}/.pids"
+    if [[ -f "${pids_dir}/backend.pid" ]]; then
+        kill "$(cat "${pids_dir}/backend.pid")" 2>/dev/null || true
+        rm -f "${pids_dir}/backend.pid"
+    fi
+    if [[ -f "${pids_dir}/frontend.pid" ]]; then
+        kill "$(cat "${pids_dir}/frontend.pid")" 2>/dev/null || true
+        rm -f "${pids_dir}/frontend.pid"
+    fi
+}
+
+new_app() {
+    local name="$1"
+    local no_db="${2:-false}"
+    validate_name "${name}"
+    ensure_workspace
+
+    local project_dir
+    project_dir="$(project_dir "${name}")"
+    if [[ -d "${project_dir}" ]]; then
+        echo "❌ Mini-app '${name}' já existe em ${project_dir}"
+        exit 1
+    fi
+
+    local boilerplate
+    if [[ "${no_db}" == "true" ]]; then
+        boilerplate="${PACKAGE_DIR}/boilerplate/without-db"
+    else
+        boilerplate="${PACKAGE_DIR}/boilerplate/with-db"
+    fi
+
+    echo "🚀 Criando mini-app '${name}'..."
+    mkdir -p "${project_dir}"
+    cp -r "${boilerplate}/." "${project_dir}/"
+    create_env "${project_dir}" "${name}"
+    replace_placeholders "${project_dir}" "${name}"
+
+    if [[ "${no_db}" == "true" ]]; then
+        setup_backend "${project_dir}"
+        setup_frontend "${project_dir}"
+        start_native "${project_dir}"
+    else
+        echo "🐳 Subindo containers com banco de dados..."
+        compose_up "${project_dir}"
+        if ! wait_for_port 8000 "backend"; then
+            echo "⚠️  Backend pode ainda estar iniciando."
+        fi
+    fi
+
+    open_url "http://localhost:3000"
+    echo ""
+    echo "✅ Mini-app '${name}' criado!"
+    echo "   Frontend: http://localhost:3000"
+    echo "   API:      http://localhost:8000"
+    echo "   Swagger:  http://localhost:8000/docs"
+    echo "   Workspace: ${project_dir}"
+}
+
+list_apps() {
+    ensure_workspace
+    if [[ ! -d "${WORKSPACE_ROOT}" ]] || [[ -z "$(ls -A "${WORKSPACE_ROOT}" 2>/dev/null)" ]]; then
+        echo "Nenhum mini-app criado."
+        return
+    fi
+    echo "Mini-apps criados:"
+    for dir in "${WORKSPACE_ROOT}"/*/; do
+        [[ -d "${dir}" ]] || continue
+        local name
+        name="$(basename "${dir}")"
+        echo "  - ${name}"
+    done
+}
+
+open_app() {
+    local name="$1"
+    validate_name "${name}"
+    local project_dir
+    project_dir="$(project_dir "${name}")"
+    if [[ ! -d "${project_dir}" ]]; then
+        echo "❌ Mini-app '${name}' não encontrado."
+        exit 1
+    fi
+
+    if [[ -f "${project_dir}/docker-compose.yml" ]]; then
+        compose_up "${project_dir}"
+        if ! wait_for_port 8000 "backend"; then
+            echo "⚠️  Backend pode ainda estar iniciando."
+        fi
+    else
+        setup_backend "${project_dir}"
+        setup_frontend "${project_dir}"
+        start_native "${project_dir}"
+    fi
+
+    open_url "http://localhost:3000"
+    echo ""
+    echo "✅ Mini-app '${name}' aberto!"
+}
+
+stop_app() {
+    local name="$1"
+    validate_name "${name}"
+    local project_dir
+    project_dir="$(project_dir "${name}")"
+    if [[ ! -d "${project_dir}" ]]; then
+        echo "❌ Mini-app '${name}' não encontrado."
+        exit 1
+    fi
+
+    if [[ -f "${project_dir}/docker-compose.yml" ]]; then
+        compose_down "${project_dir}"
+    else
+        stop_native "${project_dir}"
+    fi
+    echo "✅ Mini-app '${name}' parado."
+}
+
+remove_app() {
+    local name="$1"
+    validate_name "${name}"
+    local project_dir
+    project_dir="$(project_dir "${name}")"
+    if [[ ! -d "${project_dir}" ]]; then
+        echo "❌ Mini-app '${name}' não encontrado."
+        exit 1
+    fi
+
+    stop_app "${name}" 2>/dev/null || true
+    rm -rf "${project_dir}"
+    echo "✅ Mini-app '${name}' removido."
+}
+
+show_help() {
+    echo "Uso: cockpit mini-app [comando]"
+    echo ""
+    echo "Comandos:"
+    echo "  new <nome> [--no-db]   Cria novo mini-app"
+    echo "  list                   Lista mini-apps criados"
+    echo "  open <nome>            Abre mini-app existente"
+    echo "  stop <nome>            Para mini-app"
+    echo "  remove <nome>          Remove mini-app"
+    echo "  help                   Mostra esta ajuda"
+}
+
+CMD="${1:-help}"
+shift || true
+
+case "${CMD}" in
+    new)
+        name="${1:-}"
+        no_db=false
+        if [[ "${2:-}" == "--no-db" ]]; then
+            no_db=true
+        fi
+        if [[ -z "${name}" ]]; then
+            echo "❌ Informe o nome do mini-app."
+            show_help
+            exit 1
+        fi
+        new_app "${name}" "${no_db}"
+        ;;
+    list) list_apps ;;
+    open)
+        name="${1:-}"
+        if [[ -z "${name}" ]]; then
+            echo "❌ Informe o nome do mini-app."
+            exit 1
+        fi
+        open_app "${name}"
+        ;;
+    stop)
+        name="${1:-}"
+        if [[ -z "${name}" ]]; then
+            echo "❌ Informe o nome do mini-app."
+            exit 1
+        fi
+        stop_app "${name}"
+        ;;
+    remove)
+        name="${1:-}"
+        if [[ -z "${name}" ]]; then
+            echo "❌ Informe o nome do mini-app."
+            exit 1
+        fi
+        remove_app "${name}"
+        ;;
+    help|-h|--help) show_help ;;
+    *)
+        echo "Comando desconhecido: ${CMD}"
+        show_help
+        exit 1
+        ;;
+esac
