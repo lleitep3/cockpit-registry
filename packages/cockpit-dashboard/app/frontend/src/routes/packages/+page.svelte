@@ -256,7 +256,7 @@
 		{#if 'author' in selected && selected.author}
 			<div class="text-sm text-muted-foreground mb-6">Autor: {selected.author}</div>
 		{/if}
-		{#if tab === 'registry' && 'name' in selected && !isInstalled(selected.name)}
+		{#if tab === 'registry' && selected && 'name' in selected && !isInstalled(selected.name)}
 			<button class="w-full bg-primary text-primary-foreground py-2 rounded-md" onclick={() => { install(selected.name); drawerOpen = false; }}>
 				Instalar
 			</button>
