@@ -13,6 +13,7 @@ logger = structlog.get_logger()
 
 ALLOWED_COMMANDS: dict[str, list[str]] = {
     "doctor": ["cockpit", "doctor", "--json"],
+    "pkg": ["cockpit", "pkg"],
 }
 
 # Restrictive regex for names/keys passed as arguments.
