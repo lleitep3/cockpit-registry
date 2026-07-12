@@ -1,5 +1,5 @@
 name: cockpit-mini-apps
-version: 0.1.0
+version: 0.1.1
 description: "Plataforma base para criação de mini-apps no workspace do cockpit (SvelteKit + FastAPI + PostgreSQL)"
 author: "AICockpit"
 license: "MIT"

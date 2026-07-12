@@ -1,0 +1,18 @@
+#!/bin/bash
+# cockpit-mini-apps: configuration script
+
+set -euo pipefail
+
+CONFIG_DIR="${HOME}/.cockpit/packages/cockpit-mini-apps"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
+
+mkdir -p "${CONFIG_DIR}"
+
+cat > "${CONFIG_FILE}" <<JSON
+{
+  "workspace": "${HOME}/.cockpit/workspace/mini-apps",
+  "default_runtime": "podman"
+}
+JSON
+
+echo "Configuration saved to ${CONFIG_FILE}"
