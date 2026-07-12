@@ -1,0 +1,65 @@
+name: cockpit-dashboard
+version: 0.1.0
+description: "Mini-app com dashboard visual do estado atual do AICockpit"
+author: "AICockpit"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: plugin
+category: productivity
+
+requirements:
+  cockpit: ">=0.1.0"
+
+external-dependencies:
+  system:
+    - python3
+    - python3-venv
+    - node
+    - npm
+
+features:
+  modules:
+    - path: bin/dashboard
+      name: dashboard
+      description: "Abre o dashboard visual do cockpit"
+  kb:
+    - path: kb/usage.md
+      type: guide
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+  provider_features:
+    antigravity:
+      - modules
+      - kb
+    devin:
+      - modules
+      - kb
+    goose:
+      - modules
+      - kb
+  method: copy
+
+metadata:
+  tags:
+    - dashboard
+    - mini-app
+    - cockpit
+    - sveltekit
+    - fastapi
+  keywords:
+    - dashboard
+    - cockpit
+    - status
+    - providers
+    - packages
+    - registries
+    - knowledge-base
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/cockpit-registry/issues"

@@ -1,0 +1,38 @@
+#!/bin/bash
+# cockpit-dashboard: validate installation and dependencies
+
+set -euo pipefail
+
+ERRORS=0
+
+check() {
+    local label="${1}"
+    local cmd="${2}"
+    if eval "${cmd}" &>/dev/null; then
+        echo "OK:   ${label}"
+    else
+        echo "FAIL: ${label}"
+        ERRORS=$((ERRORS + 1))
+    fi
+}
+
+echo "Validating cockpit-dashboard..."
+echo ""
+
+check "podman or docker available" "command -v podman || command -v docker"
+check "podman-compose or docker compose available" "command -v podman-compose || command -v docker"
+
+if [[ -f "${HOME}/.cockpit/packages/cockpit-dashboard/config.json" ]]; then
+    echo "OK:   config.json found"
+else
+    echo "INFO: config.json not found — run 'cockpit dashboard configure' to create one"
+fi
+
+echo ""
+if [[ ${ERRORS} -eq 0 ]]; then
+    echo "Validation passed."
+    exit 0
+else
+    echo "Validation failed with ${ERRORS} error(s)."
+    exit 1
+fi
