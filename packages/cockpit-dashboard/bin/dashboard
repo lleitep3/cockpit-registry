@@ -19,10 +19,11 @@ BACKEND_PORT="${BACKEND_PORT:-8000}"
 FRONTEND_PORT="${FRONTEND_PORT:-3000}"
 
 setup_workspace() {
-    if [[ ! -d "${WORKSPACE_DIR}" ]]; then
-        echo "📦 Copiando mini-app para ${WORKSPACE_DIR}..."
-        mkdir -p "${WORKSPACE_DIR}"
-        cp -r "${PACKAGE_DIR}/app" "${WORKSPACE_DIR}/"
+    echo "📦 Sincronizando workspace em ${WORKSPACE_DIR}..."
+    mkdir -p "${WORKSPACE_DIR}"
+    rm -rf "${WORKSPACE_DIR}/app"
+    cp -r "${PACKAGE_DIR}/app" "${WORKSPACE_DIR}/"
+    if [[ -f "${PACKAGE_DIR}/.env.example" ]]; then
         cp "${PACKAGE_DIR}/.env.example" "${WORKSPACE_DIR}/.env"
     fi
     mkdir -p "${PID_DIR}"
