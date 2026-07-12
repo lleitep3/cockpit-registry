@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.routers import cockpit, health, kb, logs, mini_apps, overview, packages
+from app.routers import cockpit, health, kb, logs, mini_apps, overview, packages, vault
 
 
 @asynccontextmanager
@@ -37,3 +37,4 @@ app.include_router(logs.router, prefix="/api/v1")
 app.include_router(mini_apps.router, prefix="/api/v1")
 app.include_router(overview.router, prefix="/api/v1")
 app.include_router(packages.router, prefix="/api/v1")
+app.include_router(vault.router, prefix="/api/v1")
