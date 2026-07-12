@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.routers import cockpit, health, logs, mini_apps, overview, packages
+from app.routers import cockpit, health, kb, logs, mini_apps, overview, packages
 
 
 @asynccontextmanager
@@ -32,6 +32,7 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(cockpit.router, prefix="/api/v1")
+app.include_router(kb.router, prefix="/api/v1")
 app.include_router(logs.router, prefix="/api/v1")
 app.include_router(mini_apps.router, prefix="/api/v1")
 app.include_router(overview.router, prefix="/api/v1")
