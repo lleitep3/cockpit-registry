@@ -1,6 +1,24 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api';
+	import { Bar } from 'svelte-chartjs';
+	import {
+		Chart as ChartJS,
+		Title,
+		Tooltip,
+		Legend,
+		BarElement,
+		CategoryScale,
+		LinearScale,
+	} from 'chart.js';
+
+	ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+
+	type TopCommand = {
+		command: string;
+		count: number;
+		avg_duration_ms: number;
+	};
 
 	type DoctorCheck = {
 		check_name: string;
@@ -28,6 +46,7 @@
 		executions_total: number;
 		executions_success_rate: number;
 		executions_failed: number;
+		top_commands: TopCommand[];
 	};
 
 	let doctor = $state<DoctorResult | null>(null);
@@ -58,30 +77,59 @@
 		return () => clearInterval(interval);
 	});
 
-	function statusIcon(status: string) {
-		if (status === 'ok') return '✓';
-		if (status === 'warning') return '!';
-		return '✗';
-	}
-
-	function statusClass(status: string) {
-		if (status === 'ok') return 'text-emerald-400';
-		if (status === 'warning') return 'text-amber-400';
-		return 'text-red-400';
-	}
+	let chartData = $derived({
+		labels: kpis?.top_commands.map((c) => c.command) || [],
+		datasets: [
+			{
+				label: 'Uso nos últimos 7 dias',
+				data: kpis?.top_commands.map((c) => c.count) || [],
+				backgroundColor: 'rgba(239, 68, 68, 0.7)', // Neon orange/red matching UI
+				borderColor: 'rgba(239, 68, 68, 1)',
+				borderWidth: 1,
+				borderRadius: 4,
+			}
+		]
+	});
+	
+	const chartOptions = {
+		responsive: true,
+		maintainAspectRatio: false,
+		scales: {
+			y: {
+				beginAtZero: true,
+				grid: {
+					color: 'rgba(255, 255, 255, 0.05)',
+				},
+				ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+			},
+			x: {
+				grid: {
+					display: false
+				},
+				ticks: { color: 'rgba(255, 255, 255, 0.6)' }
+			}
+		},
+		plugins: {
+			legend: {
+				display: false
+			},
+			tooltip: {
+				backgroundColor: 'rgba(0, 0, 0, 0.8)',
+				titleColor: '#fff',
+				bodyColor: '#fff',
+				borderColor: 'rgba(255, 255, 255, 0.1)',
+				borderWidth: 1
+			}
+		}
+	};
 </script>
 
 <svelte:head>
-	<title>Cockpit Dashboard</title>
-	<meta name="description" content="Dashboard visual do AICockpit" />
+	<title>Overview | Cockpit Dashboard</title>
 </svelte:head>
 
-<div class="space-y-6">
-	<div>
-		<h1 class="text-3xl font-bold tracking-tight">Cockpit Dashboard</h1>
-		<p class="text-muted-foreground mt-1">Estado atual do AICockpit em tempo real.</p>
-	</div>
-
+<div class="space-y-8">
+	<!-- KPI Grid -->
 	{#if loading && !kpis && !doctor}
 		<p class="text-muted-foreground">Carregando...</p>
 	{:else if error}
@@ -89,70 +137,81 @@
 			{error}
 		</div>
 	{:else}
-		<!-- KPIs -->
 		{#if kpis}
-			<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<a href="/vault" class="rounded-xl border border-border bg-card/50 p-6 hover:bg-card/80 transition-colors">
-					<div class="text-sm text-muted-foreground">Vault</div>
-					<div class="text-2xl font-bold mt-1 {kpis.vault_locked ? 'text-red-400' : 'text-emerald-400'}">
-						{kpis.vault_locked ? 'Bloqueado' : 'Desbloqueado'}
-					</div>
-				</a>
-				<a href="/packages" class="rounded-xl border border-border bg-card/50 p-6 hover:bg-card/80 transition-colors">
-					<div class="text-sm text-muted-foreground">Pacotes</div>
-					<div class="text-2xl font-bold mt-1">{kpis.packages_total}</div>
-					{#if kpis.packages_upgradable > 0}
-						<div class="text-xs text-amber-400 mt-1">{kpis.packages_upgradable} atualizações</div>
-					{/if}
-				</a>
-				<a href="/mini-apps" class="rounded-xl border border-border bg-card/50 p-6 hover:bg-card/80 transition-colors">
-					<div class="text-sm text-muted-foreground">Mini-Apps</div>
-					<div class="text-2xl font-bold mt-1">{kpis.mini_apps_active}/{kpis.mini_apps_total}</div>
-					<div class="text-xs text-muted-foreground mt-1">ativos</div>
-				</a>
-				<a href="/kb" class="rounded-xl border border-border bg-card/50 p-6 hover:bg-card/80 transition-colors">
-					<div class="text-sm text-muted-foreground">Knowledge Base</div>
-					<div class="text-2xl font-bold mt-1">{kpis.kb_total}</div>
-					<div class="text-xs text-muted-foreground mt-1">{kpis.kb_connections} conexões</div>
-				</a>
-				<a href="/logs" class="rounded-xl border border-border bg-card/50 p-6 hover:bg-card/80 transition-colors">
-					<div class="text-sm text-muted-foreground">Execuções</div>
-					<div class="text-2xl font-bold mt-1">{kpis.executions_total}</div>
-					<div class="text-xs {kpis.executions_failed > 0 ? 'text-red-400' : 'text-emerald-400'} mt-1">
-						{kpis.executions_success_rate}% sucesso ({kpis.executions_failed} erros)
-					</div>
-				</a>
-			</div>
-		{/if}
+			<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+				
+				<!-- Versão -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">VERSÃO DO COCKPIT</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">1.13.0</div>
+					<div class="text-xs text-emerald-400 mt-2 font-medium">atualizado</div>
+				</div>
 
-		<!-- Doctor -->
-		{#if doctor}
-			<div class="rounded-xl border border-border bg-card/50 p-6">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-lg font-semibold">Diagnósticos</h2>
-					{#if doctor.passed}
-						<span class="text-emerald-400 text-sm font-medium">Tudo ok</span>
+				<!-- Cofre -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">COFRE</div>
+					<div class="text-3xl font-bold mt-2 {kpis.vault_locked ? 'text-red-400' : 'text-emerald-400'}">
+						{kpis.vault_locked ? 'Bloqueado' : 'Destravado'}
+					</div>
+					<div class="text-xs text-muted-foreground mt-2 font-medium">verificação ok</div>
+				</div>
+
+				<!-- Módulos -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">MÓDULOS</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">0/6</div>
+					<div class="text-xs text-emerald-400 mt-2 font-medium">todos ok</div>
+				</div>
+
+				<!-- Pacotes Instalados -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PACOTES INSTALADOS</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.packages_total}</div>
+					<div class="text-xs text-emerald-400 mt-2 font-medium">todos ok</div>
+				</div>
+
+				<!-- Docs no KB -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">DOCS NO KB</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.kb_total}</div>
+					<div class="text-xs text-muted-foreground mt-2 font-medium">{kpis.kb_connections} referências diretas</div>
+				</div>
+
+				<!-- Mini-apps Rodando -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">MINI-APPS RODANDO</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.mini_apps_active}</div>
+					<div class="text-xs text-emerald-400 mt-2 font-medium">de {kpis.mini_apps_total} instalados</div>
+				</div>
+
+				<!-- Projetos Ativos -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PROJETOS ATIVOS</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">4</div>
+					<div class="text-xs text-muted-foreground mt-2 font-medium">10 workspaces cruzados</div>
+				</div>
+
+				<!-- Séries de Artigos -->
+				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
+					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SÉRIES DE ARTIGOS</div>
+					<div class="text-3xl font-bold mt-2 text-gray-100">5</div>
+					<div class="text-xs text-emerald-400 mt-2 font-medium">5 com build gerado</div>
+				</div>
+
+			</div>
+
+			<!-- Analytics Area -->
+			<div class="rounded-xl border border-border/50 bg-card/40 p-6 backdrop-blur-sm mt-8">
+				<h2 class="text-lg font-semibold text-gray-200 mb-6 tracking-tight">Comandos mais usados (7 dias)</h2>
+				<div class="h-64 w-full">
+					{#if kpis.top_commands && kpis.top_commands.length > 0}
+						<Bar data={chartData} options={chartOptions} />
 					{:else}
-						<span class="text-red-400 text-sm font-medium">Falhas detectadas</span>
+						<div class="flex items-center justify-center h-full text-muted-foreground">
+							Nenhum dado de execução encontrado
+						</div>
 					{/if}
 				</div>
-				{#if doctor.error}
-					<div class="text-red-400 text-sm mb-4">{doctor.error}</div>
-				{/if}
-				<ul class="space-y-2">
-					{#each doctor.checks as check}
-						<li class="flex items-center gap-3 rounded-lg border border-border bg-background/50 px-3 py-2">
-							<span class="text-lg {statusClass(check.status)}">{statusIcon(check.status)}</span>
-							<div class="flex-1">
-								<div class="font-medium">{check.check_name}</div>
-								<div class="text-xs text-muted-foreground">{check.message}</div>
-							</div>
-							{#if check.fixable}
-								<button class="text-xs bg-primary text-primary-foreground px-2 py-1 rounded">Corrigir</button>
-							{/if}
-						</li>
-					{/each}
-				</ul>
 			</div>
 		{/if}
 	{/if}

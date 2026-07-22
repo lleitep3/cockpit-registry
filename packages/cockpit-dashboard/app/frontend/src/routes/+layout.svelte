@@ -8,8 +8,9 @@
 	let { children } = $props();
 
 	const nav = [
-		{ href: '/', label: 'Visão Geral', icon: 'home' },
-		{ href: '/packages', label: 'Pacotes', icon: 'package' },
+		{ href: '/', label: 'Overview', icon: 'home' },
+		{ href: '/packages', label: 'Pacotes instalados', icon: 'package' },
+		{ href: '/registries', label: 'Registries', icon: 'server' },
 		{ href: '/vault', label: 'Vault', icon: 'lock' },
 		{ href: '/kb', label: 'Knowledge Base', icon: 'book' },
 		{ href: '/mini-apps', label: 'Mini-Apps', icon: 'cpu' },
@@ -29,6 +30,7 @@
 			book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',
 			cpu: '<rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>',
 			chart: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+			server: '<rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>',
 		};
 		return map[name] || '';
 	}

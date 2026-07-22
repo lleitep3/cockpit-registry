@@ -35,4 +35,5 @@ async def kpi() -> dict[str, Any]:
         "executions_total": insights["total"],
         "executions_success_rate": insights["success_rate"],
         "executions_failed": insights["failed"],
+        "top_commands": insights["commands"][:7],
     }

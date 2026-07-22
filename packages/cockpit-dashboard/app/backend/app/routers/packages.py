@@ -22,6 +22,13 @@ async def get_packages() -> dict[str, Any]:
     """Lista pacotes instalados localmente."""
     return {"packages": list_packages()}
 
+from app.services.cockpit_reader import list_packages, list_registries
+
+@router.get("/sources")
+async def get_registries() -> dict[str, Any]:
+    """Lista registries configurados."""
+    return {"sources": list_registries()}
+
 
 @router.get("/registry")
 async def get_registry() -> dict[str, Any]:

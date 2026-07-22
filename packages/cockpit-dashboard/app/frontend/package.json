@@ -28,8 +28,10 @@
     "vite": "^6.0.7"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "d3": "^7.9.0",
-    "shadcn-svelte": "^1.0.0"
+    "shadcn-svelte": "^1.0.0",
+    "svelte-chartjs": "^4.0.1"
   },
   "type": "module"
 }
