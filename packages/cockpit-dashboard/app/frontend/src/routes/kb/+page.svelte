@@ -68,8 +68,8 @@
 	async function showPreview(doc: Document) {
 		selected = doc;
 		try {
-			const res = await fetch(doc.path);
-			preview = await res.text();
+			const res = await api.get<{content: string}>(`/api/v1/kb/document?path=${encodeURIComponent(doc.path)}`);
+			preview = res.content;
 		} catch {
 			preview = 'Não foi possível carregar o preview.';
 		}

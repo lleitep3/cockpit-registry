@@ -30,15 +30,25 @@ async def search(query: str = Query(..., min_length=1)) -> dict[str, Any]:
 
 from pydantic import BaseModel
 import pathlib
+from fastapi import HTTPException
 
 class DocumentUpdate(BaseModel):
     path: str
     content: str
 
+@router.get("/document")
+async def get_document(path: str) -> dict[str, Any]:
+    """Retorna o conteúdo de um documento markdown."""
+    p = pathlib.Path(path)
+    if not p.is_file():
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    return {"content": p.read_text(encoding="utf-8", errors="replace")}
+
 @router.put("/document")
 async def update_document(update: DocumentUpdate) -> dict[str, Any]:
     """Atualiza o conteúdo de um documento."""
-    path = pathlib.Path(update.path)
-    if path.is_file():
-        path.write_text(update.content, encoding="utf-8")
+    p = pathlib.Path(update.path)
+    if p.is_file():
+        p.write_text(update.content, encoding="utf-8")
     return {"status": "ok"}
+
