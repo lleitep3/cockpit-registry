@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { api } from '$lib/api';
+	import { api, BASE_URL } from '$lib/api';
 
 	type InstalledPackage = {
 		name: string;
@@ -90,7 +90,7 @@
 	}
 
 	function streamJob(jobId: string) {
-		const source = new EventSource(`/api/v1/packages/jobs/${jobId}/stream`);
+		const source = new EventSource(`${BASE_URL}/api/v1/packages/jobs/${jobId}/stream`);
 		source.onmessage = (event) => {
 			try {
 				const data = JSON.parse(event.data) as Job;
@@ -98,6 +98,7 @@
 				if (data.status === 'completed' || data.status === 'failed') {
 					source.close();
 					load();
+					setTimeout(() => { if (job?.id === jobId) job = null; }, 8000);
 				}
 			} catch {
 				// ignore
