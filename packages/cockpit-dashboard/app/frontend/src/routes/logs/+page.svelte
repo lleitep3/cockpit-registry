@@ -13,6 +13,7 @@
 		language: string;
 		error: string;
 		error_type: string;
+		error_hash: string;
 		resolved_at?: string | null;
 	};
 
@@ -61,6 +62,9 @@
 	let diagnosing = $state(false);
 	let aiDiagnosis = $state<AIDiagnosis | null>(null);
 
+	let pendingErrors = $derived(insights?.recent_errors.filter(e => !e.resolved_at) || []);
+	let resolvedErrors = $derived(insights?.recent_errors.filter(e => e.resolved_at) || []);
+
 	async function diagnoseError(error: ErrorDetail) {
 		diagnosing = true;
 		aiDiagnosis = null;
@@ -95,14 +99,15 @@
 	async function resolveError(error: ErrorDetail) {
 		resolving = true;
 		try {
-			const res = await api.post<{ success: boolean }>('/api/v1/logs/resolve', { timestamp: error.timestamp });
+			const res = await api.post<{ success: boolean }>('/api/v1/logs/resolve', { error_hash: error.error_hash });
 			if (res.success) {
 				// Update locally
 				if (insights) {
-					const idx = insights.recent_errors.findIndex((e) => e.timestamp === error.timestamp);
-					if (idx !== -1) {
-						insights.recent_errors[idx].resolved_at = new Date().toISOString();
-					}
+					insights.recent_errors.forEach((e) => {
+						if (e.error_hash === error.error_hash) {
+							e.resolved_at = new Date().toISOString();
+						}
+					});
 				}
 				if (selectedError) selectedError.resolved_at = new Date().toISOString();
 			}
@@ -330,49 +335,90 @@
 		<!-- Tab Contents -->
 		{#if activeTab === 'errors'}
 			<div class="grid gap-6 lg:grid-cols-3">
-				<!-- Recent Errors Logs List (Col Span 2) -->
-				<div class="lg:col-span-2 rounded-xl border border-border bg-slate-900/40 p-6 space-y-4">
-					<h2 class="text-lg font-bold text-white">Últimas Falhas Registradas</h2>
-					
-					<div class="divide-y divide-border overflow-hidden">
-						{#each insights.recent_errors as err}
-							<div class="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
-								<div class="space-y-1">
-									<div class="flex items-center gap-2">
-										<span class="font-mono font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded border border-red-900/50">{err.command}</span>
-										{#if err.args.length > 0}
-											<span class="text-xs text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded">{err.args.join(' ')}</span>
-										{/if}
-										{#if err.resolved_at}
+				<!-- Pending Errors List (Col Span 2) -->
+				<div class="lg:col-span-2 space-y-6">
+					<div class="rounded-xl border border-border bg-slate-900/40 p-6 space-y-4">
+						<h2 class="text-lg font-bold text-white flex items-center gap-2">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-red-400"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+							Falhas Pendentes ({pendingErrors.length})
+						</h2>
+						
+						<div class="divide-y divide-border overflow-hidden">
+							{#each pendingErrors as err}
+								<div class="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm">
+									<div class="space-y-1">
+										<div class="flex items-center gap-2">
+											<span class="font-mono font-bold text-red-400 bg-red-950/40 px-2 py-0.5 rounded border border-red-900/50">{err.command}</span>
+											{#if err.args.length > 0}
+												<span class="text-xs text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded">{err.args.join(' ')}</span>
+											{/if}
+										</div>
+										<div class="text-xs text-muted-foreground flex items-center gap-2 font-mono">
+											<span>{new Date(err.timestamp).toLocaleTimeString()}</span>
+											<span>•</span>
+											<span>Usuário: {err.user}</span>
+											<span>•</span>
+											<span class="text-red-300 truncate max-w-xs">{err.error}</span>
+										</div>
+									</div>
+									<button 
+										onclick={() => selectedError = err}
+										class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors self-start md:self-auto border border-primary/25 rounded px-2.5 py-1 bg-primary/5 hover:bg-primary/10"
+									>
+										Resolver Problema
+									</button>
+								</div>
+							{:else}
+								<div class="text-center py-8 text-muted-foreground">
+									<svg class="h-8 w-8 mx-auto mb-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+									</svg>
+									Zero falhas pendentes! O sistema está liso.
+								</div>
+							{/each}
+						</div>
+					</div>
+
+					<div class="rounded-xl border border-border bg-slate-900/40 p-6 space-y-4">
+						<h2 class="text-lg font-bold text-white flex items-center gap-2">
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-emerald-400"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							Falhas Resolvidas ({resolvedErrors.length})
+						</h2>
+						
+						<div class="divide-y divide-border overflow-hidden">
+							{#each resolvedErrors as err}
+								<div class="py-3 flex flex-col md:flex-row md:items-center justify-between gap-3 text-sm opacity-60 hover:opacity-100 transition-opacity">
+									<div class="space-y-1">
+										<div class="flex items-center gap-2">
+											<span class="font-mono font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-900/50">{err.command}</span>
+											{#if err.args.length > 0}
+												<span class="text-xs text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded">{err.args.join(' ')}</span>
+											{/if}
 											<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/50 uppercase tracking-wider">
-												<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
 												Resolvido
 											</span>
-										{/if}
+										</div>
+										<div class="text-xs text-muted-foreground flex items-center gap-2 font-mono">
+											<span>{new Date(err.timestamp).toLocaleTimeString()}</span>
+											<span>•</span>
+											<span>Usuário: {err.user}</span>
+											<span>•</span>
+											<span class="text-emerald-300/70 truncate max-w-xs">{err.error}</span>
+										</div>
 									</div>
-									<div class="text-xs text-muted-foreground flex items-center gap-2 font-mono">
-										<span>{new Date(err.timestamp).toLocaleTimeString()}</span>
-										<span>•</span>
-										<span>Usuário: {err.user}</span>
-										<span>•</span>
-										<span class="text-red-300 truncate max-w-xs">{err.error}</span>
-									</div>
+									<button 
+										onclick={() => selectedError = err}
+										class="inline-flex items-center gap-1 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors self-start md:self-auto"
+									>
+										Ver Histórico
+									</button>
 								</div>
-								<button 
-									onclick={() => selectedError = err}
-									class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors self-start md:self-auto border border-primary/25 rounded px-2.5 py-1 bg-primary/5 hover:bg-primary/10"
-								>
-									Ver Detalhes (Trace)
-								</button>
-							</div>
-						{:else}
-							<div class="text-center py-8 text-muted-foreground">
-								<svg class="h-8 w-8 mx-auto mb-2 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-									<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-								</svg>
-								Nenhuma falha de comando registrada recentemente!
-							</div>
-						{/each}
+							{:else}
+								<div class="text-center py-8 text-muted-foreground">
+									Nenhuma falha foi marcada como resolvida ainda.
+								</div>
+							{/each}
+						</div>
 					</div>
 				</div>
 

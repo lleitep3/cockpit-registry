@@ -55,10 +55,10 @@ Por favor, analise este erro na base de código, verifique os logs e arquivos en
 
 
 class ResolveRequest(BaseModel):
-    timestamp: str
+    error_hash: str
 
 @router.post("/resolve")
 async def resolve_error(req: ResolveRequest) -> dict[str, Any]:
     from app.services.log_analyzer import save_resolution
-    save_resolution(req.timestamp)
+    save_resolution(req.error_hash)
     return {"success": True}

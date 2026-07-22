@@ -37,10 +37,10 @@ def load_resolutions() -> dict[str, str]:
     except Exception:
         return {}
 
-def save_resolution(timestamp: str) -> None:
+def save_resolution(error_hash: str) -> None:
     path = _resolutions_file()
     resolutions = load_resolutions()
-    resolutions[timestamp] = datetime.now().isoformat()
+    resolutions[error_hash] = datetime.now().isoformat()
     try:
         with open(path, "w", encoding="utf-8") as f:
             json.dump(resolutions, f, indent=2)
@@ -161,6 +161,8 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             if error_type:
                 error_counter[error_type] += 1
             
+            error_hash = f"{cmd}:{error_type}"
+            
             recent_errors_list.append({
                 "timestamp": ts,
                 "command": cmd,
@@ -172,7 +174,8 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
                 "language": m.get("language", "en-us"),
                 "error": m.get("error", "Erro desconhecido"),
                 "error_type": error_type,
-                "resolved_at": resolutions.get(ts)
+                "error_hash": error_hash,
+                "resolved_at": resolutions.get(error_hash)
             })
 
     # Sort recent errors by timestamp descending
