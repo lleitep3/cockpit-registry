@@ -75,11 +75,28 @@ def list_kb() -> list[dict[str, Any]]:
                 continue
             path = Path(root) / file
             rel = path.relative_to(kb_dir)
+            
+            tags = []
+            title = path.stem
+            try:
+                content = path.read_text(encoding="utf-8", errors="replace")
+                if content.startswith("---"):
+                    parts = content.split("---", 2)
+                    if len(parts) >= 3:
+                        frontmatter = yaml.safe_load(parts[1]) or {}
+                        tags = frontmatter.get("tags", [])
+                        title = frontmatter.get("title", path.stem)
+            except Exception as e:
+                logger.warning("frontmatter_parse_error", file=file, error=str(e))
+                
             docs.append(
                 {
-                    "name": path.stem,
+                    "id": path.stem.lower().replace(" ", "-"),
+                    "name": title,
+                    "filename": path.stem,
                     "category": str(rel.parent) if str(rel.parent) != "." else "general",
                     "path": str(path),
+                    "tags": tags,
                 }
             )
     return docs
