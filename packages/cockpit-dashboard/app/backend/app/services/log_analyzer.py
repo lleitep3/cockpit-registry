@@ -24,6 +24,29 @@ def _metrics_file() -> Path:
 def _logs_dir() -> Path:
     return _cockpit_dir() / "logs"
 
+def _resolutions_file() -> Path:
+    return _cockpit_dir() / "resolved_errors.json"
+
+def load_resolutions() -> dict[str, str]:
+    path = _resolutions_file()
+    if not path.exists():
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def save_resolution(error_hash: str) -> None:
+    path = _resolutions_file()
+    resolutions = load_resolutions()
+    resolutions[error_hash] = datetime.now().isoformat()
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(resolutions, f, indent=2)
+    except Exception as e:
+        logger.error("resolutions_save_error", error=str(e))
+
 
 def load_metrics(limit: int = 10000) -> list[dict[str, Any]]:
     """Lê ~/.cockpit/metrics.json com métricas de execução de comandos."""
@@ -117,6 +140,8 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
     timeline: defaultdict[str, dict[str, int]] = defaultdict(lambda: {"success": 0, "error": 0})
     recent_errors_list: list[dict[str, Any]] = []
 
+    resolutions = load_resolutions()
+
     for m in metrics:
         cmd = m.get("command", "unknown")
         status = m.get("status", "unknown")
@@ -136,6 +161,8 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             if error_type:
                 error_counter[error_type] += 1
             
+            error_hash = f"{cmd}:{error_type}"
+            
             recent_errors_list.append({
                 "timestamp": ts,
                 "command": cmd,
@@ -146,7 +173,9 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
                 "version": m.get("version", "0.1.0"),
                 "language": m.get("language", "en-us"),
                 "error": m.get("error", "Erro desconhecido"),
-                "error_type": error_type
+                "error_type": error_type,
+                "error_hash": error_hash,
+                "resolved_at": resolutions.get(error_hash)
             })
 
     # Sort recent errors by timestamp descending
