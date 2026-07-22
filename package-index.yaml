@@ -519,3 +519,46 @@ packages:
 
     # Release date
     released_at: "2026-07-11T00:00:00Z"
+
+  - name: "cockpit-dashboard"
+    version: "0.1.0"
+    description: "Mini-app visual com dashboard do estado atual do AICockpit"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - dashboard
+      - mini-app
+      - cockpit
+      - sveltekit
+      - fastapi
+      - docker
+      - podman
+    path: "packages/cockpit-dashboard"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-dashboard"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-12T00:00:00Z"

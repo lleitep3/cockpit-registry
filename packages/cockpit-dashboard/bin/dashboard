@@ -1,0 +1,184 @@
+#!/bin/bash
+# cockpit-dashboard: native wrapper invoked by the cockpit CLI
+# Manages backend (uvicorn) and frontend (vite dev) without Docker.
+
+set -euo pipefail
+
+PROJECT_NAME="cockpit-dashboard"
+WORKSPACE_DIR="${HOME}/.cockpit/workspace/${PROJECT_NAME}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+FRONTEND_DIR="${WORKSPACE_DIR}/app/frontend"
+BACKEND_DIR="${WORKSPACE_DIR}/app/backend"
+VENV_DIR="${WORKSPACE_DIR}/.venv"
+PID_DIR="${WORKSPACE_DIR}/.pids"
+BACKEND_PID_FILE="${PID_DIR}/backend.pid"
+FRONTEND_PID_FILE="${PID_DIR}/frontend.pid"
+
+BACKEND_PORT="${BACKEND_PORT:-8000}"
+FRONTEND_PORT="${FRONTEND_PORT:-3000}"
+
+setup_workspace() {
+    echo "📦 Sincronizando workspace em ${WORKSPACE_DIR}..."
+    mkdir -p "${WORKSPACE_DIR}"
+    rm -rf "${WORKSPACE_DIR}/app"
+    cp -r "${PACKAGE_DIR}/app" "${WORKSPACE_DIR}/"
+    if [[ -f "${PACKAGE_DIR}/.env.example" ]]; then
+        cp "${PACKAGE_DIR}/.env.example" "${WORKSPACE_DIR}/.env"
+    fi
+    mkdir -p "${PID_DIR}"
+}
+
+setup_backend() {
+    if [[ ! -d "${VENV_DIR}" ]]; then
+        echo "🐍 Criando venv Python..."
+        python3 -m venv "${VENV_DIR}"
+    fi
+    echo "📥 Instalando dependências Python..."
+    "${VENV_DIR}/bin/pip" install --quiet -r "${BACKEND_DIR}/requirements.txt"
+}
+
+setup_frontend() {
+    echo "📥 Instalando dependências Node..."
+    cd "${FRONTEND_DIR}"
+    if [[ ! -d node_modules ]]; then
+        npm install
+    else
+        npm install --prefer-offline
+    fi
+}
+
+is_port_open() {
+    local port="$1"
+    curl -sf "http://localhost:${port}/health" &>/dev/null || curl -sf "http://localhost:${port}/" &>/dev/null
+}
+
+wait_for_backend() {
+    echo "⏳ Aguardando backend..."
+    for i in {1..30}; do
+        if is_port_open "${BACKEND_PORT}"; then
+            return 0
+        fi
+        echo "   tentativa ${i}/30..."
+        sleep 2
+    done
+    return 1
+}
+
+wait_for_frontend() {
+    echo "⏳ Aguardando frontend..."
+    for i in {1..30}; do
+        if curl -sf "http://localhost:${FRONTEND_PORT}/" &>/dev/null; then
+            return 0
+        fi
+        echo "   tentativa ${i}/30..."
+        sleep 2
+    done
+    return 1
+}
+
+open_dashboard() {
+    setup_workspace
+    setup_backend
+    setup_frontend
+
+    if [[ -f "${BACKEND_PID_FILE}" ]] && kill -0 "$(cat "${BACKEND_PID_FILE}")" 2>/dev/null; then
+        echo "🔵 Backend já rodando."
+    else
+        echo "🚀 Iniciando backend..."
+        cd "${BACKEND_DIR}"
+        nohup "${VENV_DIR}/bin/uvicorn" app.main:app --host 0.0.0.0 --port "${BACKEND_PORT}" --reload \
+            >"${WORKSPACE_DIR}/backend.log" 2>&1 &
+        echo $! >"${BACKEND_PID_FILE}"
+    fi
+
+    if ! wait_for_backend; then
+        echo "❌ Backend não iniciou. Verifique ${WORKSPACE_DIR}/backend.log"
+        exit 1
+    fi
+
+    if [[ -f "${FRONTEND_PID_FILE}" ]] && kill -0 "$(cat "${FRONTEND_PID_FILE}")" 2>/dev/null; then
+        echo "🟢 Frontend já rodando."
+    else
+        echo "🚀 Iniciando frontend..."
+        cd "${FRONTEND_DIR}"
+        nohup npm run dev -- --host 0.0.0.0 --port "${FRONTEND_PORT}" \
+            >"${WORKSPACE_DIR}/frontend.log" 2>&1 &
+        echo $! >"${FRONTEND_PID_FILE}"
+    fi
+
+    if ! wait_for_frontend; then
+        echo "❌ Frontend não iniciou. Verifique ${WORKSPACE_DIR}/frontend.log"
+        exit 1
+    fi
+
+    echo "🌐 Abrindo browser..."
+    if command -v xdg-open &>/dev/null; then
+        xdg-open "http://localhost:${FRONTEND_PORT}"
+    elif command -v open &>/dev/null; then
+        open "http://localhost:${FRONTEND_PORT}"
+    else
+        echo "Acesse manualmente: http://localhost:${FRONTEND_PORT}"
+    fi
+
+    echo ""
+    echo "✅ Dashboard rodando!"
+    echo "   Frontend: http://localhost:${FRONTEND_PORT}"
+    echo "   API:      http://localhost:${BACKEND_PORT}"
+    echo "   Swagger:  http://localhost:${BACKEND_PORT}/docs"
+}
+
+stop_dashboard() {
+    echo "🛑 Parando dashboard..."
+    if [[ -f "${BACKEND_PID_FILE}" ]]; then
+        pid=$(cat "${BACKEND_PID_FILE}")
+        kill "${pid}" 2>/dev/null || true
+        rm -f "${BACKEND_PID_FILE}"
+    fi
+    if [[ -f "${FRONTEND_PID_FILE}" ]]; then
+        pid=$(cat "${FRONTEND_PID_FILE}")
+        kill "${pid}" 2>/dev/null || true
+        rm -f "${FRONTEND_PID_FILE}"
+    fi
+    # Mata processos órfãos, se houver
+    pkill -f "uvicorn app.main:app.*${BACKEND_PORT}" 2>/dev/null || true
+    pkill -f "vite dev.*${FRONTEND_PORT}" 2>/dev/null || true
+    echo "✅ Dashboard parado."
+}
+
+show_logs() {
+    follow=""
+    service=""
+    for arg in "$@"; do
+        case "${arg}" in
+            -f|--follow) follow="-f" ;;
+            backend) tail ${follow:-} "${WORKSPACE_DIR}/backend.log" ;;
+            frontend) tail ${follow:-} "${WORKSPACE_DIR}/frontend.log" ;;
+        esac
+    done
+}
+
+show_help() {
+    echo "Uso: cockpit dashboard [comando]"
+    echo ""
+    echo "Comandos:"
+    echo "  open   Abre o dashboard no browser (padrão)"
+    echo "  stop   Para os processos"
+    echo "  logs   Mostra os logs [backend|frontend] [-f|--follow]"
+    echo "  help   Mostra esta ajuda"
+}
+
+CMD="${1:-open}"
+shift || true
+
+case "${CMD}" in
+    open|"") open_dashboard ;;
+    stop) stop_dashboard ;;
+    logs) show_logs "$@" ;;
+    help|-h|--help) show_help ;;
+    *)
+        echo "Comando desconhecido: ${CMD}"
+        show_help
+        exit 1
+        ;;
+esac
