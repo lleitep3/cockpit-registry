@@ -51,6 +51,32 @@
 	let activeTab = $state<'errors' | 'performance'>('errors');
 	let selectedError = $state<ErrorDetail | null>(null);
 
+	type AIDiagnosis = {
+		diagnosis: string;
+		suggested_fix: string;
+		kb_reference: string | null;
+	};
+
+	let diagnosing = $state(false);
+	let aiDiagnosis = $state<AIDiagnosis | null>(null);
+
+	async function diagnoseError(error: ErrorDetail) {
+		diagnosing = true;
+		aiDiagnosis = null;
+		try {
+			aiDiagnosis = await api.post<AIDiagnosis>('/api/v1/logs/diagnose', {
+				command: error.command,
+				error_msg: error.error,
+				error_type: error.error_type,
+				args: error.args
+			});
+		} catch (e) {
+			console.error('Failed to diagnose', e);
+		} finally {
+			diagnosing = false;
+		}
+	}
+
 	async function load() {
 		try {
 			loading = true;
@@ -414,7 +440,7 @@
 				</div>
 				<button 
 					class="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-muted/40 transition-colors" 
-					onclick={() => selectedError = null}
+					onclick={() => { selectedError = null; aiDiagnosis = null; diagnosing = false; }}
 					aria-label="Fechar"
 				>
 					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -477,13 +503,54 @@
 					</div>
 					<pre class="text-xs p-4 bg-slate-950 border border-border/80 rounded-lg overflow-x-auto font-mono text-red-200/90 select-all max-h-60 whitespace-pre-wrap leading-relaxed shadow-inner">{selectedError.error}</pre>
 				</div>
+
+				<!-- AI Auto-Fix Section -->
+				<div class="space-y-2 border border-blue-900/50 bg-blue-950/10 p-4 rounded-xl relative overflow-hidden">
+					<div class="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+					<div class="flex items-center justify-between">
+						<h4 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+							</svg>
+							IA Diagnóstico & Auto-Remediação
+						</h4>
+						{#if !aiDiagnosis && !diagnosing}
+							<button class="text-xs bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors" onclick={() => diagnoseError(selectedError)}>
+								Diagnosticar com IA
+							</button>
+						{/if}
+						{#if diagnosing}
+							<span class="text-xs text-blue-300 animate-pulse font-mono flex items-center gap-2">
+								<svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+								Analisando...
+							</span>
+						{/if}
+					</div>
+					{#if aiDiagnosis}
+						<div class="mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+							<p class="text-xs text-slate-300 leading-relaxed">{aiDiagnosis.diagnosis}</p>
+							{#if aiDiagnosis.suggested_fix}
+								<div class="mt-3 bg-slate-950 border border-slate-800 rounded-lg p-3">
+									<span class="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Comando Corretivo Sugerido</span>
+									<div class="flex items-center justify-between">
+										<code class="text-emerald-400 text-xs font-mono font-bold select-all">{aiDiagnosis.suggested_fix}</code>
+										<button class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1" onclick={() => alert('Feature coming soon: remote execution')}>
+											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+											Auto-Fix
+										</button>
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 
 			<!-- Footer -->
 			<div class="p-6 border-t border-border bg-slate-950/30 flex justify-end">
 				<button 
 					class="bg-secondary hover:bg-secondary/80 border border-border text-secondary-foreground px-4 py-2 rounded-md text-sm font-semibold transition-all" 
-					onclick={() => selectedError = null}
+					onclick={() => { selectedError = null; aiDiagnosis = null; diagnosing = false; }}
 				>
 					Fechar
 				</button>

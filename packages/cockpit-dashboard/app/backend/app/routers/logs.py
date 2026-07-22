@@ -24,3 +24,30 @@ async def get_insights(limit: int = Query(10000, ge=1, le=50000)) -> dict[str, A
 async def get_logs(limit: int = Query(1000, ge=1, le=5000)) -> dict[str, Any]:
     """Retorna entradas recentes dos arquivos de log."""
     return {"logs": load_logs(limit=limit)}
+
+from pydantic import BaseModel
+
+class DiagnoseRequest(BaseModel):
+    command: str
+    error_msg: str
+    error_type: str
+    args: list[str]
+
+@router.post("/diagnose")
+async def diagnose_failure(req: DiagnoseRequest) -> dict[str, Any]:
+    """IA auto-diagnoses the failure and suggests a fix script."""
+    # TODO: Implement actual LLM call here fetching context from KB
+    # For now, we mock the response based on the command and error
+    
+    if "doctor" in req.command and "Vault not found" in req.error_msg:
+        return {
+            "diagnosis": "A pasta 'vault' requerida pelo sistema não foi encontrada no diretório .cockpit. Isso geralmente acontece após uma deleção manual ou falha no setup.",
+            "suggested_fix": "cockpit setup",
+            "kb_reference": "wiki/troubleshooting/missing-vault.md"
+        }
+        
+    return {
+        "diagnosis": f"Análise da IA: O comando '{req.command}' falhou com '{req.error_msg}'. Nenhuma solução exata foi encontrada na Knowledge Base.",
+        "suggested_fix": "cockpit doctor",
+        "kb_reference": None
+    }
