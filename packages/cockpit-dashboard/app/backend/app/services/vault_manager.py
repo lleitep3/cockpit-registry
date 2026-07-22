@@ -56,7 +56,8 @@ def get_status() -> dict[str, Any]:
             timeout=10,
             check=False,
         )
-        locked = "LOCKED" in result.stdout or result.returncode != 0
+        # Fix the substring bug where "LOCKED" is in "UNLOCKED"
+        locked = "UNLOCKED" not in result.stdout or result.returncode != 0
         return {"locked": locked, "raw": result.stdout}
     except Exception as e:
         logger.error("vault_status_error", error=str(e))
@@ -86,7 +87,7 @@ def add_secret(key: str, value: str, master_password: str) -> dict[str, Any]:
             check=False,
             env=env,
         )
-        if not result.success:
+        if result.returncode != 0:
             return {"success": False, "error": result.stderr or "failed to store secret"}
         index = _read_index()
         secrets = index.get("secrets", [])
@@ -114,7 +115,7 @@ def get_secret(key: str, master_password: str) -> dict[str, Any]:
             check=False,
             env=env,
         )
-        if not result.success:
+        if result.returncode != 0:
             return {"success": False, "error": result.stderr or "failed to retrieve secret"}
         return {"success": True, "value": result.stdout}
     except Exception as e:
@@ -135,7 +136,7 @@ def lock_vault(master_password: str) -> dict[str, Any]:
             check=False,
             env=env,
         )
-        return {"success": result.success, "error": result.stderr if not result.success else None}
+        return {"success": result.returncode == 0, "error": result.stderr if result.returncode != 0 else None}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -153,6 +154,6 @@ def unlock_vault(master_password: str) -> dict[str, Any]:
             check=False,
             env=env,
         )
-        return {"success": result.success, "error": result.stderr if not result.success else None}
+        return {"success": result.returncode == 0, "error": result.stderr if result.returncode != 0 else None}
     except Exception as e:
         return {"success": False, "error": str(e)}

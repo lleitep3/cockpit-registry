@@ -5,6 +5,7 @@ from fastapi import APIRouter
 from app.core.command_executor import run_doctor
 from app.services.cockpit_reader import list_kb, list_packages, list_registries
 from app.services.log_analyzer import analyze_metrics, load_metrics
+from app.services.vault_manager import get_status
 
 router = APIRouter(prefix="/overview", tags=["overview"])
 
@@ -23,9 +24,10 @@ async def kpi() -> dict[str, Any]:
     packages = list_packages()
     kb = list_kb()
     registries = list_registries()
+    vault_status = get_status()
 
     return {
-        "vault_locked": False,  # placeholder until vault module is implemented
+        "vault_locked": vault_status.get("locked", True),
         "packages_total": len(packages),
         "packages_upgradable": 0,  # requires registry comparison
         "mini_apps_total": 0,  # requires mini-apps module
