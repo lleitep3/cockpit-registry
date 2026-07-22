@@ -51,3 +51,32 @@ async def diagnose_failure(req: DiagnoseRequest) -> dict[str, Any]:
         "suggested_fix": "cockpit doctor",
         "kb_reference": None
     }
+
+
+class AutoFixRequest(BaseModel):
+    command: str
+
+@router.post("/autofix")
+async def execute_autofix(req: AutoFixRequest) -> dict[str, Any]:
+    import shlex
+    import asyncio
+    
+    if not req.command.startswith("cockpit "):
+        return {"success": False, "error": "Only cockpit commands are allowed"}
+    
+    cmd = shlex.split(req.command)
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await proc.communicate()
+        return {
+            "success": proc.returncode == 0,
+            "stdout": stdout.decode(),
+            "stderr": stderr.decode(),
+            "returncode": proc.returncode
+        }
+    except Exception as e:
+        return {"success": False, "error": str(e)}

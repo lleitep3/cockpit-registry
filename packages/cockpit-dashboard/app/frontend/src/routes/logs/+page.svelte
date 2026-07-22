@@ -77,6 +77,24 @@
 		}
 	}
 
+	let fixing = $state(false);
+
+	async function executeAutoFix(command: string) {
+		fixing = true;
+		try {
+			const res = await api.post<{ success: boolean; stdout?: string; stderr?: string; error?: string }>('/api/v1/logs/autofix', { command });
+			if (res.success) {
+				alert('Comando executado com sucesso!\n\n' + (res.stdout || ''));
+			} else {
+				alert('Falha ao executar comando:\n\n' + (res.stderr || res.error || 'Erro desconhecido'));
+			}
+		} catch (e) {
+			alert('Erro na requisição: ' + (e instanceof Error ? e.message : 'desconhecido'));
+		} finally {
+			fixing = false;
+		}
+	}
+
 	async function load() {
 		try {
 			loading = true;
@@ -534,9 +552,18 @@
 									<span class="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Comando Corretivo Sugerido</span>
 									<div class="flex items-center justify-between">
 										<code class="text-emerald-400 text-xs font-mono font-bold select-all">{aiDiagnosis.suggested_fix}</code>
-										<button class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1" onclick={() => alert('Feature coming soon: remote execution')}>
-											<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-											Auto-Fix
+										<button 
+											class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1 disabled:opacity-50" 
+											onclick={() => executeAutoFix(aiDiagnosis!.suggested_fix)}
+											disabled={fixing}
+										>
+											{#if fixing}
+												<svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+												Executando...
+											{:else}
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+												Auto-Fix
+											{/if}
 										</button>
 									</div>
 								</div>
