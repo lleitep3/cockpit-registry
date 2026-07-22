@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -e
+
+echo "Configuring cockpit-mini-apps..."
+exit 0
