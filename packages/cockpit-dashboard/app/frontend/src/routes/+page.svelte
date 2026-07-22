@@ -83,10 +83,12 @@
 			{
 				label: 'Uso nos últimos 7 dias',
 				data: kpis?.top_commands.map((c) => c.count) || [],
-				backgroundColor: 'rgba(239, 68, 68, 0.7)', // Neon orange/red matching UI
-				borderColor: 'rgba(239, 68, 68, 1)',
-				borderWidth: 1,
-				borderRadius: 4,
+				backgroundColor: 'rgba(6, 182, 212, 0.2)', // Cyan neon background
+				borderColor: 'rgba(6, 182, 212, 1)', // Cyan border
+				borderWidth: 2,
+				borderRadius: 6,
+				hoverBackgroundColor: 'rgba(6, 182, 212, 0.4)',
+				hoverBorderColor: 'rgba(34, 211, 238, 1)',
 			}
 		]
 	});
@@ -138,72 +140,87 @@
 		</div>
 	{:else}
 		{#if kpis}
-			<div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+			<div class="grid grid-cols-2 lg:grid-cols-4 gap-5">
 				
 				<!-- Versão -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">VERSÃO DO COCKPIT</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">1.13.0</div>
-					<div class="text-xs text-emerald-400 mt-2 font-medium">atualizado</div>
-				</div>
+				<a href="#" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] backdrop-blur-md group cursor-default">
+					<div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">VERSÃO DO COCKPIT</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">1.13.0</div>
+					<div class="flex items-center gap-1.5 mt-3">
+						<div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+						<div class="text-xs text-emerald-400 font-medium">atualizado</div>
+					</div>
+				</a>
 
 				<!-- Cofre -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">COFRE</div>
-					<div class="text-3xl font-bold mt-2 {kpis.vault_locked ? 'text-red-400' : 'text-emerald-400'}">
-						{kpis.vault_locked ? 'Bloqueado' : 'Destravado'}
+				<a href="/vault" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-purple-500/30 hover:shadow-[0_0_20px_rgba(139,92,246,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">COFRE</div>
+					<div class="text-4xl font-black mt-3 {kpis.vault_locked ? 'text-red-400' : 'text-purple-400'} tracking-tight drop-shadow-md">
+						{kpis.vault_locked ? 'Lock' : 'Open'}
 					</div>
-					<div class="text-xs text-muted-foreground mt-2 font-medium">verificação ok</div>
-				</div>
+					<div class="text-xs text-muted-foreground mt-3 font-medium">verificação ok</div>
+				</a>
 
 				<!-- Módulos -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">MÓDULOS</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">0/6</div>
-					<div class="text-xs text-emerald-400 mt-2 font-medium">todos ok</div>
-				</div>
+				<a href="/registries" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-blue-500/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">MÓDULOS</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">0/6</div>
+					<div class="text-xs text-emerald-400 mt-3 font-medium">todos ok</div>
+				</a>
 
 				<!-- Pacotes Instalados -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PACOTES INSTALADOS</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.packages_total}</div>
-					<div class="text-xs text-emerald-400 mt-2 font-medium">todos ok</div>
-				</div>
+				<a href="/packages" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-pink-500/30 hover:shadow-[0_0_20px_rgba(236,72,153,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-pink-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">PACOTES INSTALADOS</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">{kpis.packages_total}</div>
+					<div class="text-xs text-emerald-400 mt-3 font-medium">todos ok</div>
+				</a>
 
 				<!-- Docs no KB -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">DOCS NO KB</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.kb_total}</div>
-					<div class="text-xs text-muted-foreground mt-2 font-medium">{kpis.kb_connections} referências diretas</div>
-				</div>
+				<a href="/kb" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-amber-500/30 hover:shadow-[0_0_20px_rgba(245,158,11,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">DOCS NO KB</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">{kpis.kb_total}</div>
+					<div class="text-xs text-muted-foreground mt-3 font-medium">{kpis.kb_connections} referências diretas</div>
+				</a>
 
 				<!-- Mini-apps Rodando -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">MINI-APPS RODANDO</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">{kpis.mini_apps_active}</div>
-					<div class="text-xs text-emerald-400 mt-2 font-medium">de {kpis.mini_apps_total} instalados</div>
-				</div>
+				<a href="/mini-apps" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-green-500/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">MINI-APPS ATIVOS</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">{kpis.mini_apps_active}</div>
+					<div class="text-xs text-emerald-400 mt-3 font-medium">de {kpis.mini_apps_total} instalados</div>
+				</a>
 
 				<!-- Projetos Ativos -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">PROJETOS ATIVOS</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">4</div>
-					<div class="text-xs text-muted-foreground mt-2 font-medium">10 workspaces cruzados</div>
-				</div>
+				<a href="/projects" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">PROJETOS ATIVOS</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">4</div>
+					<div class="text-xs text-muted-foreground mt-3 font-medium">10 workspaces cruzados</div>
+				</a>
 
 				<!-- Séries de Artigos -->
-				<div class="rounded-xl border border-border/50 bg-card/40 p-4 hover:bg-card/60 transition-colors backdrop-blur-sm">
-					<div class="text-xs text-muted-foreground uppercase tracking-wider font-semibold">SÉRIES DE ARTIGOS</div>
-					<div class="text-3xl font-bold mt-2 text-gray-100">5</div>
-					<div class="text-xs text-emerald-400 mt-2 font-medium">5 com build gerado</div>
-				</div>
+				<a href="/articles" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-rose-500/30 hover:shadow-[0_0_20px_rgba(244,63,94,0.1)] backdrop-blur-md group">
+					<div class="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">SÉRIES DE ARTIGOS</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">5</div>
+					<div class="text-xs text-emerald-400 mt-3 font-medium">5 com build gerado</div>
+				</a>
 
 			</div>
 
 			<!-- Analytics Area -->
-			<div class="rounded-xl border border-border/50 bg-card/40 p-6 backdrop-blur-sm mt-8">
-				<h2 class="text-lg font-semibold text-gray-200 mb-6 tracking-tight">Comandos mais usados (7 dias)</h2>
-				<div class="h-64 w-full">
+			<div class="relative rounded-2xl border border-white/5 bg-black/40 p-8 backdrop-blur-md mt-10 shadow-2xl">
+				<div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+				<h2 class="text-xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-cyan-400"><path d="M3 3v18h18"></path><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path></svg>
+					Comandos Mais Usados (7 dias)
+				</h2>
+				<div class="h-80 w-full relative">
 					{#if kpis.top_commands && kpis.top_commands.length > 0}
 						<Bar data={chartData} options={chartOptions} />
 					{:else}
