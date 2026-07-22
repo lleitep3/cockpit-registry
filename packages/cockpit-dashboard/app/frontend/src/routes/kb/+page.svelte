@@ -123,7 +123,12 @@
 		node
 			.append('circle')
 			.attr('r', 8)
-			.attr('fill', (d: any) => (d.orphan ? '#94a3b8' : '#8b5cf6'));
+			.attr('fill', (d: any) => {
+				if (d.path.includes('/raw/failures/')) return '#ef4444';
+				if (d.path.includes('/raw/')) return '#22c55e';
+				if (d.path.includes('/wiki/')) return '#3b82f6';
+				return d.orphan ? '#94a3b8' : '#8b5cf6';
+			});
 
 		node
 			.append('text')
@@ -163,6 +168,35 @@
 		if (graph && svgRef) {
 			drawGraph();
 		}
+	});
+
+	let saving = $state(false);
+	
+	async function savePreview() {
+		if (!selected) return;
+		saving = true;
+		try {
+			await api.put('/api/v1/kb/document', { path: selected.path, content: preview });
+		} catch (e) {
+			console.error(e);
+		} finally {
+			saving = false;
+		}
+	}
+
+	let selectedBacklinks = $derived(() => {
+		if (!selected || !graph) return [];
+		const id = selected.name.toLowerCase().replace(/\s+/g, '-');
+		return graph.edges
+			.filter(e => {
+				const targetId = typeof e.target === 'object' ? (e.target as any).id : e.target;
+				return targetId === id;
+			})
+			.map(e => {
+				const sourceId = typeof e.source === 'object' ? (e.source as any).id : e.source;
+				return graph.nodes.find(n => n.id === sourceId);
+			})
+			.filter(Boolean);
 	});
 </script>
 
@@ -213,13 +247,62 @@
 
 {#if selected}
 	<div class="fixed inset-0 z-50 bg-black/50" onclick={() => (selected = null)} role="presentation"></div>
-	<div class="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-slate-900 border-l border-border p-6 overflow-y-auto shadow-2xl">
-		<div class="flex items-center justify-between mb-6">
-			<h2 class="text-xl font-bold">{selected.name}</h2>
-			<button class="text-muted-foreground hover:text-foreground" onclick={() => (selected = null)}>✕</button>
+	<div class="fixed inset-y-0 right-0 z-50 w-full max-w-4xl bg-slate-900 border-l border-border flex flex-col shadow-2xl">
+		<!-- Header -->
+		<div class="p-4 border-b border-border flex items-center justify-between bg-slate-950">
+			<h2 class="text-lg font-bold">{selected.name}</h2>
+			<div class="flex items-center gap-3">
+				<button 
+					class="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-1.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50" 
+					onclick={savePreview}
+					disabled={saving}
+				>
+					{saving ? 'Salvando...' : 'Salvar'}
+				</button>
+				<button class="text-muted-foreground hover:text-foreground" onclick={() => (selected = null)}>✕</button>
+			</div>
 		</div>
-		<div class="prose prose-invert prose-sm max-w-none">
-			<pre class="whitespace-pre-wrap text-sm text-muted-foreground font-mono">{preview}</pre>
+		
+		<!-- Content -->
+		<div class="flex-1 flex overflow-hidden">
+			<!-- Editor -->
+			<div class="flex-1 p-4 overflow-y-auto">
+				<textarea 
+					class="w-full h-full min-h-[70vh] bg-slate-950/50 border border-border rounded-lg p-4 font-mono text-sm text-slate-300 focus:outline-none focus:border-primary resize-none transition-colors leading-relaxed"
+					bind:value={preview}
+				></textarea>
+			</div>
+
+			<!-- Sidebar (Backlinks & Meta) -->
+			<div class="w-64 border-l border-border bg-slate-950/30 p-4 overflow-y-auto">
+				<h3 class="font-semibold text-sm mb-3 text-slate-300 uppercase tracking-wider">Backlinks</h3>
+				{#if selectedBacklinks.length > 0}
+					<ul class="space-y-2">
+						{#each selectedBacklinks as bl}
+							<li>
+								<button 
+									class="text-left w-full text-xs text-blue-400 hover:text-blue-300 hover:underline truncate"
+									onclick={() => {
+										const doc = documents.find(d => d.path === bl?.path);
+										if (doc) showPreview(doc);
+									}}
+								>
+									{bl?.label}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<div class="text-xs text-muted-foreground">Nenhum documento aponta para cá.</div>
+				{/if}
+				
+				<div class="mt-6">
+					<h3 class="font-semibold text-sm mb-3 text-slate-300 uppercase tracking-wider">File Path</h3>
+					<div class="text-[10px] text-muted-foreground font-mono break-all bg-black/40 p-2 rounded border border-border/50">
+						{selected.path}
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 {/if}
