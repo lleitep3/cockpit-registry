@@ -13,6 +13,7 @@
 		language: string;
 		error: string;
 		error_type: string;
+		resolved_at?: string | null;
 	};
 
 	type CommandErrorRate = {
@@ -86,6 +87,29 @@
 			setTimeout(() => (copied = false), 2000);
 		} catch (e) {
 			alert('Falha ao copiar prompt');
+		}
+	}
+
+	let resolving = $state(false);
+
+	async function resolveError(error: ErrorDetail) {
+		resolving = true;
+		try {
+			const res = await api.post<{ success: boolean }>('/api/v1/logs/resolve', { timestamp: error.timestamp });
+			if (res.success) {
+				// Update locally
+				if (insights) {
+					const idx = insights.recent_errors.findIndex((e) => e.timestamp === error.timestamp);
+					if (idx !== -1) {
+						insights.recent_errors[idx].resolved_at = new Date().toISOString();
+					}
+				}
+				if (selectedError) selectedError.resolved_at = new Date().toISOString();
+			}
+		} catch (e) {
+			console.error('Failed to resolve', e);
+		} finally {
+			resolving = false;
 		}
 	}
 
@@ -319,6 +343,12 @@
 										{#if err.args.length > 0}
 											<span class="text-xs text-muted-foreground font-mono bg-muted/40 px-1.5 py-0.5 rounded">{err.args.join(' ')}</span>
 										{/if}
+										{#if err.resolved_at}
+											<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/50 uppercase tracking-wider">
+												<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+												Resolvido
+											</span>
+										{/if}
 									</div>
 									<div class="text-xs text-muted-foreground flex items-center gap-2 font-mono">
 										<span>{new Date(err.timestamp).toLocaleTimeString()}</span>
@@ -450,15 +480,37 @@
 					</h3>
 					<p class="text-xs text-muted-foreground mt-1 font-mono">{new Date(selectedError.timestamp).toLocaleString()}</p>
 				</div>
-				<button 
-					class="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-muted/40 transition-colors" 
-					onclick={() => { selectedError = null; aiDiagnosis = null; diagnosing = false; }}
-					aria-label="Fechar"
-				>
-					<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-						<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
+				<div class="flex items-center gap-4">
+					{#if selectedError.resolved_at}
+						<span class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-900/50 uppercase tracking-wider">
+							<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+							Corrigido
+						</span>
+					{:else}
+						<button 
+							class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1 disabled:opacity-50"
+							onclick={() => resolveError(selectedError!)}
+							disabled={resolving}
+						>
+							{#if resolving}
+								<svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+								Marcando...
+							{:else}
+								<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+								Marcar como Corrigido
+							{/if}
+						</button>
+					{/if}
+					<button 
+						class="text-muted-foreground hover:text-foreground p-1.5 rounded-md hover:bg-muted/40 transition-colors" 
+						onclick={() => { selectedError = null; aiDiagnosis = null; diagnosing = false; }}
+						aria-label="Fechar"
+					>
+						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			<!-- Content -->

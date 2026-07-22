@@ -52,3 +52,13 @@ Por favor, analise este erro na base de código, verifique os logs e arquivos en
         "suggested_fix": prompt,
         "kb_reference": None
     }
+
+
+class ResolveRequest(BaseModel):
+    timestamp: str
+
+@router.post("/resolve")
+async def resolve_error(req: ResolveRequest) -> dict[str, Any]:
+    from app.services.log_analyzer import save_resolution
+    save_resolution(req.timestamp)
+    return {"success": True}
