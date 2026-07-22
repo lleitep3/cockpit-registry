@@ -73,6 +73,15 @@ def load_logs(limit: int = 1000) -> list[dict[str, Any]]:
     return entries[:limit]
 
 
+def parse_ts(ts_str: Any) -> datetime | None:
+    if not ts_str or not isinstance(ts_str, str):
+        return None
+    try:
+        return datetime.strptime(ts_str[:19], "%Y-%m-%dT%H:%M:%S")
+    except Exception:
+        return None
+
+
 def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
     """Gera insights a partir das métricas de execução."""
     if not metrics:
@@ -87,6 +96,9 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
             "error_types": [],
             "slowest_commands": [],
             "timeline": [],
+            "recent_errors": [],
+            "command_error_rates": [],
+            "generated_insights": [],
         }
 
     total = len(metrics)
@@ -99,9 +111,11 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
     avg_duration = round(total_duration / total, 2) if total else 0.0
 
     command_counter: Counter[str] = Counter()
+    command_failures: Counter[str] = Counter()
     error_counter: Counter[str] = Counter()
     command_durations: defaultdict[str, list[float]] = defaultdict(list)
     timeline: defaultdict[str, dict[str, int]] = defaultdict(lambda: {"success": 0, "error": 0})
+    recent_errors_list: list[dict[str, Any]] = []
 
     for m in metrics:
         cmd = m.get("command", "unknown")
@@ -113,14 +127,31 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
         command_counter[cmd] += 1
         command_durations[cmd].append(duration)
 
-        if status != "success" and error_type:
-            error_counter[error_type] += 1
-
         day = ts[:10] if isinstance(ts, str) and len(ts) >= 10 else "unknown"
         if status == "success":
             timeline[day]["success"] += 1
         else:
             timeline[day]["error"] += 1
+            command_failures[cmd] += 1
+            if error_type:
+                error_counter[error_type] += 1
+            
+            recent_errors_list.append({
+                "timestamp": ts,
+                "command": cmd,
+                "args": m.get("args", []),
+                "exit_code": m.get("exit_code", 1),
+                "duration_ms": duration,
+                "user": m.get("user", "unknown"),
+                "version": m.get("version", "0.1.0"),
+                "language": m.get("language", "en-us"),
+                "error": m.get("error", "Erro desconhecido"),
+                "error_type": error_type
+            })
+
+    # Sort recent errors by timestamp descending
+    recent_errors_list.sort(key=lambda x: x["timestamp"], reverse=True)
+    recent_errors = recent_errors_list[:20]
 
     commands = [
         {"command": cmd, "count": count, "avg_duration_ms": round(sum(command_durations[cmd]) / len(command_durations[cmd]), 2)}
@@ -134,8 +165,8 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
 
     slowest = sorted(
         [
-            {"command": cmd, "avg_duration_ms": round(sum(durations) / len(durations), 2), "max_duration_ms": round(max(durations), 2)}
-            for cmd, durations in command_durations.items()
+            {"command": cmd, "avg_duration_ms": round(sum(durs) / len(durs), 2), "max_duration_ms": round(max(durs), 2)}
+            for cmd, durs in command_durations.items()
         ],
         key=lambda x: x["avg_duration_ms"],
         reverse=True,
@@ -145,6 +176,82 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
         {"date": day, "success": data["success"], "error": data["error"]}
         for day, data in sorted(timeline.items())
     ]
+
+    # Calculate error rate per command
+    command_error_rates = []
+    for cmd, count in command_counter.items():
+        fails = command_failures[cmd]
+        rate = round((fails / count) * 100, 2)
+        command_error_rates.append({
+            "command": cmd,
+            "total": count,
+            "failed": fails,
+            "rate": rate
+        })
+    command_error_rates.sort(key=lambda x: x["rate"], reverse=True)
+
+    # Generate smart insights
+    generated_insights = []
+    
+    # 1. Success Rate Insight
+    if success_rate == 100.0:
+        generated_insights.append({
+            "type": "success",
+            "title": "Excelente Estabilidade",
+            "description": "Todas as execuções recentes de comandos foram concluídas com sucesso (100% de taxa de sucesso)!"
+        })
+    elif success_rate >= 95.0:
+        generated_insights.append({
+            "type": "info",
+            "title": "Boa Estabilidade",
+            "description": f"A taxa de sucesso geral dos comandos está em {success_rate}%, mantendo-se dentro do padrão esperado."
+        })
+    else:
+        generated_insights.append({
+            "type": "error",
+            "title": "Atenção: Instabilidade Detectada",
+            "description": f"A taxa de sucesso geral caiu para {success_rate}%, abaixo da meta recomendada de 95%. Verifique os logs de erro."
+        })
+
+    # 2. Command Error Rate Alert
+    high_failure_cmds = [c for c in command_error_rates if c["rate"] > 10.0 and c["total"] >= 3]
+    for hfc in high_failure_cmds[:3]:
+        generated_insights.append({
+            "type": "warning",
+            "title": f"Alta taxa de erro em '{hfc['command']}'",
+            "description": f"O comando '{hfc['command']}' falhou em {hfc['rate']}% das execuções ({hfc['failed']} de {hfc['total']})."
+        })
+
+    # 3. Last 24 Hours Error Volume
+    errors_24h = 0
+    now = datetime.now()
+    for e in recent_errors_list:
+        ts = parse_ts(e["timestamp"])
+        if ts and (now - ts).total_seconds() < 86400:
+            errors_24h += 1
+    
+    if errors_24h > 0:
+        generated_insights.append({
+            "type": "warning",
+            "title": "Erros Recentes",
+            "description": f"Houve {errors_24h} falha(s) de comando registrada(s) nas últimas 24 horas."
+        })
+    elif failed > 0:
+        generated_insights.append({
+            "type": "success",
+            "title": "Livre de erros recentemente",
+            "description": "Nenhum erro de comando foi registrado nas últimas 24 horas."
+        })
+
+    # 4. Slowness Alert
+    if slowest:
+        worst_slow = slowest[0]
+        if worst_slow["avg_duration_ms"] > 1000.0:
+            generated_insights.append({
+                "type": "info",
+                "title": f"Gargalo de Performance em '{worst_slow['command']}'",
+                "description": f"O comando '{worst_slow['command']}' é o mais lento em média, levando {worst_slow['avg_duration_ms']:.0f}ms por execução."
+            })
 
     return {
         "total": total,
@@ -157,4 +264,7 @@ def analyze_metrics(metrics: list[dict[str, Any]]) -> dict[str, Any]:
         "error_types": error_types,
         "slowest_commands": slowest,
         "timeline": timeline_sorted,
+        "recent_errors": recent_errors,
+        "command_error_rates": command_error_rates,
+        "generated_insights": generated_insights,
     }
