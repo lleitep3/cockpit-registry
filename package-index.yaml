@@ -521,7 +521,7 @@ packages:
     released_at: "2026-07-11T00:00:00Z"
 
   - name: "cockpit-dashboard"
-    version: "0.2.0"
+    version: "0.3.0"
     description: "Mini-app visual com dashboard do estado atual do AICockpit"
     author: "AICockpit"
     license: "MIT"
