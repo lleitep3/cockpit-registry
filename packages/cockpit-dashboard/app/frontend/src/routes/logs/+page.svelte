@@ -77,21 +77,15 @@
 		}
 	}
 
-	let fixing = $state(false);
+	let copied = $state(false);
 
-	async function executeAutoFix(command: string) {
-		fixing = true;
+	async function copyPrompt(prompt: string) {
 		try {
-			const res = await api.post<{ success: boolean; stdout?: string; stderr?: string; error?: string }>('/api/v1/logs/autofix', { command });
-			if (res.success) {
-				alert('Comando executado com sucesso!\n\n' + (res.stdout || ''));
-			} else {
-				alert('Falha ao executar comando:\n\n' + (res.stderr || res.error || 'Erro desconhecido'));
-			}
+			await navigator.clipboard.writeText(prompt);
+			copied = true;
+			setTimeout(() => (copied = false), 2000);
 		} catch (e) {
-			alert('Erro na requisição: ' + (e instanceof Error ? e.message : 'desconhecido'));
-		} finally {
-			fixing = false;
+			alert('Falha ao copiar prompt');
 		}
 	}
 
@@ -549,20 +543,21 @@
 							<p class="text-xs text-slate-300 leading-relaxed">{aiDiagnosis.diagnosis}</p>
 							{#if aiDiagnosis.suggested_fix}
 								<div class="mt-3 bg-slate-950 border border-slate-800 rounded-lg p-3">
-									<span class="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Comando Corretivo Sugerido</span>
-									<div class="flex items-center justify-between">
-										<code class="text-emerald-400 text-xs font-mono font-bold select-all">{aiDiagnosis.suggested_fix}</code>
+									<span class="block text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Prompt para Solução (Copie e Cole)</span>
+									<div class="flex items-center justify-between gap-4">
+										<pre class="text-emerald-400 text-xs font-mono select-all overflow-hidden text-ellipsis whitespace-pre-wrap flex-1 max-h-32 overflow-y-auto">{aiDiagnosis.suggested_fix}</pre>
 										<button 
-											class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-md font-semibold transition-colors flex items-center gap-1 disabled:opacity-50" 
-											onclick={() => executeAutoFix(aiDiagnosis!.suggested_fix)}
-											disabled={fixing}
+											class="text-xs shrink-0 flex items-center gap-1 transition-colors px-3 py-1.5 rounded-md font-semibold {copied ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-900/50' : 'bg-emerald-600 hover:bg-emerald-500 text-white'}"
+											onclick={() => copyPrompt(aiDiagnosis!.suggested_fix)}
 										>
-											{#if fixing}
-												<svg class="animate-spin h-3 w-3" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-												Executando...
+											{#if copied}
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+												Copiado!
 											{:else}
-												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-												Auto-Fix
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+													<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+												</svg>
+												Copiar para a IA
 											{/if}
 										</button>
 									</div>
