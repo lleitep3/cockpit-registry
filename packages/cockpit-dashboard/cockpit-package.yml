@@ -1,5 +1,5 @@
 name: cockpit-dashboard
-version: 0.1.0
+version: 0.2.0
 description: "Mini-app com dashboard visual do estado atual do AICockpit"
 author: "AICockpit"
 license: "MIT"
