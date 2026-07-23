@@ -1,6 +1,6 @@
 name: cockpit-dashboard
-version: 0.2.0
-description: "Mini-app com dashboard visual do estado atual do AICockpit"
+version: 0.3.0
+description: "AICockpit Dashboard with overview, providers, and KB."
 author: "AICockpit"
 license: "MIT"
 homepage: "https://github.com/lleitep3/cockpit-registry"

@@ -96,7 +96,6 @@
 			.on('zoom', (event: any) => {
 				container.attr('transform', event.transform);
 			});
-			
 		currentZoom = zoom;
 
 		svg.call(zoom as any);
@@ -224,8 +223,6 @@
 	}
 
 	let allTags = $derived(Array.from(new Set(documents.flatMap(d => d.tags || []))).sort());
-
-
 
 	let selectedBacklinks = $derived((() => {
 		if (!selected || !graph) return [];
