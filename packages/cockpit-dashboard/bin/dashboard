@@ -142,6 +142,7 @@ stop_dashboard() {
     fi
     # Mata processos órfãos, se houver
     pkill -f "uvicorn app.main:app.*${BACKEND_PORT}" 2>/dev/null || true
+    pkill -f "python3.*multiprocessing-fork" 2>/dev/null || true
     pkill -f "vite dev.*${FRONTEND_PORT}" 2>/dev/null || true
     echo "✅ Dashboard parado."
 }
