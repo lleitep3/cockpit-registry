@@ -48,6 +48,8 @@ def list_packages() -> list[dict[str, Any]]:
                     data = yaml.safe_load(f) or {}
                 pkg["version"] = data.get("version")
                 pkg["description"] = data.get("description")
+                pkg["has_dashboard"] = data.get("has_dashboard", False)
+                pkg["icon"] = data.get("icon", "box")
             except Exception as e:
                 logger.warning("manifest_read_error", package=entry.name, error=str(e))
         packages.append(pkg)

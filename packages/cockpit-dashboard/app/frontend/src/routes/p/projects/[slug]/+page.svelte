@@ -232,6 +232,7 @@
 
 		// Now reorder
 		const newIndex = selectedProject.tasks.findIndex((t: any) => t.id === targetTask.id);
+		console.log("Reordering task", dTaskId, "to index", newIndex, "target is", targetTask.id);
 		if (newIndex !== -1) {
 			await api.put(`/api/v1/projects/${selectedProject.id}/task/${dTaskId}/reorder`, { index: newIndex });
 		}
@@ -374,7 +375,13 @@
 							{#each (selectedProject.tasks || []) as task (task.id)}
 								<!-- svelte-ignore a11y_click_events_have_key_events -->
 								<!-- svelte-ignore a11y_no_static_element_interactions -->
-								<div class="grid grid-cols-12 gap-4 p-4 text-sm hover:dark:bg-slate-900/50 hover:bg-muted/50 transition-colors items-center cursor-pointer" onclick={() => openTask(task)}>
+								<div class="grid grid-cols-12 gap-4 p-4 text-sm hover:dark:bg-slate-900/50 hover:bg-muted/50 transition-colors items-center cursor-pointer {draggedTaskId === task.id ? 'opacity-50' : ''}" 
+									onclick={() => openTask(task)}
+									draggable="true"
+									ondragstart={(e) => handleDragStart(e, task.id)}
+									ondragover={handleDragOver}
+									ondrop={(e) => handleTaskDrop(e, task)}
+								>
 									<div class="col-span-2 text-muted-foreground font-mono text-xs">{task.id.slice(0, 8).toUpperCase()}</div>
 									<div class="col-span-6 font-medium text-foreground">{task.title}</div>
 									<div class="col-span-2 text-muted-foreground text-xs">{task.status}</div>
