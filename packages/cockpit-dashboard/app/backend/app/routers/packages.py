@@ -20,7 +20,22 @@ _jobs: dict[str, dict[str, Any]] = {}
 @router.get("")
 async def get_packages() -> dict[str, Any]:
     """Lista pacotes instalados localmente."""
-    return {"packages": list_packages()}
+    pkgs = list_packages()
+    
+    # Check if 'project' command is available in CLI
+    from app.core.command_executor import execute_command
+    result = execute_command("project", ["--help"])
+    if result.success:
+        pkgs.append({
+            "name": "projects",
+            "description": "Gerenciamento de Projetos e Kanban",
+            "status": "installed",
+            "version": "core",
+            "has_dashboard": True,
+            "icon": "layout"
+        })
+        
+    return {"packages": pkgs}
 
 from app.services.cockpit_reader import list_packages, list_registries
 

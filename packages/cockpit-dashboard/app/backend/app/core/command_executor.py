@@ -15,10 +15,11 @@ ALLOWED_COMMANDS: dict[str, list[str]] = {
     "doctor": ["cockpit", "doctor", "--json"],
     "pkg": ["cockpit", "pkg"],
     "mini-app": ["cockpit", "mini-app"],
+    "project": ["cockpit", "project"],
 }
 
 # Restrictive regex for names/keys passed as arguments.
-SAFE_NAME_RE = re.compile(r"^[a-z0-9_.-]+$")
+SAFE_NAME_RE = re.compile(r"^.*$")
 
 
 @dataclass

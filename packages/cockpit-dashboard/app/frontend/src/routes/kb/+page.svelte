@@ -38,6 +38,7 @@
 	let svgRef: SVGSVGElement | null = null;
 	let width = 0;
 	let height = 0;
+	let currentZoom = $state<any>(null);
 
 	async function load() {
 		try {
@@ -81,8 +82,8 @@
 		}
 	}
 
-	function drawGraph() {
-		if (!svgRef || !graph) return;
+	function drawGraph(g: Graph) {
+		if (!svgRef || !g) return;
 		width = svgRef.clientWidth || 800;
 		height = svgRef.clientHeight || 400;
 		const svg = d3.select(svgRef);
@@ -95,11 +96,13 @@
 			.on('zoom', (event: any) => {
 				container.attr('transform', event.transform);
 			});
+			
+		currentZoom = zoom;
 
 		svg.call(zoom as any);
 
-		const nodes = graph.nodes.map((n) => ({ ...n }));
-		const edges = graph.edges.map((e) => ({ source: e.source, target: e.target }));
+		const nodes = g.nodes.map((n) => ({ ...n }));
+		const edges = g.edges.map((e) => ({ source: e.source, target: e.target }));
 
 		const simulation = d3
 			.forceSimulation(nodes as any)
@@ -180,9 +183,29 @@
 		}
 	}
 
+	let filteredDocs = $derived(documents.filter(d => {
+		if (selectedTag && (!d.tags || !d.tags.includes(selectedTag))) return false;
+		if (query && !d.name.toLowerCase().includes(query.toLowerCase()) && !d.path.toLowerCase().includes(query.toLowerCase())) return false;
+		return true;
+	}));
+
+	let filteredGraph = $derived((() => {
+		if (!graph) return null;
+		if (!selectedTag && !query) return graph;
+		
+		const validIds = new Set(filteredDocs.map(d => d.id));
+		const nodes = graph.nodes.filter(n => validIds.has(n.id));
+		const edges = graph.edges.filter(e => {
+			const sId = typeof e.source === 'object' ? (e.source as any).id : e.source;
+			const tId = typeof e.target === 'object' ? (e.target as any).id : e.target;
+			return validIds.has(sId) && validIds.has(tId);
+		});
+		return { nodes, edges };
+	})());
+
 	$effect(() => {
-		if (graph && svgRef) {
-			drawGraph();
+		if (filteredGraph && svgRef) {
+			drawGraph(filteredGraph);
 		}
 	});
 
@@ -202,13 +225,9 @@
 
 	let allTags = $derived(Array.from(new Set(documents.flatMap(d => d.tags || []))).sort());
 
-	let filteredDocs = $derived(documents.filter(d => {
-		if (selectedTag && (!d.tags || !d.tags.includes(selectedTag))) return false;
-		if (query && !d.name.toLowerCase().includes(query.toLowerCase()) && !d.path.toLowerCase().includes(query.toLowerCase())) return false;
-		return true;
-	}));
 
-	let selectedBacklinks = $derived(() => {
+
+	let selectedBacklinks = $derived((() => {
 		if (!selected || !graph) return [];
 		const id = selected.id;
 		return graph.edges
@@ -221,7 +240,7 @@
 				return graph.nodes.find(n => n.id === sourceId);
 			})
 			.filter(Boolean);
-	});
+	})());
 </script>
 
 <svelte:head>
@@ -287,7 +306,21 @@
 			<div class="absolute top-4 right-4 z-10 flex gap-2">
 				<button 
 					class="bg-black/60 hover:bg-black/80 text-white border border-white/10 p-2 rounded-lg backdrop-blur-md transition-colors"
-					onclick={() => d3.select(svgRef).transition().duration(750).call(d3.zoom().transform as any, d3.zoomIdentity)}
+					onclick={() => currentZoom && d3.select(svgRef).transition().duration(300).call(currentZoom.scaleBy as any, 1.3)}
+					title="Zoom In"
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+				</button>
+				<button 
+					class="bg-black/60 hover:bg-black/80 text-white border border-white/10 p-2 rounded-lg backdrop-blur-md transition-colors"
+					onclick={() => currentZoom && d3.select(svgRef).transition().duration(300).call(currentZoom.scaleBy as any, 0.7)}
+					title="Zoom Out"
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+				</button>
+				<button 
+					class="bg-black/60 hover:bg-black/80 text-white border border-white/10 p-2 rounded-lg backdrop-blur-md transition-colors"
+					onclick={() => currentZoom && d3.select(svgRef).transition().duration(750).call(currentZoom.transform as any, d3.zoomIdentity)}
 					title="Reset Zoom"
 				>
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
@@ -295,7 +328,7 @@
 			</div>
 
 			<svg bind:this={svgRef} class="flex-1 w-full min-h-[300px]"></svg>
-			{#if graph && graph.nodes.length === 0}
+			{#if filteredGraph && filteredGraph.nodes.length === 0}
 				<div class="absolute inset-0 flex items-center justify-center text-muted-foreground flex-col gap-3">
 					<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="opacity-50"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
 					<span>Nenhuma nota encontrada na rede.</span>
@@ -350,7 +383,7 @@
 					></textarea>
 				{:else}
 					<div class="prose prose-invert prose-amber max-w-none">
-						{@html marked(preview)}
+						{@html marked.parse(preview)}
 					</div>
 				{/if}
 			</div>
