@@ -36,12 +36,12 @@ def build_kb_graph() -> dict[str, Any]:
     link_counts: dict[str, int] = defaultdict(int)
 
     for entry in kb:
-        doc_id = entry["name"].lower().replace(" ", "-")
+        doc_id = entry.get("id", entry["name"].lower().replace(" ", "-"))
         node_ids.add(doc_id)
         nodes.append({"id": doc_id, "label": entry["name"], "path": entry["path"]})
 
     for entry in kb:
-        doc_id = entry["name"].lower().replace(" ", "-")
+        doc_id = entry.get("id", entry["name"].lower().replace(" ", "-"))
         try:
             text = Path(entry["path"]).read_text(encoding="utf-8", errors="replace")
         except Exception as e:
