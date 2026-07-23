@@ -35,6 +35,7 @@ setup_backend() {
         python3 -m venv "${VENV_DIR}"
     fi
     echo "📥 Instalando dependências Python..."
+    "${VENV_DIR}/bin/python3" -m pip install --upgrade pip -q
     "${VENV_DIR}/bin/pip" install --quiet -r "${BACKEND_DIR}/requirements.txt"
 }
 
