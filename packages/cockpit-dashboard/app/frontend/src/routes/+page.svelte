@@ -41,6 +41,7 @@
 		packages_upgradable: number;
 		mini_apps_total: number;
 		mini_apps_active: number;
+		projects_active: number;
 		kb_total: number;
 		kb_connections: number;
 		executions_total: number;
@@ -196,11 +197,11 @@
 				</a>
 
 				<!-- Projetos Ativos -->
-				<a href="/projects" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] backdrop-blur-md group">
+				<a href="/p/projects" class="relative block overflow-hidden rounded-xl border border-white/5 bg-black/40 p-5 hover:bg-black/60 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_0_20px_rgba(99,102,241,0.1)] backdrop-blur-md group">
 					<div class="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
 					<div class="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-bold">PROJETOS ATIVOS</div>
-					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">4</div>
-					<div class="text-xs text-muted-foreground mt-3 font-medium">10 workspaces cruzados</div>
+					<div class="text-4xl font-black mt-3 text-white tracking-tight drop-shadow-md">{kpis.projects_active || 0}</div>
+					<div class="text-xs text-muted-foreground mt-3 font-medium">gerenciados pelo pacote</div>
 				</a>
 
 				<!-- Séries de Artigos -->
