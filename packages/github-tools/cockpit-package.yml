@@ -1,0 +1,56 @@
+name: github-tools
+version: 0.1.0
+description: GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews.
+author: AICockpit
+license: MIT
+type: tool
+category: integration
+
+requirements:
+  cockpit: ">=0.4.0"
+
+external-dependencies:
+  system:
+    - gh >= 2.50.0
+
+features:
+  modules:
+    - name: github
+      path: bin/github-tools
+      description: GitHub CLI wrapper with vault-backed authentication
+  skills:
+    - name: github
+      path: skills/github
+  rules:
+    - name: github
+      path: rules/github.md
+  gold_rules:
+    - "Whenever you need to interact with GitHub (search code, view issues/PRs, run or inspect Actions, list commits, comment, approve, or resolve review threads), always use `cockpit github <command>` instead of calling `gh` directly."
+    - "The `github-tools` package reads the GitHub token from the AICockpit vault and injects it into every `gh` invocation, so you do not need to manage authentication yourself."
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - antigravity
+    - windsurf
+    - cursor
+  provider_features:
+    devin:
+      - github
+    goose:
+      - github
+    antigravity:
+      - github
+    windsurf:
+      - github
+    cursor:
+      - github
+
+metadata:
+  status: beta
+  tags:
+    - github
+    - gh
+    - ci/cd
+    - pull-request
