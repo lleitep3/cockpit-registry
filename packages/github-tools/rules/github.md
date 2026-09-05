@@ -11,6 +11,8 @@ Do **not** invoke `gh` or `git` directly for GitHub-related work. The `github-to
 The package supports multiple GitHub profiles. Register a profile with a user label and token, and optionally set it as the default. Use `--user <label>` to select a profile for a single command.
 
 - Register a profile: `cockpit github configure --user <USER> --token <TOKEN> --default`
+- Override profile name/email: `cockpit github configure --user <USER> --token <TOKEN> --name "Name" --email "name@example.com" --default`
+- Defaults: name = `<USER>`, email = `<USER>@users.noreply.github.com`
 - List profiles: `cockpit github configure --list`
 - Use a profile: `cockpit github --user <USER> run repo view`
 - Commit as a profile: `cockpit github --user <USER> git commit -m "..."`

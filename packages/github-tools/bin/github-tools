@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Always use the token stored in the AICockpit vault; ignore any GH_TOKEN
+# environment variable that may have been inherited from the parent shell.
+unset GH_TOKEN
+
 readonly NAMESPACE="github-tools"
 readonly TOKEN_KEY="token"
 
@@ -14,7 +18,7 @@ Global flags:
   --user USER     Use the GitHub profile registered for USER (default: configured default)
 
 Commands:
-  configure [--user USER] [--token TOKEN] [--default]
+  configure [--user USER] [--token TOKEN] [--name NAME] [--email EMAIL] [--default]
             [--default-owner OWNER] [--default-repo REPO]
   configure --list
   configure --remove --user USER
@@ -69,9 +73,10 @@ get_token_for_user() {
 }
 
 get_token() {
-    local user
+    local user token
     user=$(get_user)
-    get_token_for_user "$user" || fail "no token configured for user '${user}'; run 'cockpit github configure --user ${user} --token <TOKEN>'"
+    token=$(get_token_for_user "$user") || fail "no token configured for user '${user}'; run 'cockpit github configure --user ${user} --token <TOKEN>'"
+    GH_TOKEN="$token"
 }
 
 profile_list() {
@@ -135,15 +140,20 @@ validate_token() {
 
 fetch_profile_info() {
     local token="$1"
+    local name_override="${2:-}"
+    local email_override="${3:-}"
     local login name email
     login=$(GH_TOKEN="$token" gh api user --jq '.login')
-    name=$(GH_TOKEN="$token" gh api user --jq '.name' || true)
-    email=$(GH_TOKEN="$token" gh api user --jq '.email' || true)
 
-    if [[ -z "$name" || "$name" == "null" ]]; then
+    if [[ -n "$name_override" ]]; then
+        name="$name_override"
+    else
         name="$login"
     fi
-    if [[ -z "$email" || "$email" == "null" ]]; then
+
+    if [[ -n "$email_override" ]]; then
+        email="$email_override"
+    else
         email="${login}@users.noreply.github.com"
     fi
 
@@ -158,7 +168,7 @@ export_user_env() {
     email=$(cockpit vault get "profile-${user}-email" --namespace "$NAMESPACE" 2>/dev/null || true)
 
     if [[ -z "$login" ]]; then
-        return 0
+        login="$user"
     fi
     if [[ -z "$name" || "$name" == "null" ]]; then
         name="$login"
@@ -190,7 +200,8 @@ resolve_repo() {
         return
     fi
 
-    GH_TOKEN="$(get_token)" gh repo view --json owner,name \
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh repo view --json owner,name \
         --jq '"\(.owner.login)/\(.name)"' 2>/dev/null || fail "could not detect repository; set defaults with 'cockpit github configure' or pass --repo OWNER/REPO"
 }
 
@@ -201,6 +212,8 @@ resolve_repo() {
 cmd_configure() {
     local user=""
     local token=""
+    local name_override=""
+    local email_override=""
     local default_owner=""
     local default_repo=""
     local make_default="false"
@@ -224,6 +237,14 @@ cmd_configure() {
                 ;;
             --default-repo)
                 default_repo="${2:-}"
+                shift 2
+                ;;
+            --name)
+                name_override="${2:-}"
+                shift 2
+                ;;
+            --email)
+                email_override="${2:-}"
                 shift 2
                 ;;
             --default)
@@ -303,7 +324,7 @@ cmd_configure() {
     validate_token "$token"
 
     local info login name email rest
-    info=$(fetch_profile_info "$token")
+    info=$(fetch_profile_info "$token" "$name_override" "$email_override")
     login="${info%%|*}"
     rest="${info#*|}"
     name="${rest%%|*}"
@@ -341,14 +362,16 @@ cmd_configure() {
 cmd_run() {
     shift
     require_gh
-    GH_TOKEN="$(get_token)" exec gh "$@"
+    get_token
+    GH_TOKEN="$GH_TOKEN" exec gh "$@"
 }
 
 cmd_git() {
     shift
     require_gh
     export_user_env
-    GH_TOKEN="$(get_token)" exec git "$@"
+    get_token
+    GH_TOKEN="$GH_TOKEN" exec git "$@"
 }
 
 # ---------------------------------------------------------------------------
@@ -378,7 +401,8 @@ cmd_actions_list() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh run list \
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh run list \
         --repo "$repo" \
         --limit "$limit" \
         --json databaseId,name,status,conclusion,createdAt,headBranch
@@ -412,7 +436,8 @@ cmd_actions_watch() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh run watch "$run_id" --repo "$repo"
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh run watch "$run_id" --repo "$repo"
 }
 
 cmd_actions_logs() {
@@ -443,7 +468,8 @@ cmd_actions_logs() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh run view "$run_id" --repo "$repo" --log
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh run view "$run_id" --repo "$repo" --log
 }
 
 cmd_actions() {
@@ -492,7 +518,8 @@ cmd_commits() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh api "repos/${repo}/commits?sha=${branch}&per_page=${limit}" \
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh api "repos/${repo}/commits?sha=${branch}&per_page=${limit}" \
         --jq '.[] | "\(.sha[:7])  \(.commit.author.name)  \(.commit.author.date)  \(.commit.message | split("\n")[0])"'
 }
 
@@ -534,7 +561,8 @@ cmd_pr_comment() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh pr comment "$pr" --repo "$repo" --body "$body"
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh pr comment "$pr" --repo "$repo" --body "$body"
 }
 
 cmd_pr_approve() {
@@ -565,7 +593,8 @@ cmd_pr_approve() {
 
     require_gh
     repo=$(resolve_repo "$repo")
-    GH_TOKEN="$(get_token)" gh pr review "$pr" --repo "$repo" --approve
+    get_token
+    GH_TOKEN="$GH_TOKEN" gh pr review "$pr" --repo "$repo" --approve
 }
 
 cmd_pr_resolve() {
@@ -615,7 +644,8 @@ cmd_pr_resolve() {
     }'
 
     local ids=""
-    ids=$(GH_TOKEN="$(get_token)" gh api graphql \
+    ids=$(get_token
+    GH_TOKEN="$GH_TOKEN" gh api graphql \
         --raw-field "query=${query}" \
         --raw-field "owner=${owner}" \
         --raw-field "repo=${name}" \
@@ -637,7 +667,8 @@ cmd_pr_resolve() {
     local resolved=0
     while IFS= read -r thread_id; do
         [[ -n "$thread_id" ]] || continue
-        GH_TOKEN="$(get_token)" gh api graphql \
+        get_token
+    GH_TOKEN="$GH_TOKEN" gh api graphql \
             --raw-field "query=${mutation}" \
             --raw-field "id=${thread_id}"
         echo "Resolved thread: ${thread_id}"
