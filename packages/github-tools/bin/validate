@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v gh >/dev/null 2>&1; then
+    echo "github-tools: gh (GitHub CLI) is not installed" >&2
+    exit 1
+fi
+
+gh --version >/dev/null 2>&1
+echo "github-tools: gh is installed ($(gh --version | awk 'NR==1 {print $3}))."
