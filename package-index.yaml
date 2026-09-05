@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-07-03T18:00:00Z"
+updated_at: "2026-09-05T18:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 14
+  total_packages: 15
   categories:
     - examples
     - productivity
@@ -562,3 +562,48 @@ packages:
 
     # Release date
     released_at: "2026-07-28T00:00:00Z"
+
+  - name: "github-tools"
+    version: "0.1.0"
+    description: "GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews."
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - github
+      - gh
+      - cli
+      - pull-request
+      - actions
+      - ci/cd
+    path: "packages/github-tools"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/github-tools"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+      - windsurf
+      - cursor
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - rules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.4.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-09-05T00:00:00Z"

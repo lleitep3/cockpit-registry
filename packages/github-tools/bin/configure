@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This package is configured via the runtime command:
+#   cockpit github configure --token <TOKEN> [--default-owner <OWNER>] [--default-repo <REPO>]
+# No additional install-time configuration is required.
+echo "github-tools: run 'cockpit github configure' after installation."

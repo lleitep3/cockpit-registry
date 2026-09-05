@@ -1,0 +1,479 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+readonly NAMESPACE="github-tools"
+readonly TOKEN_KEY="token"
+
+usage() {
+    cat <<'EOF'
+Usage: cockpit github <command> [options]
+
+GitHub CLI wrapper with vault-backed authentication.
+
+Commands:
+  configure [--token TOKEN] [--default-owner OWNER] [--default-repo REPO]
+  run <gh args...>
+  actions list [--repo OWNER/REPO] [--limit N]
+  actions watch <run-id> [--repo OWNER/REPO]
+  actions logs <run-id> [--repo OWNER/REPO]
+  commits <branch> [--repo OWNER/REPO] [--limit N]
+  pr comment <pr> --body "..." [--repo OWNER/REPO]
+  pr approve <pr> [--repo OWNER/REPO]
+  pr resolve <pr> [--repo OWNER/REPO]
+
+If --repo is omitted, the package falls back to the configured default
+(owner/repo stored during configure) or detects the repository from the
+current Git directory.
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+fail() {
+    echo "Error: $1" >&2
+    exit 1
+}
+
+get_token() {
+    cockpit vault get "$TOKEN_KEY" --namespace "$NAMESPACE"
+}
+
+require_gh() {
+    local min_version="2.50.0"
+
+    if ! command -v gh >/dev/null 2>&1; then
+        fail "gh (GitHub CLI) is not installed. Install it from https://cli.github.com (required >= ${min_version})"
+    fi
+
+    local current_version
+    current_version=$(gh --version | awk 'NR==1 {print $3}')
+
+    if [[ -z "$current_version" ]]; then
+        fail "could not determine gh version (required >= ${min_version})"
+    fi
+
+    local lowest
+    lowest=$(printf '%s\n%s\n' "$min_version" "$current_version" | sort -V | head -n1)
+    if [[ "$lowest" != "$min_version" ]]; then
+        fail "gh version ${current_version} is too old (required >= ${min_version})"
+    fi
+}
+
+validate_token() {
+    local token="$1"
+    if ! GH_TOKEN="$token" gh auth status >/dev/null 2>&1; then
+        fail "github token failed authentication against GitHub"
+    fi
+}
+
+resolve_repo() {
+    local repo_flag="${1:-}"
+    if [[ -n "$repo_flag" ]]; then
+        echo "$repo_flag"
+        return
+    fi
+
+    local owner=""
+    local name=""
+    owner=$(cockpit vault get "default-owner" --namespace "$NAMESPACE" 2>/dev/null || true)
+    name=$(cockpit vault get "default-repo" --namespace "$NAMESPACE" 2>/dev/null || true)
+
+    if [[ -n "$owner" && -n "$name" ]]; then
+        echo "$owner/$name"
+        return
+    fi
+
+    GH_TOKEN="$(get_token)" gh repo view --json owner,name \
+        --jq '"\(.owner.login)/\(.name)"' 2>/dev/null || fail "could not detect repository; set defaults with 'cockpit github configure' or pass --repo OWNER/REPO"
+}
+
+# ---------------------------------------------------------------------------
+# configure
+# ---------------------------------------------------------------------------
+
+cmd_configure() {
+    local token=""
+    local default_owner=""
+    local default_repo=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --token)
+                token="${2:-}"
+                shift 2
+                ;;
+            --default-owner)
+                default_owner="${2:-}"
+                shift 2
+                ;;
+            --default-repo)
+                default_repo="${2:-}"
+                shift 2
+                ;;
+            *)
+                fail "unknown configure flag: $1"
+                ;;
+        esac
+    done
+
+    if [[ -z "$token" ]]; then
+        read -rsp "GitHub token: " token || true
+        echo
+    fi
+
+    if [[ -z "$token" ]]; then
+        fail "github token is required"
+    fi
+
+    require_gh
+    validate_token "$token"
+
+    cockpit vault set "$TOKEN_KEY" --namespace "$NAMESPACE" --value "$token"
+
+    if [[ -n "$default_owner" ]]; then
+        cockpit vault set "default-owner" --namespace "$NAMESPACE" --value "$default_owner"
+    fi
+    if [[ -n "$default_repo" ]]; then
+        cockpit vault set "default-repo" --namespace "$NAMESPACE" --value "$default_repo"
+    fi
+
+    echo "GitHub integration configured successfully."
+}
+
+# ---------------------------------------------------------------------------
+# run
+# ---------------------------------------------------------------------------
+
+cmd_run() {
+    shift
+    require_gh
+    GH_TOKEN="$(get_token)" exec gh "$@"
+}
+
+# ---------------------------------------------------------------------------
+# actions
+# ---------------------------------------------------------------------------
+
+cmd_actions_list() {
+    local repo=""
+    local limit="10"
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            --limit)
+                limit="${2:-}"
+                shift 2
+                ;;
+            *)
+                fail "unknown actions list flag: $1"
+                ;;
+        esac
+    done
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh run list \
+        --repo "$repo" \
+        --limit "$limit" \
+        --json databaseId,name,status,conclusion,createdAt,headBranch
+}
+
+cmd_actions_watch() {
+    local repo=""
+    local run_id=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown actions watch flag: $1"
+                ;;
+            *)
+                if [[ -n "$run_id" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                run_id="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$run_id" ]] || fail "run-id is required"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh run watch "$run_id" --repo "$repo"
+}
+
+cmd_actions_logs() {
+    local repo=""
+    local run_id=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown actions logs flag: $1"
+                ;;
+            *)
+                if [[ -n "$run_id" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                run_id="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$run_id" ]] || fail "run-id is required"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh run view "$run_id" --repo "$repo" --log
+}
+
+cmd_actions() {
+    case "${2:-}" in
+        list) cmd_actions_list "$@" ;;
+        watch) cmd_actions_watch "$@" ;;
+        logs) cmd_actions_logs "$@" ;;
+        *) fail "unknown actions subcommand: ${2:-}; expected list, watch or logs" ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
+# commits
+# ---------------------------------------------------------------------------
+
+cmd_commits() {
+    local repo=""
+    local limit="10"
+    local branch=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            --limit)
+                limit="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown commits flag: $1"
+                ;;
+            *)
+                if [[ -n "$branch" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                branch="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$branch" ]] || fail "branch name is required"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh api "repos/${repo}/commits?sha=${branch}&per_page=${limit}" \
+        --jq '.[] | "\(.sha[:7])  \(.commit.author.name)  \(.commit.author.date)  \(.commit.message | split("\n")[0])"'
+}
+
+# ---------------------------------------------------------------------------
+# pr
+# ---------------------------------------------------------------------------
+
+cmd_pr_comment() {
+    local repo=""
+    local body=""
+    local pr=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            --body)
+                body="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown pr comment flag: $1"
+                ;;
+            *)
+                if [[ -n "$pr" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                pr="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$pr" ]] || fail "pull request number is required"
+    [[ -n "$body" ]] || fail "--body is required"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh pr comment "$pr" --repo "$repo" --body "$body"
+}
+
+cmd_pr_approve() {
+    local repo=""
+    local pr=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown pr approve flag: $1"
+                ;;
+            *)
+                if [[ -n "$pr" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                pr="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$pr" ]] || fail "pull request number is required"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    GH_TOKEN="$(get_token)" gh pr review "$pr" --repo "$repo" --approve
+}
+
+cmd_pr_resolve() {
+    local repo=""
+    local pr=""
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            -*)
+                fail "unknown pr resolve flag: $1"
+                ;;
+            *)
+                if [[ -n "$pr" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                pr="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$pr" ]] || fail "pull request number is required"
+    [[ "$pr" =~ ^[0-9]+$ ]] || fail "pull request must be a number"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+
+    local owner=""
+    local name=""
+    owner="${repo%%/*}"
+    name="${repo##*/}"
+
+    local query
+    query='query($owner: String!, $repo: String!, $pr: Int!) {
+      repository(owner: $owner, name: $repo) {
+        pullRequest(number: $pr) {
+          reviewThreads(first: 100) {
+            nodes { id isResolved }
+          }
+        }
+      }
+    }'
+
+    local ids=""
+    ids=$(GH_TOKEN="$(get_token)" gh api graphql \
+        --raw-field "query=${query}" \
+        --raw-field "owner=${owner}" \
+        --raw-field "repo=${name}" \
+        --raw-field "pr=${pr}" \
+        --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id' 2>/dev/null || true)
+
+    if [[ -z "$ids" ]]; then
+        echo "No unresolved review threads found."
+        return
+    fi
+
+    local mutation
+    mutation='mutation($id: ID!) {
+      resolveReviewThread(input: {threadId: $id}) {
+        thread { id isResolved }
+      }
+    }'
+
+    local resolved=0
+    while IFS= read -r thread_id; do
+        [[ -n "$thread_id" ]] || continue
+        GH_TOKEN="$(get_token)" gh api graphql \
+            --raw-field "query=${mutation}" \
+            --raw-field "id=${thread_id}"
+        echo "Resolved thread: ${thread_id}"
+        resolved=$((resolved + 1))
+    done <<< "$ids"
+
+    echo "Resolved ${resolved} review thread(s)."
+}
+
+cmd_pr() {
+    case "${2:-}" in
+        comment) cmd_pr_comment "$@" ;;
+        approve) cmd_pr_approve "$@" ;;
+        resolve) cmd_pr_resolve "$@" ;;
+        *) fail "unknown pr subcommand: ${2:-}; expected comment, approve or resolve" ;;
+    esac
+}
+
+# ---------------------------------------------------------------------------
+# Main dispatcher
+# ---------------------------------------------------------------------------
+
+main() {
+    [[ $# -eq 0 ]] && { usage; exit 1; }
+
+    case "$1" in
+        configure) cmd_configure "$@" ;;
+        run) cmd_run "$@" ;;
+        actions) cmd_actions "$@" ;;
+        commits) cmd_commits "$@" ;;
+        pr) cmd_pr "$@" ;;
+        help|--help|-h) usage ;;
+        *) fail "unknown command: $1" ;;
+    esac
+}
+
+main "$@"
