@@ -23,6 +23,15 @@ cockpit github configure --user <USER> --token <GITHUB_TOKEN>
 # Set a profile as the default one
 cockpit github configure --user <USER> --token <GITHUB_TOKEN> --default
 
+# Override the profile email (useful when the GitHub email is private)
+cockpit github configure --user <USER> --token <GITHUB_TOKEN> --email <EMAIL> --default
+
+# Override the profile name
+cockpit github configure --user <USER> --token <GITHUB_TOKEN> --name <NAME> --default
+
+# Without overrides, name/email default to the GitHub login
+# name = <USER>, email = <USER>@users.noreply.github.com
+
 # List configured profiles
 cockpit github configure --list
 
