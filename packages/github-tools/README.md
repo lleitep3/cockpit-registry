@@ -1,6 +1,6 @@
 # github-tools
 
-AICockpit package that wraps the official GitHub CLI (`gh`) with vault-backed authentication.
+AICockpit package that wraps the official GitHub CLI (`gh`) with vault-backed authentication and multi-profile support.
 
 ## Supported `gh` version
 
@@ -12,26 +12,51 @@ Tested with `gh >= 2.50.0`. Older versions may work but are not guaranteed.
 cockpit pkg install github-tools
 ```
 
-## Configure
+## Configure profiles
+
+A profile binds a GitHub username to a token. You can register several profiles and choose one as default.
 
 ```bash
-cockpit github configure --token <GITHUB_TOKEN> \
-                         --default-owner <OWNER> \
-                         --default-repo <REPO>
+# Add a profile (also validates the token against GitHub)
+cockpit github configure --user <USER> --token <GITHUB_TOKEN>
+
+# Set a profile as the default one
+cockpit github configure --user <USER> --token <GITHUB_TOKEN> --default
+
+# List configured profiles
+cockpit github configure --list
+
+# Remove a profile
+cockpit github configure --remove --user <USER>
+
+# Keep a single default profile (legacy behaviour)
+cockpit github configure --token <GITHUB_TOKEN>
 ```
 
-The configure step:
+You can also store a default owner/repo for repository resolution:
 
-1. Checks that `gh` is installed.
-2. Validates that the supplied token can authenticate against GitHub.
-3. Stores the token securely in the AICockpit vault under the namespace `github-tools`.
-4. Optionally stores the default owner and repository for subsequent commands.
+```bash
+cockpit github configure --user <USER> --token <TOKEN> \
+                         --default-owner <OWNER> \
+                         --default-repo <REPO> \
+                         --default
+```
 
 ## Usage
 
 ```bash
-# Pass any gh command with the token injected automatically
+# Use the default profile
+cockpit github run repo view
+
+# Use a specific profile for one command
+cockpit github --user <USER> run repo view
+
+# Run any gh command with the selected token injected
 cockpit github run <gh args...>
+
+# Run git commands with the profile's name/email as author
+# (useful when you need to commit as a specific GitHub user)
+cockpit github --user <USER> git commit -m "my commit"
 
 # GitHub Actions
 cockpit github actions list [--repo OWNER/REPO] [--limit N]
