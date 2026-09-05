@@ -6,13 +6,20 @@ readonly TOKEN_KEY="token"
 
 usage() {
     cat <<'EOF'
-Usage: cockpit github <command> [options]
+Usage: cockpit github [--user USER] <command> [options]
 
-GitHub CLI wrapper with vault-backed authentication.
+GitHub CLI wrapper with vault-backed authentication and multi-profile support.
+
+Global flags:
+  --user USER     Use the GitHub profile registered for USER (default: configured default)
 
 Commands:
-  configure [--token TOKEN] [--default-owner OWNER] [--default-repo REPO]
+  configure [--user USER] [--token TOKEN] [--default]
+            [--default-owner OWNER] [--default-repo REPO]
+  configure --list
+  configure --remove --user USER
   run <gh args...>
+  git <git args...>
   actions list [--repo OWNER/REPO] [--limit N]
   actions watch <run-id> [--repo OWNER/REPO]
   actions logs <run-id> [--repo OWNER/REPO]
@@ -36,8 +43,66 @@ fail() {
     exit 1
 }
 
+get_default_user() {
+    cockpit vault get "default-user" --namespace "$NAMESPACE" 2>/dev/null || true
+}
+
+get_user() {
+    local user="${SELECTED_USER:-}"
+    if [[ -z "$user" ]]; then
+        user=$(get_default_user)
+    fi
+    if [[ -z "$user" ]]; then
+        user="default"
+    fi
+    echo "$user"
+}
+
+get_token_for_user() {
+    local user="$1"
+    if [[ "$user" == "default" ]]; then
+        cockpit vault get "$TOKEN_KEY" --namespace "$NAMESPACE" 2>/dev/null
+        return $?
+    fi
+    cockpit vault get "token-${user}" --namespace "$NAMESPACE" 2>/dev/null
+    return $?
+}
+
 get_token() {
-    cockpit vault get "$TOKEN_KEY" --namespace "$NAMESPACE"
+    local user
+    user=$(get_user)
+    get_token_for_user "$user" || fail "no token configured for user '${user}'; run 'cockpit github configure --user ${user} --token <TOKEN>'"
+}
+
+profile_list() {
+    cockpit vault get "profile-list" --namespace "$NAMESPACE" 2>/dev/null || true
+}
+
+add_to_profile_list() {
+    local user="$1"
+    local list
+    list=$(profile_list)
+    if [[ -z "$list" ]]; then
+        list="$user"
+    elif [[ ",${list}," != *",${user},"* ]]; then
+        list="${list},${user}"
+    fi
+    cockpit vault set "profile-list" --namespace "$NAMESPACE" --value "$list"
+}
+
+remove_from_profile_list() {
+    local user="$1"
+    local list
+    list=$(profile_list)
+    if [[ -z "$list" ]]; then
+        return 0
+    fi
+    list=$(echo "$list" | tr ',' '\n' | grep -Fxv "$user" | paste -sd ',' -)
+    if [[ -z "$list" ]]; then
+        cockpit vault remove "profile-list" --namespace "$NAMESPACE" 2>/dev/null || true
+    else
+        cockpit vault set "profile-list" --namespace "$NAMESPACE" --value "$list"
+    fi
 }
 
 require_gh() {
@@ -68,6 +133,46 @@ validate_token() {
     fi
 }
 
+fetch_profile_info() {
+    local token="$1"
+    local login name email
+    login=$(GH_TOKEN="$token" gh api user --jq '.login')
+    name=$(GH_TOKEN="$token" gh api user --jq '.name' || true)
+    email=$(GH_TOKEN="$token" gh api user --jq '.email' || true)
+
+    if [[ -z "$name" || "$name" == "null" ]]; then
+        name="$login"
+    fi
+    if [[ -z "$email" || "$email" == "null" ]]; then
+        email="${login}@users.noreply.github.com"
+    fi
+
+    echo "${login}|${name}|${email}"
+}
+
+export_user_env() {
+    local user login name email
+    user=$(get_user)
+    login=$(cockpit vault get "profile-${user}-login" --namespace "$NAMESPACE" 2>/dev/null || true)
+    name=$(cockpit vault get "profile-${user}-name" --namespace "$NAMESPACE" 2>/dev/null || true)
+    email=$(cockpit vault get "profile-${user}-email" --namespace "$NAMESPACE" 2>/dev/null || true)
+
+    if [[ -z "$login" ]]; then
+        return 0
+    fi
+    if [[ -z "$name" || "$name" == "null" ]]; then
+        name="$login"
+    fi
+    if [[ -z "$email" || "$email" == "null" ]]; then
+        email="${login}@users.noreply.github.com"
+    fi
+
+    export GIT_AUTHOR_NAME="$name"
+    export GIT_COMMITTER_NAME="$name"
+    export GIT_AUTHOR_EMAIL="$email"
+    export GIT_COMMITTER_EMAIL="$email"
+}
+
 resolve_repo() {
     local repo_flag="${1:-}"
     if [[ -n "$repo_flag" ]]; then
@@ -94,13 +199,21 @@ resolve_repo() {
 # ---------------------------------------------------------------------------
 
 cmd_configure() {
+    local user=""
     local token=""
     local default_owner=""
     local default_repo=""
+    local make_default="false"
+    local list_profiles="false"
+    local remove_user="false"
 
     shift
     while [[ $# -gt 0 ]]; do
         case "$1" in
+            --user)
+                user="${2:-}"
+                shift 2
+                ;;
             --token)
                 token="${2:-}"
                 shift 2
@@ -113,14 +226,72 @@ cmd_configure() {
                 default_repo="${2:-}"
                 shift 2
                 ;;
+            --default)
+                make_default="true"
+                shift
+                ;;
+            --list)
+                list_profiles="true"
+                shift
+                ;;
+            --remove)
+                remove_user="true"
+                shift
+                ;;
             *)
                 fail "unknown configure flag: $1"
                 ;;
         esac
     done
 
+    if [[ "$list_profiles" == "true" ]]; then
+        local default
+        default=$(get_default_user)
+        echo "Default user: ${default:-<none>}"
+        echo "Profiles:"
+        local list has_default="false"
+        list=$(profile_list)
+        if cockpit vault get "$TOKEN_KEY" --namespace "$NAMESPACE" >/dev/null 2>&1; then
+            has_default="true"
+            if [[ -z "$list" || -z "$default" || "$default" == "default" ]]; then
+                echo "  default"
+            fi
+        fi
+        if [[ -n "$list" ]]; then
+            IFS=',' read -ra users <<< "$list"
+            for u in "${users[@]}"; do
+                if [[ "$u" == "$default" ]]; then
+                    echo "  $u (default)"
+                else
+                    echo "  $u"
+                fi
+            done
+        elif [[ "$has_default" != "true" ]]; then
+            echo "  <none>"
+        fi
+        return 0
+    fi
+
+    if [[ "$remove_user" == "true" ]]; then
+        [[ -n "$user" ]] || fail "--user is required with --remove"
+        cockpit vault remove "token-${user}" --namespace "$NAMESPACE" 2>/dev/null || true
+        cockpit vault remove "profile-${user}-login" --namespace "$NAMESPACE" 2>/dev/null || true
+        cockpit vault remove "profile-${user}-name" --namespace "$NAMESPACE" 2>/dev/null || true
+        cockpit vault remove "profile-${user}-email" --namespace "$NAMESPACE" 2>/dev/null || true
+        remove_from_profile_list "$user"
+        local default
+        default=$(get_default_user)
+        if [[ "$default" == "$user" ]]; then
+            cockpit vault remove "default-user" --namespace "$NAMESPACE" 2>/dev/null || true
+        fi
+        echo "Profile '${user}' removed."
+        return 0
+    fi
+
+    [[ -n "$user" ]] || user="default"
+
     if [[ -z "$token" ]]; then
-        read -rsp "GitHub token: " token || true
+        read -rsp "GitHub token for user '${user}': " token || true
         echo
     fi
 
@@ -131,7 +302,27 @@ cmd_configure() {
     require_gh
     validate_token "$token"
 
-    cockpit vault set "$TOKEN_KEY" --namespace "$NAMESPACE" --value "$token"
+    local info login name email rest
+    info=$(fetch_profile_info "$token")
+    login="${info%%|*}"
+    rest="${info#*|}"
+    name="${rest%%|*}"
+    email="${rest##*|}"
+
+    if [[ "$user" == "default" ]]; then
+        cockpit vault set "$TOKEN_KEY" --namespace "$NAMESPACE" --value "$token"
+    else
+        cockpit vault set "token-${user}" --namespace "$NAMESPACE" --value "$token"
+        add_to_profile_list "$user"
+    fi
+
+    cockpit vault set "profile-${user}-login" --namespace "$NAMESPACE" --value "$login"
+    cockpit vault set "profile-${user}-name" --namespace "$NAMESPACE" --value "$name"
+    cockpit vault set "profile-${user}-email" --namespace "$NAMESPACE" --value "$email"
+
+    if [[ "$make_default" == "true" ]]; then
+        cockpit vault set "default-user" --namespace "$NAMESPACE" --value "$user"
+    fi
 
     if [[ -n "$default_owner" ]]; then
         cockpit vault set "default-owner" --namespace "$NAMESPACE" --value "$default_owner"
@@ -140,17 +331,24 @@ cmd_configure() {
         cockpit vault set "default-repo" --namespace "$NAMESPACE" --value "$default_repo"
     fi
 
-    echo "GitHub integration configured successfully."
+    echo "GitHub profile '${user}' configured successfully (${login})."
 }
 
 # ---------------------------------------------------------------------------
-# run
+# run / git
 # ---------------------------------------------------------------------------
 
 cmd_run() {
     shift
     require_gh
     GH_TOKEN="$(get_token)" exec gh "$@"
+}
+
+cmd_git() {
+    shift
+    require_gh
+    export_user_env
+    GH_TOKEN="$(get_token)" exec git "$@"
 }
 
 # ---------------------------------------------------------------------------
@@ -250,9 +448,9 @@ cmd_actions_logs() {
 
 cmd_actions() {
     case "${2:-}" in
-        list) cmd_actions_list "$@" ;;
-        watch) cmd_actions_watch "$@" ;;
-        logs) cmd_actions_logs "$@" ;;
+        list) cmd_actions_list "${@:2}" ;;
+        watch) cmd_actions_watch "${@:2}" ;;
+        logs) cmd_actions_logs "${@:2}" ;;
         *) fail "unknown actions subcommand: ${2:-}; expected list, watch or logs" ;;
     esac
 }
@@ -451,9 +649,9 @@ cmd_pr_resolve() {
 
 cmd_pr() {
     case "${2:-}" in
-        comment) cmd_pr_comment "$@" ;;
-        approve) cmd_pr_approve "$@" ;;
-        resolve) cmd_pr_resolve "$@" ;;
+        comment) cmd_pr_comment "${@:2}" ;;
+        approve) cmd_pr_approve "${@:2}" ;;
+        resolve) cmd_pr_resolve "${@:2}" ;;
         *) fail "unknown pr subcommand: ${2:-}; expected comment, approve or resolve" ;;
     esac
 }
@@ -465,13 +663,34 @@ cmd_pr() {
 main() {
     [[ $# -eq 0 ]] && { usage; exit 1; }
 
+    SELECTED_USER=""
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --user)
+                SELECTED_USER="${2:-}"
+                shift 2
+                ;;
+            help|--help|-h)
+                usage
+                exit 0
+                ;;
+            *)
+                break
+                ;;
+        esac
+    done
+
+    export SELECTED_USER
+
+    [[ $# -eq 0 ]] && { usage; exit 1; }
+
     case "$1" in
         configure) cmd_configure "$@" ;;
         run) cmd_run "$@" ;;
+        git) cmd_git "$@" ;;
         actions) cmd_actions "$@" ;;
         commits) cmd_commits "$@" ;;
         pr) cmd_pr "$@" ;;
-        help|--help|-h) usage ;;
         *) fail "unknown command: $1" ;;
     esac
 }
