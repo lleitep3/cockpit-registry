@@ -7,7 +7,7 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-09-05T18:00:00Z"
+updated_at: "2026-09-05T21:00:00Z"
 
 # Registry metadata
 metadata:
@@ -564,7 +564,7 @@ packages:
     released_at: "2026-07-28T00:00:00Z"
 
   - name: "github-tools"
-    version: "0.1.0"
+    version: "0.1.1"
     description: "GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews."
     author: "AICockpit"
     license: "MIT"
@@ -606,4 +606,4 @@ packages:
     status: "beta"
 
     # Release date
-    released_at: "2026-09-05T00:00:00Z"
+    released_at: "2026-09-05T21:00:00Z"
