@@ -19,6 +19,10 @@ O pacote suporta múltiplos usuários/profiles. Cada profile é um par `(usuári
 # Cadastrar um profile e definí-lo como padrão
 cockpit github configure --user <USUARIO> --token <TOKEN> --default
 
+# Sobrescrever nome/e-mail do profile
+# Por padrão: nome = <USUARIO>, e-mail = <USUARIO>@users.noreply.github.com
+cockpit github configure --user <USUARIO> --token <TOKEN> --name "Nome" --email "email@example.com" --default
+
 # Listar profiles cadastrados
 cockpit github configure --list
 

@@ -1,5 +1,5 @@
 name: github-tools
-version: 0.2.0
+version: 0.2.1
 description: GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews.
 author: AICockpit
 license: MIT
