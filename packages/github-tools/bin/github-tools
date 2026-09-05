@@ -63,7 +63,7 @@ require_gh() {
 
 validate_token() {
     local token="$1"
-    if ! GH_TOKEN="$token" gh auth status >/dev/null 2>&1; then
+    if ! GH_TOKEN="$token" gh api user >/dev/null 2>&1; then
         fail "github token failed authentication against GitHub"
     fi
 }
