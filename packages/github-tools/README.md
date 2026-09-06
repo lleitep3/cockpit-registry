@@ -68,7 +68,10 @@ cockpit github run <gh args...>
 cockpit github --user <USER> git commit -m "my commit"
 
 # GitHub Actions
-cockpit github actions list [--repo OWNER/REPO] [--limit N]
+# Default output is a compact table. Use --json for JSON or --fields for table columns.
+cockpit github actions list [--repo OWNER/REPO] [--limit N] [--json] [--fields FIELDS]
+cockpit github actions list --fields=status,conclusion,name
+cockpit github actions list --fields=*
 cockpit github actions watch <run-id> [--repo OWNER/REPO]
 cockpit github actions logs <run-id> [--repo OWNER/REPO]
 
@@ -76,6 +79,10 @@ cockpit github actions logs <run-id> [--repo OWNER/REPO]
 cockpit github commits <branch> [--repo OWNER/REPO] [--limit N]
 
 # Pull requests
+# Default output is a compact table.
+cockpit github pr view <pr> [--repo OWNER/REPO] [--json] [--fields FIELDS]
+cockpit github pr view <pr> --fields=title,state,mergeStateStatus
+cockpit github pr view <pr> --fields=*
 cockpit github pr comment <pr> --body "..." [--repo OWNER/REPO]
 cockpit github pr approve <pr> [--repo OWNER/REPO]
 cockpit github pr resolve <pr> [--repo OWNER/REPO]

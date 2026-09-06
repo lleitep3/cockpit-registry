@@ -564,7 +564,7 @@ packages:
     released_at: "2026-07-28T00:00:00Z"
 
   - name: "github-tools"
-    version: "0.2.1"
+    version: "0.2.2"
     description: "GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews."
     author: "AICockpit"
     license: "MIT"

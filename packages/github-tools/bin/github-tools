@@ -24,10 +24,11 @@ Commands:
   configure --remove --user USER
   run <gh args...>
   git <git args...>
-  actions list [--repo OWNER/REPO] [--limit N]
+  actions list [--repo OWNER/REPO] [--limit N] [--json] [--fields FIELDS]
   actions watch <run-id> [--repo OWNER/REPO]
   actions logs <run-id> [--repo OWNER/REPO]
   commits <branch> [--repo OWNER/REPO] [--limit N]
+  pr view <pr> [--repo OWNER/REPO] [--json] [--fields FIELDS]
   pr comment <pr> --body "..." [--repo OWNER/REPO]
   pr approve <pr> [--repo OWNER/REPO]
   pr resolve <pr> [--repo OWNER/REPO]
@@ -375,12 +376,65 @@ cmd_git() {
 }
 
 # ---------------------------------------------------------------------------
+# Structured output
+# ---------------------------------------------------------------------------
+
+format_table() {
+    local fields="$1"
+    shift
+    local jq_filter=".[] | ["
+    if [[ "${1:-}" == "pr" ]]; then
+        jq_filter="["
+    fi
+    local field
+    local first="true"
+
+    IFS=',' read -ra field_list <<< "$fields"
+    for field in "${field_list[@]}"; do
+        if [[ ! "$field" =~ ^[A-Za-z][A-Za-z0-9]*$ ]]; then
+            fail "invalid field name: $field"
+        fi
+        if [[ "$first" != "true" ]]; then
+            jq_filter+=","
+        fi
+        jq_filter+="(.[\"$field\"] // \"\" | tostring)"
+        first="false"
+    done
+    jq_filter+='] | @tsv'
+
+    printf '%s\n' "$fields" | tr ',' '\t'
+    GH_TOKEN="$GH_TOKEN" gh "$@" --json "$fields" --jq "$jq_filter"
+}
+
+print_structured_output() {
+    local json_fields="$1"
+    local output_json="$2"
+    local fields="$3"
+    shift 3
+
+    if [[ "$fields" == "*" ]]; then
+        fields="$json_fields"
+    fi
+    [[ -n "$fields" ]] || fail "--fields requires at least one field"
+
+    if [[ "$output_json" == "true" ]]; then
+        GH_TOKEN="$GH_TOKEN" gh "$@" --json "$fields"
+        return
+    fi
+
+    format_table "$fields" "$@" | column -t -s $'\t'
+}
+
+# ---------------------------------------------------------------------------
 # actions
 # ---------------------------------------------------------------------------
 
 cmd_actions_list() {
     local repo=""
     local limit="10"
+    local output_json="false"
+    local fields="databaseId,name,status,conclusion,createdAt,headBranch"
+    local all_fields="databaseId,name,displayTitle,status,conclusion,workflowName,event,headBranch,headSha,createdAt,updatedAt,url"
 
     shift
     while [[ $# -gt 0 ]]; do
@@ -393,6 +447,18 @@ cmd_actions_list() {
                 limit="${2:-}"
                 shift 2
                 ;;
+            --json)
+                output_json="true"
+                shift
+                ;;
+            --fields)
+                fields="${2:-}"
+                shift 2
+                ;;
+            --fields=*)
+                fields="${1#--fields=}"
+                shift
+                ;;
             *)
                 fail "unknown actions list flag: $1"
                 ;;
@@ -402,10 +468,12 @@ cmd_actions_list() {
     require_gh
     repo=$(resolve_repo "$repo")
     get_token
-    GH_TOKEN="$GH_TOKEN" gh run list \
+    if [[ "$fields" == "*" ]]; then
+        fields="$all_fields"
+    fi
+    print_structured_output "$fields" "$output_json" "$fields" run list \
         --repo "$repo" \
-        --limit "$limit" \
-        --json databaseId,name,status,conclusion,createdAt,headBranch
+        --limit "$limit"
 }
 
 cmd_actions_watch() {
@@ -526,6 +594,58 @@ cmd_commits() {
 # ---------------------------------------------------------------------------
 # pr
 # ---------------------------------------------------------------------------
+
+cmd_pr_view() {
+    local repo=""
+    local pr=""
+    local output_json="false"
+    local fields="number,title,state,author,headRefName,baseRefName,mergeStateStatus,reviewDecision,url,createdAt,updatedAt"
+    local all_fields="number,title,body,state,author,assignees,reviewers,labels,comments,commits,additions,deletions,changedFiles,headRefName,headRefOid,baseRefName,baseRefOid,isDraft,mergeable,mergeStateStatus,reviewDecision,statusCheckRollup,url,createdAt,updatedAt"
+
+    shift
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo)
+                repo="${2:-}"
+                shift 2
+                ;;
+            --json)
+                output_json="true"
+                shift
+                ;;
+            --fields)
+                fields="${2:-}"
+                shift 2
+                ;;
+            --fields=*)
+                fields="${1#--fields=}"
+                shift
+                ;;
+            -*|--*)
+                fail "unknown pr view flag: $1"
+                ;;
+            *)
+                if [[ -n "$pr" ]]; then
+                    fail "unexpected argument: $1"
+                fi
+                pr="$1"
+                shift
+                ;;
+        esac
+    done
+
+    [[ -n "$pr" ]] || fail "pull request number is required"
+    [[ "$pr" =~ ^[0-9]+$ ]] || fail "pull request must be a number"
+    [[ -n "$fields" ]] || fail "--fields requires at least one field"
+
+    require_gh
+    repo=$(resolve_repo "$repo")
+    get_token
+    if [[ "$fields" == "*" ]]; then
+        fields="$all_fields"
+    fi
+    print_structured_output "$fields" "$output_json" "$fields" pr view "$pr" --repo "$repo"
+}
 
 cmd_pr_comment() {
     local repo=""
@@ -680,10 +800,11 @@ cmd_pr_resolve() {
 
 cmd_pr() {
     case "${2:-}" in
+        view) cmd_pr_view "${@:2}" ;;
         comment) cmd_pr_comment "${@:2}" ;;
         approve) cmd_pr_approve "${@:2}" ;;
         resolve) cmd_pr_resolve "${@:2}" ;;
-        *) fail "unknown pr subcommand: ${2:-}; expected comment, approve or resolve" ;;
+        *) fail "unknown pr subcommand: ${2:-}; expected view, comment, approve or resolve" ;;
     esac
 }
 
