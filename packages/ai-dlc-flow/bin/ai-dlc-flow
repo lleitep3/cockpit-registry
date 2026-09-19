@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+# Provider-neutral AI-DLC control panel launcher.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+COCKPIT_ROOT="${COCKPIT_HOME:-${HOME}/.cockpit}"
+STATE_DIR="${COCKPIT_ROOT}/ai-dlc-flow"
+CONFIG_FILE="${STATE_DIR}/control-panel.conf"
+PID_FILE="${STATE_DIR}/control-panel.pid"
+LOG_FILE="${STATE_DIR}/control-panel.log"
+
+show_help() {
+    cat <<'EOF'
+Uso: cockpit ai-dlc-flow control-panel <comando> [opções]
+
+Comandos:
+  configure <repo>                         Aponta o painel para um repo de docs
+  start [--repo PATH] [--port N]           Inicia o serviço em background
+  stop                                     Para o serviço local
+  status                                   Mostra o estado do serviço
+  open                                     Abre o painel no navegador
+  help                                     Mostra esta ajuda
+
+Opções de start:
+  --host HOST                              Padrão: 127.0.0.1
+  --port N                                 Padrão: 8765
+  --base-path PATH                         Padrão: /partilhar
+  --foreground                             Mantém o processo no terminal
+
+Exemplo:
+  cockpit ai-dlc-flow control-panel configure ~/projects/partilhar-aba/partilhar-aba-docs
+  cockpit ai-dlc-flow control-panel start
+EOF
+}
+
+ensure_state_dir() {
+    mkdir -p "${STATE_DIR}"
+}
+
+config_value() {
+    local key="$1"
+    if [[ ! -f "${CONFIG_FILE}" ]]; then
+        return 0
+    fi
+    sed -n "s/^${key}=//p" "${CONFIG_FILE}" | head -n 1
+}
+
+save_config() {
+    local repo="$1"
+    local host="$2"
+    local port="$3"
+    local base_path="$4"
+    ensure_state_dir
+    printf 'repo=%s\nhost=%s\nport=%s\nbase_path=%s\n' \
+        "${repo}" "${host}" "${port}" "${base_path}" >"${CONFIG_FILE}"
+}
+
+configured_repo() { config_value repo; }
+configured_host() { config_value host || true; }
+configured_port() { config_value port || true; }
+configured_base_path() { config_value base_path || true; }
+
+normalise_base_path() {
+    local path="${1:-/partilhar}"
+    [[ "${path}" == /* ]] || path="/${path}"
+    path="${path%/}"
+    [[ -n "${path}" ]] || path="/"
+    printf '%s' "${path}"
+}
+
+is_running() {
+    [[ -f "${PID_FILE}" ]] && kill -0 "$(cat "${PID_FILE}")" 2>/dev/null
+}
+
+open_url() {
+    local url="$1"
+    if command -v xdg-open >/dev/null 2>&1; then
+        xdg-open "${url}" >/dev/null 2>&1 &
+    else
+        echo "Acesse manualmente: ${url}"
+    fi
+}
+
+configure_panel() {
+    local repo="${1:-}"
+    if [[ -z "${repo}" ]]; then
+        echo "Erro: informe o caminho do repo de docs." >&2
+        exit 1
+    fi
+    if [[ ! -d "${repo}" ]]; then
+        echo "Erro: repo não encontrado: ${repo}" >&2
+        exit 1
+    fi
+    repo="$(cd "${repo}" && pwd)"
+    local host="$(configured_host)"
+    local port="$(configured_port)"
+    local base_path="$(configured_base_path)"
+    save_config "${repo}" "${host:-127.0.0.1}" "${port:-8765}" "$(normalise_base_path "${base_path:-/partilhar}")"
+    echo "✅ Repo conectado ao painel: ${repo}"
+    echo "   Configuração: ${CONFIG_FILE}"
+}
+
+start_panel() {
+    local repo="$(configured_repo)"
+    local host="$(configured_host)"
+    local port="$(configured_port)"
+    local base_path="$(configured_base_path)"
+    local foreground="false"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --repo) repo="${2:-}"; shift 2 ;;
+            --host) host="${2:-}"; shift 2 ;;
+            --port) port="${2:-}"; shift 2 ;;
+            --base-path) base_path="${2:-}"; shift 2 ;;
+            --foreground) foreground="true"; shift ;;
+            *) echo "Opção desconhecida: $1" >&2; exit 1 ;;
+        esac
+    done
+    if [[ -z "${repo}" || ! -d "${repo}" ]]; then
+        echo "Erro: configure primeiro o repo ou use --repo PATH." >&2
+        exit 1
+    fi
+    host="${host:-127.0.0.1}"
+    port="${port:-8765}"
+    base_path="$(normalise_base_path "${base_path:-/partilhar}")"
+    repo="$(cd "${repo}" && pwd)"
+    save_config "${repo}" "${host}" "${port}" "${base_path}"
+
+    if is_running; then
+        echo "ℹ️  Painel já está rodando (PID $(cat "${PID_FILE}"))."
+        echo "   URL: http://${host}:${port}${base_path}/"
+        return 0
+    fi
+
+    ensure_state_dir
+    local command=(python3 "${PACKAGE_DIR}/control-panel/server.py" --root "${repo}" --host "${host}" --port "${port}" --base-path "${base_path}")
+    if [[ "${foreground}" == "true" ]]; then
+        exec "${command[@]}"
+    fi
+    nohup "${command[@]}" >"${LOG_FILE}" 2>&1 &
+    echo $! >"${PID_FILE}"
+    sleep 0.25
+    if ! is_running; then
+        echo "❌ Painel não iniciou. Verifique ${LOG_FILE}" >&2
+        exit 1
+    fi
+    echo "✅ AI-DLC Control Panel iniciado."
+    echo "   URL: http://${host}:${port}${base_path}/"
+    echo "   Repo: ${repo}"
+    echo "   Log:  ${LOG_FILE}"
+}
+
+stop_panel() {
+    if ! is_running; then
+        echo "ℹ️  Painel não está rodando."
+        rm -f "${PID_FILE}"
+        return 0
+    fi
+    kill "$(cat "${PID_FILE}")"
+    rm -f "${PID_FILE}"
+    echo "✅ AI-DLC Control Panel parado."
+}
+
+status_panel() {
+    if is_running; then
+        echo "✅ rodando (PID $(cat "${PID_FILE}"))"
+    else
+        echo "⏸️  parado"
+    fi
+    echo "Repo:      $(configured_repo || true)"
+    echo "Endereço:  http://$(configured_host || echo 127.0.0.1):$(configured_port || echo 8765)$(normalise_base_path "$(configured_base_path || echo /partilhar)")/"
+    echo "Config:    ${CONFIG_FILE}"
+}
+
+control_panel() {
+    local command="${1:-help}"
+    shift || true
+    case "${command}" in
+        configure) configure_panel "$@" ;;
+        start) start_panel "$@" ;;
+        stop) stop_panel ;;
+        status) status_panel ;;
+        open)
+            local host="$(configured_host)"
+            local port="$(configured_port)"
+            local base_path="$(configured_base_path)"
+            host="${host:-127.0.0.1}"
+            port="${port:-8765}"
+            base_path="$(normalise_base_path "${base_path:-/partilhar}")"
+            open_url "http://${host}:${port}${base_path}/"
+            ;;
+        help|--help|-h) show_help ;;
+        *) echo "Erro: comando desconhecido: ${command}" >&2; show_help; exit 1 ;;
+    esac
+}
+
+case "${1:-help}" in
+    control-panel|controlpanel|cp)
+        shift
+        control_panel "$@"
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    *)
+        echo "Erro: use 'cockpit ai-dlc-flow control-panel ...'." >&2
+        show_help
+        exit 1
+        ;;
+esac

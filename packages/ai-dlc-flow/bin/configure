@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "AI-DLC Flow instalado."
+echo "Conecte um repo de docs com:"
+echo "  cockpit ai-dlc-flow control-panel configure <caminho-do-repo>"

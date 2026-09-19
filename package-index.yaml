@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-09-05T23:00:00Z"
+updated_at: "2026-09-19T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 15
+  total_packages: 16
   categories:
     - examples
     - productivity
@@ -607,3 +607,48 @@ packages:
 
     # Release date
     released_at: "2026-09-05T23:00:00Z"
+
+  - name: "ai-dlc-flow"
+    version: "0.3.0"
+    description: "Knowledge base, modelos e painel de controle local para lifecycle adaptativo, evidências, gates, métricas e forecast explícito"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - ai-dlc
+      - lifecycle
+      - evidence
+      - gates
+      - metrics
+      - forecast
+      - project-control
+    path: "packages/ai-dlc-flow"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/ai-dlc-flow"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+      - github-copilot
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "alpha"
+
+    # Release date
+    released_at: "2026-09-19T00:00:00Z"

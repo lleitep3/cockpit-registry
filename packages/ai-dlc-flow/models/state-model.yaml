@@ -1,0 +1,190 @@
+schema_version: "0.1"
+model: ai-dlc-flow
+status: conceptual
+
+project:
+  intention_policy:
+    parallel: true
+    rule: "A blocker localiza a intenção afetada; só bloqueia o portfólio quando a dependência é compartilhada."
+    focus_rule: "O foco é uma seleção operacional, não uma promoção de estado nem a única intenção válida."
+  intention:
+    states: [proposed, active, blocked, waiting, completed, parked, superseded]
+    required_fields: [id, title, objective, phase, state, owner, next_action, dependencies, blockers]
+    progress_rule: "O progresso da intenção vem de work units, gates e evidências vinculadas; commits são eventos de apoio."
+  blocker:
+    required_fields: [id, type, description, scope, unlock_condition, owner]
+    scopes: [intention, shared, project]
+    types: [missing_decision, missing_evidence, dependency, environment, external]
+  focus:
+    required_fields: [intention_id, selected_at, selected_by, reason]
+    rule: "A intenção em foco pode mudar sem alterar o estado das demais intenções."
+
+principles:
+  - id: evidence-class-boundary
+    rule: "Specification != Prototype != POC != Implementation != Production Evidence"
+  - id: progress-is-not-commits
+    rule: "Progress is derived from work units, gates and evidence; commits are supporting events only."
+  - id: human-authority
+    rule: "Agents may propose and verify; humans decide product, risk, policy, acceptance and release."
+  - id: forecast-honesty
+    rule: "Insufficient history requires a wide interval, low confidence and explicit unknowns."
+
+lifecycle:
+  phases:
+    - id: intent
+      question: "What outcome do we seek?"
+    - id: explore
+      question: "What is known, unknown or risky?"
+    - id: define
+      question: "What is in scope and under which rules?"
+    - id: design
+      question: "How can the solution work?"
+    - id: validate
+      question: "Is the proposal acceptable and feasible?"
+    - id: plan
+      question: "What ordered work can be executed?"
+    - id: build
+      question: "What is being constructed?"
+    - id: verify
+      question: "Does the result meet its criteria?"
+    - id: release
+      question: "May it be made available in this environment?"
+    - id: observe
+      question: "What happened after delivery?"
+    - id: learn
+      question: "What should change?"
+    - id: replan
+      question: "What is the next cycle?"
+  default_order: [intent, explore, define, design, validate, plan, build, verify, release, observe, learn, replan]
+  transition_rules:
+    - from: any
+      to: explore
+      when: "new facts or unresolved uncertainty invalidate the current model"
+    - from: any
+      to: define
+      when: "scope or acceptance needs explicit revision"
+    - from: any
+      to: design
+      when: "solution assumptions need revision"
+    - from: any
+      to: plan
+      when: "dependencies, work units or forecast need revision"
+    - from: intent
+      to: explore
+      when: "intent is recorded"
+    - from: explore
+      to: define
+      when: "facts, hypotheses and open questions are separated"
+    - from: define
+      to: design
+      when: "scope and requirements pass G-SCOPE"
+    - from: design
+      to: validate
+      when: "design artifacts and risks are reviewable"
+    - from: validate
+      to: plan
+      when: "required human decisions and validation evidence exist"
+    - from: plan
+      to: build
+      when: "work units pass G-READINESS"
+    - from: build
+      to: verify
+      when: "implementation output is versioned and testable"
+    - from: verify
+      to: release
+      when: "criteria and review evidence satisfy G-VERIFY"
+    - from: release
+      to: observe
+      when: "release authorization and delivery evidence exist"
+    - from: observe
+      to: learn
+      when: "observation window and signals are recorded"
+    - from: learn
+      to: replan
+      when: "learning has an owner and proposed action"
+    - from: replan
+      to: explore
+      when: "next cycle starts"
+
+artifact_types:
+  intent: {evidence_required: E1}
+  discovery: {evidence_required: E2}
+  requirement: {evidence_required: E2}
+  domain_model: {evidence_required: E2}
+  ux_design: {evidence_required: E2}
+  architecture_decision: {evidence_required: E4}
+  test_plan: {evidence_required: E2}
+  work_plan: {evidence_required: E2}
+  specification: {evidence_required: E2}
+  prototype: {evidence_required: E2}
+  poc: {evidence_required: E3}
+  implementation: {evidence_required: E2}
+  verification_report: {evidence_required: E3}
+  production_observation: {evidence_required: E5}
+  decision_record: {evidence_required: E4}
+
+evidence:
+  assurance_levels:
+    E0: absent
+    E1: declared
+    E2: observed
+    E3: reproducible
+    E4: independently_reviewed_or_human_validated
+    E5: operational
+  required_fields: [id, kind, level, claim, source_artifact, subject, version, scenario, result, limits, recorded_at, recorded_by]
+  results: [pass, fail, partial, unknown]
+  promotion_rule: "An artifact class changes only through a recorded transition with matching evidence and gate."
+
+work_unit:
+  states: [proposed, ready, in_progress, blocked, in_review, rework, verified, accepted, released, observed, learned, superseded, cancelled]
+  required_fields: [id, objective, inputs, outputs, owner, dependencies, acceptance_criteria, evidence_required, gate, state]
+  readiness_checks:
+    - objective_clear
+    - source_status_known
+    - acceptance_observable
+    - dependencies_have_unlock_condition
+    - owner_and_authority_defined
+    - data_and_environment_available
+    - exit_gate_defined
+    - human_decisions_separated
+
+gates:
+  states: [open, ready_for_review, passed, failed, waived_by_human, superseded]
+  definitions:
+    G-INTENT: {authority: human, evidence: [intent, decision_record]}
+    G-SCOPE: {authority: human, evidence: [requirement, decision_record]}
+    G-DOMAIN: {authority: human_plus_agent, evidence: [discovery, domain_model]}
+    G-DESIGN: {authority: human_plus_agent, evidence: [ux_design, architecture_decision]}
+    G-READINESS: {authority: agent_check_plus_human_exceptions, evidence: [work_plan]}
+    G-BUILD: {authority: agent_or_ci, evidence: [implementation, verification_report]}
+    G-VERIFY: {authority: qa_or_agent_plus_human_when_required, evidence: [verification_report]}
+    G-RELEASE: {authority: human, evidence: [decision_record, verification_report]}
+    G-OBSERVE: {authority: agent_measures_plus_human_interprets, evidence: [production_observation]}
+    G-REPLAN: {authority: human_for_scope_changes, evidence: [decision_record, work_plan]}
+
+metrics:
+  names:
+    - lead_time
+    - cycle_time
+    - throughput
+    - blocked_time
+    - rework_rate
+    - review_time
+    - scope_growth
+    - variance
+    - work_in_progress
+    - state_inventory
+  source: append_only_events_or_versioned_records
+  quality_values: [measured, partial, estimated, unknown]
+
+forecast:
+  required_fields: [scope, interval, confidence, method, sample, assumptions, unknowns, risks, next_update]
+  confidence_levels:
+    low: "no history or critical gates open"
+    medium: "short history and mostly stable scope"
+    high: "sufficient complete history and low recent variance"
+  no_history_policy:
+    calendar_interval: unknown
+    work_unit_interval: required
+    confidence: low
+    minimum_completed_units_before_calibration: 3

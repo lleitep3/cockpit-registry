@@ -1,0 +1,94 @@
+name: "ai-dlc-flow"
+version: "0.3.0"
+description: "Knowledge base, modelos e painel de controle local para conduzir projetos de software com lifecycle adaptativo, evidências, gates, métricas e forecast explícito."
+author: "AICockpit"
+license: "MIT"
+homepage: "https://github.com/lleitep3/cockpit-registry"
+repository: "https://github.com/lleitep3/cockpit-registry"
+
+type: "plugin"
+category: "productivity"
+
+external-dependencies:
+  system:
+    - python3
+
+requirements:
+  cockpit: ">=0.3.0"
+
+features:
+  modules:
+    - path: "bin/ai-dlc-flow"
+      name: "ai-dlc-flow"
+      description: "Configura e serve o painel de controle do AI-DLC para um repositório de docs"
+
+  skills:
+    - path: "skills/ai-dlc-flow"
+      name: "ai-dlc-flow"
+      description: "Aplica o modelo AI-DLC Flow sem promover artefatos ou evidências implicitamente."
+
+  kb:
+    - path: "kb/concepts/README.md"
+      type: "guide"
+    - path: "kb/concepts/core-model.md"
+      type: "reference"
+    - path: "kb/concepts/evidence-and-gates.md"
+      type: "reference"
+    - path: "kb/concepts/metrics-and-forecast.md"
+      type: "reference"
+    - path: "kb/concepts/autonomy-and-opportunities.md"
+      type: "guide"
+
+installation:
+  supported_providers:
+    - antigravity
+    - devin
+    - goose
+    - github-copilot
+
+  provider_features:
+    antigravity:
+      - modules
+      - skills
+      - kb
+    devin:
+      - modules
+      - skills
+      - kb
+    goose:
+      - modules
+      - skills
+      - kb
+    github-copilot:
+      - modules
+      - skills
+      - kb
+
+  method: "copy"
+
+metadata:
+  tags:
+    - ai-dlc
+    - lifecycle
+    - evidence
+    - gates
+    - metrics
+    - forecast
+    - project-control
+
+  keywords:
+    - work-unit
+    - traceability
+    - readiness
+    - blockers
+    - replan
+
+  maintainers:
+    - name: "AICockpit Team"
+      email: "team@aicockpit.dev"
+
+  status: "alpha"
+
+  support:
+    issues: "https://github.com/lleitep3/cockpit-registry/issues"
+    documentation: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/ai-dlc-flow"
