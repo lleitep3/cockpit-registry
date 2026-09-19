@@ -95,3 +95,17 @@ cockpit ai-dlc-flow control-panel stop
 - **V1 — Project Control:** inspect-project, readiness, blockers, plan, forecast e replan, com eventos observáveis.
 - **V2 — Inception Automation:** descoberta, produto, arquitetura, UX e QA com gates humanos.
 - **V3 — Construction Automation:** work unit → implementação → testes → review → evidence → merge → atualização do plano.
+
+
+## Boilerplate de CI documental
+
+Projetos novos que usem AI-DLC devem copiar
+`boilerplates/docs-project/` para a raiz do repositório. O boilerplate inclui:
+
+- `.github/workflows/validate-ai-dlc-docs.yml`;
+- `scripts/validate_ai_dlc_docs.py`;
+- `scripts/test_validate_ai_dlc_docs.py`.
+
+O CI verifica o núcleo documental e exige título e `Status` explícito nos
+documentos alterados. Ele valida contrato documental; não conta commits como
+progresso de produto.
