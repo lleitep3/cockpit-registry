@@ -1,5 +1,5 @@
 name: "ai-dlc-flow"
-version: "0.3.0"
+version: "0.4.0"
 description: "Knowledge base, modelos e painel de controle local para conduzir projetos de software com lifecycle adaptativo, evidências, gates, métricas e forecast explícito."
 author: "AICockpit"
 license: "MIT"
