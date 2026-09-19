@@ -609,7 +609,7 @@ packages:
     released_at: "2026-09-05T23:00:00Z"
 
   - name: "ai-dlc-flow"
-    version: "0.3.0"
+    version: "0.4.0"
     description: "Knowledge base, modelos e painel de controle local para lifecycle adaptativo, evidências, gates, métricas e forecast explícito"
     author: "AICockpit"
     license: "MIT"
@@ -639,6 +639,7 @@ packages:
       - modules
       - skills
       - kb
+      - boilerplate
 
     # Requirements
     requirements:
@@ -651,4 +652,4 @@ packages:
     status: "alpha"
 
     # Release date
-    released_at: "2026-09-19T00:00:00Z"
+    released_at: "2026-09-19T23:30:00Z"
