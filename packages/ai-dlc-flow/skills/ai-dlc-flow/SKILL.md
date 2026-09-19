@@ -52,3 +52,17 @@ Para cada incremento, registre:
 - `replan`: registrar delta, causa, impacto e próxima ordem.
 
 No V0 esses modos são protocolo de trabalho, não comandos executáveis. Não invente automação onde ainda não existe.
+
+
+## Bootstrap de projeto documental
+
+Ao iniciar um repositório novo que use AI-DLC para documentação, inclua o
+boilerplate versionado em `boilerplates/docs-project/`:
+
+- `.github/workflows/validate-ai-dlc-docs.yml`;
+- `scripts/validate_ai_dlc_docs.py`;
+- `scripts/test_validate_ai_dlc_docs.py`.
+
+Instale o workflow antes do primeiro PR documental. Ajuste somente os diretórios
+necessários e mantenha o validador determinístico. CI valida contratos
+documentais; não transforma commits em progresso de produto.
