@@ -1,0 +1,39 @@
+name: Validate AI-DLC documentation
+
+on:
+  pull_request:
+    paths:
+      - "README.md"
+      - "AGENTS.md"
+      - "docs/**"
+      - "process/**"
+      - "requirements/**"
+      - "architecture/**"
+      - "experiments/**"
+      - "scripts/validate_ai_dlc_docs.py"
+      - "scripts/test_validate_ai_dlc_docs.py"
+      - ".github/workflows/validate-ai-dlc-docs.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate AI-DLC documents
+        run: python scripts/validate_ai_dlc_docs.py
+
+      - name: Test documentation validator
+        run: python scripts/test_validate_ai_dlc_docs.py
