@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+python3 -m py_compile "${PACKAGE_DIR}/control-panel/server.py"
+test -f "${PACKAGE_DIR}/control-panel/index.html"
+test -f "${PACKAGE_DIR}/control-panel/app.js"
+test -d "${PACKAGE_DIR}/control-panel/components"
+echo "AI-DLC Flow control panel assets are valid."

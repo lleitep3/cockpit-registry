@@ -1,0 +1,59 @@
+{
+  "name": "Partilhar ABA",
+  "summary": "Evolução do produto clínico com decisão humana explícita.",
+  "started_at": "2026-09-17",
+  "phase": "define",
+  "focus_intention_id": "INT-SCOPE-B",
+  "intentions": [
+    {
+      "id": "INT-SCOPE-B",
+      "title": "Validar o recorte B",
+      "objective": "Confirmar com a clínica o primeiro degrau útil do MVP.",
+      "phase": "validate",
+      "state": "waiting",
+      "owner": "clínica + proponente",
+      "priority": "now",
+      "gate": "G-SCOPE",
+      "next_action": "Registrar a decisão clínica e o limite do recorte.",
+      "dependencies": [],
+      "history": [
+        {
+          "title": "Recorte B proposto",
+          "detail": "Escopo registrado no repositório em 2026-09-17."
+        }
+      ],
+      "work_units": [],
+      "blockers": [
+        {
+          "id": "BLK-001",
+          "type": "missing_decision",
+          "description": "Aceite clínico ainda não registrado.",
+          "scope": "intention",
+          "unlock_condition": "Decisão registrada no repo.",
+          "owner": "clínica"
+        }
+      ]
+    },
+    {
+      "id": "INT-AUTH",
+      "title": "Fechar autorização e identidade",
+      "objective": "Validar as regras de acesso que atravessam o MVP.",
+      "phase": "design",
+      "state": "active",
+      "owner": "produto + arquitetura",
+      "priority": "next",
+      "gate": "G-DOMAIN",
+      "next_action": "Revisar a matriz de permissões com os fluxos B.",
+      "dependencies": [],
+      "history": [],
+      "work_units": [
+        {
+          "id": "WU-AUTH-001",
+          "title": "Revisar matriz de permissões",
+          "state": "in_progress"
+        }
+      ],
+      "blockers": []
+    }
+  ]
+}
