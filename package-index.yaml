@@ -7,7 +7,7 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-09-05T23:00:00Z"
+updated_at: "2026-09-19T00:00:00Z"
 
 # Registry metadata
 metadata:
@@ -607,3 +607,4 @@ packages:
 
     # Release date
     released_at: "2026-09-05T23:00:00Z"
+
