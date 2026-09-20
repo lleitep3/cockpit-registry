@@ -35,3 +35,7 @@ build/
 *.tmp
 *.bak
 *.swp
+
+# Python cache
+__pycache__/
+*.pyc
