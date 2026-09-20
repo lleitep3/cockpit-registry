@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flutter Developer"
+  short_description: "Desenvolva Flutter com arquitetura, design system e testes"
+  default_prompt: "Use $flutter-developer para planejar ou implementar esta mudança Flutter com estados explícitos, catálogo visual e testes proporcionais ao risco."

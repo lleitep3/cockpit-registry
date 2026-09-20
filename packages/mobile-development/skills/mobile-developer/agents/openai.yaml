@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile Developer"
+  short_description: "Planeje e desenvolva apps Flutter, Android e iOS"
+  default_prompt: "Use $mobile-developer para decidir a plataforma e planejar esta mudança mobile com arquitetura, acessibilidade, estados, testes e riscos de release."
