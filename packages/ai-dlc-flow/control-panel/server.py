@@ -510,8 +510,8 @@ class ProjectReader:
             return None
         for relative in ("requirements/mvp-scope.md", "requirements/mvp-step-b-scope.md",
                          "requirements/scope-b.md", "scope-b.md"):
-            candidate = self.root / relative
-            if candidate.is_file():
+            candidate = (self.root / relative).resolve()
+            if candidate.is_relative_to(self.root) and candidate.is_file():
                 return candidate
         return None
 
