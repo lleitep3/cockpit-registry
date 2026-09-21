@@ -113,11 +113,11 @@ class ProjectReaderTest(unittest.TestCase):
             self.assertEqual(payload["gates"][0]["work_units"], ["WU-001", "WU-002"])
             self.assertEqual(
                 payload["gates"][0]["work_unit_details"][0]["title"],
-                "Confirmar o primeiro degrau útil do MVP",
+                "confirm_first_useful_mvp_step",
             )
             self.assertEqual(
                 payload["intentions"][0]["title"],
-                "Validar o primeiro degrau útil do MVP",
+                "validate_first_useful_mvp_step",
             )
             self.assertEqual(
                 payload["intentions"][0]["phase"],
@@ -126,7 +126,7 @@ class ProjectReaderTest(unittest.TestCase):
             self.assertEqual(payload["intentions"][0]["work_units"][0]["id"], "WU-001")
             self.assertEqual(
                 payload["intentions"][0]["work_units"][0]["title"],
-                "Confirmar o primeiro degrau útil do MVP",
+                "confirm_first_useful_mvp_step",
             )
             self.assertEqual(
                 payload["intentions"][0]["work_units"][0]["state_label"],
@@ -160,7 +160,7 @@ class ProjectReaderTest(unittest.TestCase):
             payload = ProjectReader(root).payload()
 
             self.assertEqual(payload["decisions"][0]["id"], "ADR-0001")
-            self.assertEqual(payload["scope_b"]["summary"], "Supervisão")
+            self.assertEqual(payload["scope_b"]["summary"], "MVP")
             self.assertEqual(payload["scope_b"]["source"], "requirements/mvp-scope.md")
 
     def test_infers_decision_date_from_git_creation_commit(self) -> None:

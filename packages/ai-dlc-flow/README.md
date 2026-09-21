@@ -76,7 +76,21 @@ O painel possui três níveis de leitura:
 
 1. **Portfólio:** intenções ativas, bloqueadas, aguardando ou concluídas.
 2. **Foco:** a intenção escolhida para o próximo movimento operacional.
-3. **Detalhe:** lifecycle, decisões e escopo B da intenção selecionada.
+3. **Detalhe:** lifecycle, decisões e escopo atual da intenção selecionada.
+
+### Fontes e compatibilidade
+
+O painel respeita títulos, objetivos e próximas ações do contrato, sem substituir
+seu significado por rótulos associados a IDs de outro projeto. IDs estáveis não
+determinam o escopo. O documento vigente vem de `scope.source` ou
+`analysis.current_scope_artifact` em `dashboard/data.json`. Uma fonte explícita
+inválida gera estado vazio, sem retornar silenciosamente a um escopo antigo.
+
+O contrato expõe `scope`; `scope_b` e a rota `scope-b` continuam como aliases para
+links antigos, com o mesmo conteúdo vigente. A navegação nova usa `scope`.
+Nenhuma dessas adaptações promove gates ou altera decisões do projeto.
+
+Verificação: `python -m unittest discover -s packages/ai-dlc-flow/control-panel/tests`.
 
 Dentro do detalhe de cada intenção, a navegação separa explicitamente **o que já
 passou**, **o que está em construção** e **o próximo movimento**. A troca entre
