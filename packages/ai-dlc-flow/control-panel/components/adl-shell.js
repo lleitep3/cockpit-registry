@@ -32,7 +32,7 @@ class AdlShell extends HTMLElement {
             <p class="sidebar-label">Navegar</p>
             ${this.link("overview", "Visão geral", "⌂", navigationRoute)}
             ${this.link("decisions", "Decisões", "◈", navigationRoute)}
-            ${this.link("scope-b", "Escopo B", "B", navigationRoute)}
+            ${this.link("scope", "Escopo atual", "MVP", navigationRoute)}
             <div class="sidebar-rule"></div>
             <p class="sidebar-label">Princípio</p>
             <p class="sidebar-help">O painel mostra estado observável. A intenção humana continua sendo a autoridade do fluxo.</p>

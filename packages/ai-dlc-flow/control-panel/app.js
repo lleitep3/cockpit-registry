@@ -99,7 +99,7 @@ function renderOverview() {
             <p class="eyebrow">jornada selecionada</p>
             <h2>Lifecycle do foco</h2>
           </div>
-          <a class="text-link" href="#/scope-b">Ver escopo B →</a>
+          <a class="text-link" href="#/scope">Ver escopo atual →</a>
         </div>
         <adl-roadmap></adl-roadmap>
       </article>
@@ -127,7 +127,7 @@ function renderScope() {
     <section class="page-enter page-heading">
       <div>
         <p class="eyebrow">intenção em detalhe</p>
-        <h1>Escopo B</h1>
+        <h1>Escopo atual</h1>
         <p>Uma leitura operacional do objetivo, da fonte e das pendências do recorte.</p>
       </div>
     </section>
@@ -158,7 +158,7 @@ function renderPage() {
     : null;
   const view = currentRoute === "decisions"
     ? renderDecisions()
-    : currentRoute === "scope-b"
+    : ["scope", "scope-b"].includes(currentRoute)
       ? renderScope()
       : selectedIntention
         ? renderIntentionDetail(selectedIntention)
@@ -189,7 +189,7 @@ function renderPage() {
   const decisionTimeline = app.querySelector("adl-decision-timeline");
   if (decisionTimeline) decisionTimeline.items = state.decisions;
   const scopePage = app.querySelector("adl-scope-page");
-  if (scopePage) scopePage.scope = state.scope_b;
+  if (scopePage) scopePage.scope = (state.scope || state.scope_b);
   const intentionDetail = app.querySelector("adl-intention-detail");
   if (intentionDetail) {
     intentionDetail.item = selectedIntention;

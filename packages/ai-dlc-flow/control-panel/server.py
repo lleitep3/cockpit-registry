@@ -30,39 +30,6 @@ PHASES = [
     ("replan", "Replanejar"),
 ]
 
-INTENTION_TITLES = {
-    "INT-SCOPE-B": "Validar o primeiro degrau útil do MVP",
-    "INT-DOMAIN-FORMS": "Validar formulários e pontuação",
-    "INT-PATIENT-SESSION": "Fechar paciente, sessão e encaminhamento",
-    "INT-AUTHORIZATION": "Aprovar autorização e auditoria",
-    "INT-UX-VERTICAL-SLICE": "Validar o fluxo vertical de app e web",
-    "INT-ARCHITECTURE": "Escolher backend, repositórios e ambiente",
-    "INT-IDENTITY-ACCESS": "Definir login e cadastro profissional",
-    "INT-DATA-FOUNDATION": "Mapear os dados mínimos do MVP",
-}
-
-INTENTION_OBJECTIVES = {
-    "INT-SCOPE-B": "Confirmar com a clínica se B é o primeiro degrau útil.",
-    "INT-DOMAIN-FORMS": "Confirmar formulários, tipos, opções, pesos e fórmula.",
-    "INT-PATIENT-SESSION": "Definir cenários operacionais e transições.",
-    "INT-AUTHORIZATION": "Fechar perfis, recursos, escopos e auditoria.",
-    "INT-UX-VERTICAL-SLICE": "Representar o fluxo de criar, preencher, revisar e consultar.",
-    "INT-ARCHITECTURE": "Definir topologia, repositórios e ambiente fictício.",
-    "INT-IDENTITY-ACCESS": "Definir login, convite, vinculação e estados de acesso.",
-    "INT-DATA-FOUNDATION": "Separar dados mínimos, candidatos e perguntas abertas.",
-}
-
-INTENTION_NEXT_ACTIONS = {
-    "INT-SCOPE-B": "Validar B com a clínica e registrar a decisão.",
-    "INT-DOMAIN-FORMS": "Obter materiais reais e validação clínica.",
-    "INT-PATIENT-SESSION": "Validar os cenários operacionais com a clínica.",
-    "INT-AUTHORIZATION": "Revisar a matriz antes de implementar autorização.",
-    "INT-UX-VERTICAL-SLICE": "Preparar a revisão do fluxo depois da definição de escopo.",
-    "INT-ARCHITECTURE": "Decidir a topologia antes de criar código do produto.",
-    "INT-IDENTITY-ACCESS": "Decidir a política de e-mail, login, convite e vinculação.",
-    "INT-DATA-FOUNDATION": "Revisar o inventário mínimo e as perguntas clínicas abertas.",
-}
-
 PHASE_LABELS = {
     "intent": "Intenção",
     "explore": "Exploração",
@@ -73,22 +40,6 @@ PHASE_LABELS = {
     "build": "Construção",
     "verify": "Verificação",
     "release": "Liberação",
-}
-
-WORK_UNIT_TITLES = {
-    "WU-001": "Confirmar o primeiro degrau útil do MVP",
-    "WU-002": "Validar dois formulários reais e regras de pontuação",
-    "WU-003": "Fechar cenários de paciente, sessão e encaminhamento",
-    "WU-004": "Aprovar matriz de permissões e escopos",
-    "WU-005": "Validar fluxo vertical de app e web",
-    "WU-006": "Escolher backend, repositórios e ambiente de teste",
-    "WU-007": "Transformar escopo aceito em unidades executáveis",
-    "WU-008": "Construir fatia vertical dos formulários",
-    "WU-009": "Verificar autorização, versões, pontuação e canais",
-    "WU-010": "Autorizar liberação do piloto controlado",
-    "WU-011": "Preparar identidade e onboarding profissional",
-    "WU-012": "Mapear contrato mínimo de dados do MVP",
-    "WU-013": "Preparar baseline local de backend e infraestrutura",
 }
 
 WORK_UNIT_STATE_LABELS = {
@@ -134,6 +85,7 @@ class ProjectReader:
             "intentions": self._intentions(metadata),
             "roadmap": self._roadmap(current_phase),
             "decisions": self._decisions(),
+            "scope": self._scope_b(),
             "scope_b": self._scope_b(),
             "signals": self._signals(),
             "gates": [],
@@ -183,6 +135,7 @@ class ProjectReader:
             "intentions": intentions,
             "roadmap": self._dashboard_roadmap(data, current_phase),
             "decisions": self._decisions(),
+            "scope": self._scope_b(),
             "scope_b": self._scope_b(),
             "signals": self._signals(),
             "gates": self._dashboard_gates(data),
@@ -270,10 +223,7 @@ class ProjectReader:
             phase = str(item.get("phase", "unknown"))
             next_action = str(item.get("next_action", "Não registrada"))
             if humanize:
-                title = INTENTION_TITLES.get(intention_id, title)
-                objective = INTENTION_OBJECTIVES.get(intention_id, objective)
                 phase = PHASE_LABELS.get(phase, phase)
-                next_action = INTENTION_NEXT_ACTIONS.get(intention_id, next_action)
             raw_work_units = item.get("work_units", [])
             work_units: list[Any] = []
             if isinstance(raw_work_units, list):
@@ -398,7 +348,7 @@ class ProjectReader:
                 continue
             unit_id = str(unit["id"])
             state = str(unit.get("state", "proposed"))
-            title = WORK_UNIT_TITLES.get(unit_id, str(unit.get("title", unit_id)))
+            title = str(unit.get("title") or unit_id)
             details[unit_id] = {
                 "id": unit_id,
                 "title": title,
@@ -546,24 +496,35 @@ class ProjectReader:
         return "Sem resumo registrado."
 
     def _scope_file(self) -> Path | None:
-        candidates = [
-            self.root / "requirements" / "mvp-step-b-scope.md",
-            self.root / "requirements" / "mvp-scope.md",
-            self.root / "requirements" / "scope-b.md",
-            self.root / "scope-b.md",
-        ]
-        for path in candidates:
-            if path.is_file():
-                return path
-        matches = sorted(self.root.rglob("*mvp-scope*.md"))
-        return matches[0] if matches else None
+        data = self._dashboard_data() or {}
+        scope = data.get("scope", {})
+        analysis = data.get("analysis", {})
+        source = (scope.get("source") if isinstance(scope, dict) else None) or (
+            analysis.get("current_scope_artifact") if isinstance(analysis, dict) else None
+        )
+        if source:
+            # Explicit sources are authoritative; never silently fall back to old scope.
+            candidate = (self.root / str(source)).resolve()
+            if candidate.is_relative_to(self.root) and candidate.is_file():
+                return candidate
+            return None
+        for relative in ("requirements/mvp-scope.md", "requirements/mvp-step-b-scope.md",
+                         "requirements/scope-b.md", "scope-b.md"):
+            candidate = self.root / relative
+            if candidate.is_file():
+                return candidate
+        return None
 
     def _scope_b(self) -> dict[str, str | None]:
+        """Legacy response key retained; content always represents current scope."""
+        data = self._dashboard_data() or {}
+        scope = data.get("scope", {})
+        scope = scope if isinstance(scope, dict) else {}
         path = self._scope_file()
         if path is None:
             return {
-                "title": "Escopo B — Supervisão",
-                "summary": "Documento de escopo B não encontrado no repositório.",
+                "title": scope.get("label") or "Escopo atual",
+                "summary": "Documento de escopo atual não encontrado ou fonte inválida.",
                 "source": None,
                 "content": "",
             }
@@ -571,11 +532,10 @@ class ProjectReader:
             content = path.read_text(encoding="utf-8")
         except OSError:
             content = ""
-        row = re.search(r"^\|\s*B\s*[—-]\s*(.+?)\s*\|", content, re.MULTILINE)
-        summary = row.group(1).strip() if row else self._summary(content)
+        heading = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
         return {
-            "title": "Escopo B — Supervisão",
-            "summary": summary,
+            "title": scope.get("label") or (heading.group(1) if heading else "Escopo atual"),
+            "summary": scope.get("confirmed_input") or self._summary(content),
             "source": path.relative_to(self.root).as_posix(),
             "content": content[:20000],
         }
