@@ -655,7 +655,7 @@ packages:
     released_at: "2026-09-19T23:30:00Z"
 
   - name: "backend-development"
-    version: "0.1.0"
+    version: "0.2.0"
     description: "Backend API development with Clean Architecture, explicit ports, test-first use cases and production boundaries."
     author: "lleitep3"
     license: "MIT"
@@ -667,6 +667,8 @@ packages:
       - testing
       - typescript
       - nestjs
+      - use-case-planning
+      - product-flow
     path: "packages/backend-development"
     url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/backend-development"
     homepage: "https://github.com/lleitep3/cockpit-registry"
@@ -680,7 +682,7 @@ packages:
       cockpit: ">=0.1.0"
     installation_method: "copy"
     status: "beta"
-    released_at: "2026-09-23T00:00:00Z"
+    released_at: "2026-09-23T13:00:00Z"
 
   - name: "mobile-development"
     version: "0.1.0"

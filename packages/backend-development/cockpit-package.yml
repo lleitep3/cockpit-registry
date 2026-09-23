@@ -1,5 +1,5 @@
 name: "backend-development"
-version: "0.1.0"
+version: "0.2.0"
 description: "Backend API development with Clean Architecture, explicit ports, test-first use cases and production boundaries."
 author: "lleitep3"
 license: "MIT"
@@ -14,6 +14,9 @@ features:
     - path: "skills/api-developer"
       name: "api-developer"
       description: "Planejamento e implementação de APIs com Clean Architecture e testes orientados por comportamento."
+    - path: "skills/use-case-planner"
+      name: "use-case-planner"
+      description: "Mapeamento reproduzível de fluxos de usuário e casos de uso com entregáveis documentais."
   kb:
     - path: "kb/guides/backend-development.md"
       type: "guide"
@@ -24,6 +27,7 @@ installation:
   provider_features:
     codex:
       - skills/api-developer
+      - skills/use-case-planner
       - kb
   method: "copy"
 
