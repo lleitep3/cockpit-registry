@@ -9,8 +9,8 @@ class AdlScopePage extends HTMLElement {
     this.innerHTML = `
       <article class="panel scope-panel page-enter">
         <div class="scope-hero">
-          <span class="scope-letter">B</span>
-          <div><p class="eyebrow">objetivo em validação</p><h2>${this.escape(scope.title || "Escopo B — Supervisão")}</h2><p>${this.escape(scope.summary || "Resumo ainda não registrado.")}</p></div>
+          <span class="scope-letter">MVP</span>
+          <div><p class="eyebrow">objetivo em validação</p><h2>${this.escape(scope.title || "Escopo atual")}</h2><p>${this.escape(scope.summary || "Resumo ainda não registrado.")}</p></div>
         </div>
         <div class="scope-source"><span>Fonte</span><code>${this.escape(scope.source || "não encontrada")}</code></div>
         <div class="markdown-content">${this.markdown(scope.content || "")}</div>
@@ -19,7 +19,7 @@ class AdlScopePage extends HTMLElement {
   }
 
   markdown(value) {
-    if (!value) return '<p class="empty-inline">O documento do escopo B ainda não foi encontrado.</p>';
+    if (!value) return '<p class="empty-inline">O documento do escopo atual ainda não foi encontrado.</p>';
     const lines = value.split("\n");
     const output = [];
     let listOpen = false;

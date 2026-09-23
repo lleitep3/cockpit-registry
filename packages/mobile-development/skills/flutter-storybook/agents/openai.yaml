@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flutter Storybook"
+  short_description: "Catalogue componentes e páginas Flutter com estados e goldens"
+  default_prompt: "Use $flutter-storybook para criar o catálogo visual desta feature, cobrindo componentes, estados, páginas, viewports e testes visuais."

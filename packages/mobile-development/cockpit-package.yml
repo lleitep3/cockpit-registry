@@ -1,0 +1,60 @@
+name: "mobile-development"
+version: "0.1.0"
+description: "Cross-platform mobile development guidance, agent profile and curated knowledge for Flutter, Android and iOS projects."
+author: "lleitep3"
+license: "MIT"
+type: plugin
+category: development
+
+requirements:
+  cockpit: ">=0.1.0"
+
+features:
+  agents:
+    - path: "agents/mobile-developer.md"
+      name: "mobile-developer-agent"
+      description: "Perfil de agente para decidir, planejar e implementar produtos mobile."
+  skills:
+    - path: "skills/mobile-developer"
+      name: "mobile-developer"
+      description: "Desenvolvimento mobile cross-platform e nativo com fronteiras claras."
+    - path: "skills/flutter-developer"
+      name: "flutter-developer"
+      description: "Arquitetura, implementação e revisão de apps Flutter."
+    - path: "skills/flutter-storybook"
+      name: "flutter-storybook"
+      description: "Catálogo visual de componentes, estados, templates e páginas Flutter."
+  kb:
+    - path: "kb/guides/mobile-development.md"
+      type: "guide"
+    - path: "kb/guides/package-maintenance.md"
+      type: "guide"
+
+installation:
+  supported_providers:
+    - codex
+  provider_features:
+    codex:
+      - agents
+      - skills
+      - kb
+  method: "copy"
+
+metadata:
+  tags:
+    - mobile
+    - flutter
+    - android
+    - ios
+    - cross-platform
+    - native
+  keywords:
+    - mobile development
+    - flutter
+    - android
+    - ios
+    - swiftui
+    - architecture
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/aicockpit/issues"
