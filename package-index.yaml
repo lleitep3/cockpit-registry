@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-09-20T21:00:00Z"
+updated_at: "2026-09-23T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 17
+  total_packages: 18
   categories:
     - examples
     - productivity
@@ -653,6 +653,34 @@ packages:
 
     # Release date
     released_at: "2026-09-19T23:30:00Z"
+
+  - name: "backend-development"
+    version: "0.1.0"
+    description: "Backend API development with Clean Architecture, explicit ports, test-first use cases and production boundaries."
+    author: "lleitep3"
+    license: "MIT"
+    category: "development"
+    tags:
+      - backend
+      - api
+      - clean-architecture
+      - testing
+      - typescript
+      - nestjs
+    path: "packages/backend-development"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/backend-development"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+    supported_providers:
+      - codex
+    features:
+      - skills
+      - kb
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-23T00:00:00Z"
 
   - name: "mobile-development"
     version: "0.1.0"
