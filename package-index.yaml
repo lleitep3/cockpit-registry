@@ -11,13 +11,14 @@ updated_at: "2026-09-23T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 18
+  total_packages: 19
   categories:
     - examples
     - productivity
     - skills
     - automation
     - notifications
+    - infrastructure
 
 # Packages in this registry
 packages:
@@ -725,3 +726,34 @@ packages:
 
     # Release date
     released_at: "2026-09-20T21:00:00Z"
+
+  - name: "cloud-infrastructure"
+    version: "0.5.0"
+    description: "Cloud architecture and engineering with cost-aware delivery, Terraform review, and infrastructure knowledge."
+    author: "lleitep3"
+    license: "MIT"
+    category: "infrastructure"
+    tags:
+      - cloud
+      - infrastructure
+      - terraform
+      - aws
+      - iac-review
+      - cost-management
+    path: "packages/cloud-infrastructure"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cloud-infrastructure"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+    supported_providers:
+      - codex
+    features:
+      - modules
+      - agents
+      - skills
+      - rules
+      - kb
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-24T00:00:00Z"

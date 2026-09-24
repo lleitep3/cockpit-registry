@@ -1,0 +1,173 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+import argparse, json, os, subprocess, sys
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+
+class CostError(RuntimeError):
+    pass
+
+def aws(args, profile, region):
+    command = ["aws", "--region", region]
+    if profile:
+        command += ["--profile", profile]
+    try:
+        result = subprocess.run(command + args + ["--output", "json"], check=True, text=True, capture_output=True)
+        return json.loads(result.stdout)
+    except FileNotFoundError as exc:
+        raise CostError("AWS CLI não encontrado; instale-o e autentique a conta correta.") from exc
+    except subprocess.CalledProcessError as exc:
+        raise CostError(f"consulta de billing falhou: {(exc.stderr or exc.stdout).strip()}") from exc
+    except json.JSONDecodeError as exc:
+        raise CostError("AWS CLI retornou JSON inválido.") from exc
+
+def iso(value):
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(f"data inválida: {value}; use YYYY-MM-DD") from exc
+
+def period_month():
+    start = date.today().replace(day=1)
+    end = date(start.year + (start.month == 12), 1 if start.month == 12 else start.month + 1, 1)
+    return start, end
+
+def usd(value):
+    return f"US$ {value:,.2f}"
+
+def show(data, as_json):
+    if as_json:
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return
+    print(data["title"])
+    if data.get("period"):
+        print(f"Período: {data['period']['start']} até {data['period']['end']}")
+    print(f"Consultado em: {data['retrieved_at']}")
+    for row in data.get("services", []):
+        print(f"{row['service']}: {usd(row['amount'])}")
+    if "total" in data:
+        print(f"Total: {usd(data['total'])}")
+    if data.get("forecast"):
+        forecast = data["forecast"]
+        print(f"Previsão média: {usd(forecast['mean'])}")
+        if forecast["lower"] is not None:
+            print(f"Intervalo ({forecast['confidence']}%): {usd(forecast['lower'])} a {usd(forecast['upper'])}")
+    if "scenario_monthly_total" in data:
+        print(f"Cenário mensal modelado: {usd(data['scenario_monthly_total'])}")
+        print(f"Recursos modelados: {data['modeled_resources']}; sem premissa: {data['unmodeled_resources']}")
+        for address in data.get("unmodeled_addresses", []):
+            print(f"  sem premissa: {address}")
+    if data.get("warning"):
+        print(f"Atenção: {data['warning']}")
+
+def actual(args):
+    start = args.start or date.today() - timedelta(days=args.days)
+    end = args.end or date.today() + timedelta(days=1)
+    if end <= start:
+        raise CostError("a data final precisa ser posterior à inicial")
+    request = ["ce", "get-cost-and-usage", "--time-period", f"Start={start},End={end}", "--granularity", "DAILY", "--metrics", args.metric, "--group-by", "Type=DIMENSION,Key=SERVICE"]
+    if args.cost_center:
+        request += ["--filter", json.dumps({"Tags": {"Key": args.tag_key, "Values": [args.cost_center]}})]
+    data = aws(request, args.profile, args.region)
+    totals, unit = {}, "USD"
+    for period in data.get("ResultsByTime", []):
+        for group in period.get("Groups", []):
+            name = group.get("Keys", ["Desconhecido"])[0]
+            metric = group.get("Metrics", {}).get(args.metric, {})
+            totals[name] = totals.get(name, 0.0) + float(metric.get("Amount", 0))
+            unit = metric.get("Unit", unit)
+    services = [{"service": name, "amount": round(value, 8), "unit": unit} for name, value in sorted(totals.items(), key=lambda item: item[1], reverse=True) if abs(value) > 1e-8]
+    payload = {"title": "Custo realizado por serviço", "kind": "actual", "period": {"start": start.isoformat(), "end": end.isoformat()}, "retrieved_at": datetime.now(timezone.utc).isoformat(), "currency": unit, "services": services, "total": round(sum(item["amount"] for item in services), 8), "source": "AWS Cost Explorer GetCostAndUsage"}
+    if not services:
+        payload["warning"] = "A AWS pode ainda não ter dados processados para este período."
+    show(payload, args.json)
+
+def forecast(args):
+    start, end = period_month()
+    data = aws(["ce", "get-cost-forecast", "--time-period", f"Start={start},End={end}", "--metric", args.metric, "--granularity", "MONTHLY", "--prediction-interval-level", str(args.confidence)], args.profile, args.region)
+    total = data.get("Total", {})
+    point = (data.get("ForecastResultsByTime") or [{}])[0]
+    mean = float(point.get("MeanValue", total.get("Amount", 0)))
+    lower = point.get("PredictionIntervalLowerBound")
+    upper = point.get("PredictionIntervalUpperBound")
+    payload = {"title": "Previsão de cobrança do mês", "kind": "forecast", "period": {"start": start.isoformat(), "end": end.isoformat()}, "retrieved_at": datetime.now(timezone.utc).isoformat(), "currency": total.get("Unit", "USD"), "forecast": {"mean": round(mean, 8), "lower": float(lower) if lower is not None else None, "upper": float(upper) if upper is not None else None, "confidence": args.confidence}, "source": "AWS Cost Explorer GetCostForecast", "warning": "É uma previsão estatística baseada no histórico; não é valor garantido da fatura."}
+    show(payload, args.json)
+
+def service(resource_type):
+    prefixes = {"aws_s3_": "Amazon S3", "aws_cognito_": "Amazon Cognito", "aws_budgets_": "AWS Budgets", "aws_cloudwatch_": "Amazon CloudWatch", "aws_lambda_": "AWS Lambda", "aws_apigateway": "Amazon API Gateway", "aws_nat_gateway": "Amazon VPC", "aws_vpc": "Amazon VPC", "aws_subnet": "Amazon VPC", "aws_route": "Amazon VPC", "aws_security_group": "Amazon VPC", "aws_db_": "Amazon RDS", "aws_dynamodb_": "Amazon DynamoDB"}
+    return next((value for prefix, value in prefixes.items() if resource_type.startswith(prefix)), "AWS / serviço não mapeado")
+
+def resources(state):
+    result = []
+    def visit(module):
+        for item in module.get("resources", []):
+            kind = str(item.get("type", "unknown"))
+            result.append({"address": str(item.get("address", kind)), "type": kind, "service": service(kind)})
+        for child in module.get("child_modules", []):
+            visit(child)
+    if isinstance(state.get("values"), dict):
+        visit(state["values"].get("root_module", {}))
+    for item in state.get("resources", []):
+        kind = str(item.get("type", "unknown"))
+        result.append({"address": str(item.get("address", kind)), "type": kind, "service": service(kind)})
+    return result
+
+def estimate(args):
+    try:
+        state = json.loads(Path(args.state).read_text())
+        assumptions = json.loads(Path(args.assumptions).read_text()) if args.assumptions else {}
+    except (OSError, json.JSONDecodeError) as exc:
+        raise CostError("não foi possível ler o state/show JSON ou as premissas") from exc
+    if not isinstance(assumptions, dict):
+        raise CostError("o arquivo de premissas precisa ser um objeto JSON")
+    try:
+        assumptions = {str(key): float(value) for key, value in assumptions.items()}
+    except (TypeError, ValueError) as exc:
+        raise CostError("todas as premissas precisam ser valores mensais em USD") from exc
+    inventory = resources(state)
+    modeled = [item for item in inventory if item["address"] in assumptions]
+    missing = [item for item in inventory if item["address"] not in assumptions]
+    payload = {"title": "Estimativa de cenário baseada no estado Terraform", "kind": "estimate", "state": args.state, "retrieved_at": datetime.now(timezone.utc).isoformat(), "resources": inventory, "modeled_resources": len(modeled), "unmodeled_resources": len(missing), "scenario_monthly_total": round(sum(assumptions[item["address"]] for item in modeled), 8), "assumptions": assumptions, "source": "Terraform state/show JSON + premissas explícitas", "warning": "Não é forecast de fatura: o estado não informa volume, tráfego, requisições, armazenamento efetivo ou usuários ativos."}
+    if missing and not args.json:
+        payload["unmodeled_addresses"] = [item["address"] for item in missing]
+    show(payload, args.json)
+
+def parser():
+    root = argparse.ArgumentParser(prog="cloud-infrastructure-cost")
+    commands = root.add_subparsers(dest="command", required=True)
+    def common(command):
+        command.add_argument("--profile", default=os.environ.get("AWS_PROFILE"))
+        command.add_argument("--region", default=os.environ.get("AWS_CE_REGION", "us-east-1"))
+        command.add_argument("--json", action="store_true")
+    command = commands.add_parser("actual")
+    common(command)
+    command.add_argument("--days", type=int, default=30)
+    command.add_argument("--start", type=iso)
+    command.add_argument("--end", type=iso)
+    command.add_argument("--metric", default="UnblendedCost")
+    command.add_argument("--cost-center", help="filter by the AWS cost allocation tag value")
+    command.add_argument("--tag-key", default="CostCenter", help="tag key used with --cost-center")
+    command.set_defaults(handler=actual)
+    command = commands.add_parser("forecast")
+    common(command)
+    command.add_argument("--metric", default="UNBLENDED_COST")
+    command.add_argument("--confidence", type=int, default=80)
+    command.set_defaults(handler=forecast)
+    command = commands.add_parser("estimate")
+    command.add_argument("--state", required=True)
+    command.add_argument("--assumptions")
+    command.add_argument("--json", action="store_true")
+    command.set_defaults(handler=estimate)
+    return root
+
+def main():
+    args = parser().parse_args()
+    try:
+        args.handler(args)
+    except CostError as exc:
+        print(f"cloud-infrastructure-cost: {exc}", file=sys.stderr)
+        return 1
+    return 0
+
+if __name__ == "__main__":
+    raise SystemExit(main())

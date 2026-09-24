@@ -1,0 +1,27 @@
+domain_prefix = "replace-with-unique-__PROJECT_NAME__-dev"
+
+enable_google    = true
+google_client_id = "replace-with-google-client-id"
+
+# Never commit this value. Set it through TF_VAR_google_client_secret or CI secrets.
+# google_client_secret = "replace-with-google-client-secret"
+
+clients = {
+  web = {
+    callback_urls = [
+      "http://localhost:3000/auth/callback",
+    ]
+    logout_urls = [
+      "http://localhost:3000/logout",
+    ]
+  }
+  mobile = {
+    callback_urls = [
+      "__APP_SCHEME__://auth/callback",
+    ]
+    logout_urls = [
+      "__APP_SCHEME__://auth/logout",
+    ]
+  }
+}
+

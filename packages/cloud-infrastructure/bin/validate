@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [[ $# -eq 0 ]]; then
+  echo "Usage: validate <repository-path>" >&2
+  exit 2
+fi
+exec "$PACKAGE_ROOT/bin/cloud-infrastructure" validate "$@"

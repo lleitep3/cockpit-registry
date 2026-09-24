@@ -1,0 +1,22 @@
+version: "0.1.0"
+components:
+  - name: governance-budget
+    path: modules/budget
+    category: governance
+    status: optional
+    description: Monthly AWS budget filtered by the CostCenter tag with forecasted alerts.
+  - name: storage-private-s3
+    path: modules/private-s3
+    category: storage
+    status: optional
+    description: Private S3 bucket with public access blocking, encryption, and versioning.
+  - name: identity-cognito
+    path: modules/cognito
+    category: identity
+    status: available
+    description: Cognito User Pool with public web/mobile clients and optional Google federation.
+  - name: environment-dev
+    path: environments/dev
+    category: composition
+    status: example
+    description: Development root module that composes the identity module.

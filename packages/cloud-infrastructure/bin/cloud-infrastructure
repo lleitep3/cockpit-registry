@@ -1,0 +1,291 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PACKAGE_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BOILERPLATE_ROOT="$PACKAGE_ROOT/boilerplate"
+CATALOG_FILE="$BOILERPLATE_ROOT/components.yml"
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  cloud-infrastructure components
+  cloud-infrastructure validate <repository-path>
+  cloud-infrastructure init [options]
+  cloud-infrastructure cost <actual|forecast|estimate> [options]
+
+Commands:
+  components              List reusable Terraform components in the boilerplate.
+  cost                    Read actual spend, forecast, or Terraform scenario estimate.
+  validate <path>         Validate an existing infrastructure repository without changing it.
+  init                    Reuse an existing repository or scaffold a new one.
+
+Init options:
+  --repo PATH             Use and validate an existing infrastructure repository.
+  --create PATH           Create a new repository at PATH from the boilerplate.
+  --project-name NAME     Lowercase project identifier used in names and state keys.
+  --display-name NAME     Human-readable project name used in invitation messages and docs.
+  --client-slug SLUG      Lowercase client/cost-center identifier.
+  --app-scheme SCHEME     Mobile callback scheme. Defaults to client slug without hyphens.
+  --region REGION         AWS region. Defaults to us-east-1.
+  --environment NAME      Environment. Defaults to dev.
+  --force                 Allow copying into a non-empty destination explicitly.
+  --no-git-init           Do not initialize a local Git repository for a new destination.
+  --yes                   Skip interactive questions when all required values are provided.
+  -h, --help              Show this help.
+USAGE
+}
+
+die() {
+  printf 'cloud-infrastructure: %s\n' "$1" >&2
+  exit 1
+}
+
+require_directory() {
+  [[ -d "$1" ]] || die "directory does not exist: $1"
+}
+
+validate_slug() {
+  [[ "$2" =~ ^[a-z0-9][a-z0-9-]*$ ]] || die "$1 must contain only lowercase letters, numbers, and hyphens"
+}
+
+validate_environment() {
+  case "$1" in
+    dev|staging|prod) ;;
+    *) die "environment must be dev, staging, or prod" ;;
+  esac
+}
+
+validate_repository() {
+  local repository_path="$1"
+  local missing=()
+  require_directory "$repository_path"
+
+  for required_path in README.md environments modules; do
+    [[ -e "$repository_path/$required_path" ]] || missing+=("$required_path")
+  done
+
+  if ((${#missing[@]} > 0)); then
+    printf 'Repository is missing required paths: %s\n' "${missing[*]}" >&2
+    return 1
+  fi
+
+  printf 'Infrastructure repository is valid: %s\n' "$repository_path"
+}
+
+list_components() {
+  [[ -f "$CATALOG_FILE" ]] || die "component catalog not found: $CATALOG_FILE"
+  cat "$CATALOG_FILE"
+}
+
+cost_command() {
+  [[ $# -gt 0 ]] || die "cost requires actual, forecast, or estimate"
+  exec "$PACKAGE_ROOT/bin/cloud-infrastructure-cost" "$@"
+}
+
+prompt_default() {
+  local label="$1"
+  local default_value="$2"
+  local answer
+  read -r -p "$label [$default_value]: " answer
+  printf '%s' "${answer:-$default_value}"
+}
+
+prompt_required() {
+  local label="$1"
+  local answer=""
+  while [[ -z "$answer" ]]; do
+    read -r -p "$label: " answer
+  done
+  printf '%s' "$answer"
+}
+
+escape_sed_replacement() {
+  printf '%s' "$1" | sed 's/[\\&|]/\\&/g'
+}
+
+replace_token() {
+  local token="$1"
+  local value="$2"
+  local escaped_value
+  escaped_value="$(escape_sed_replacement "$value")"
+
+  while IFS= read -r -d '' file; do
+    sed -i "s|$token|$escaped_value|g" "$file"
+  done < <(find "$TARGET_PATH" -type f ! -path '*/.git/*' -print0)
+}
+
+scaffold_repository() {
+  require_directory "$BOILERPLATE_ROOT"
+
+  if [[ -e "$TARGET_PATH" ]]; then
+    if [[ ! -d "$TARGET_PATH" ]]; then
+      die "destination exists and is not a directory: $TARGET_PATH"
+    fi
+
+    if [[ -n "$(find "$TARGET_PATH" -mindepth 1 -maxdepth 1 -print -quit)" && "$FORCE" != true ]]; then
+      die "destination is not empty; use --force only when overwriting is intentional: $TARGET_PATH"
+    fi
+  else
+    mkdir -p "$TARGET_PATH"
+  fi
+
+  cp -R "$BOILERPLATE_ROOT"/. "$TARGET_PATH"/
+
+  replace_token "__PROJECT_NAME__" "$PROJECT_NAME"
+  replace_token "__PROJECT_DISPLAY_NAME__" "$DISPLAY_NAME"
+  replace_token "__CLIENT_SLUG__" "$CLIENT_SLUG"
+  replace_token "__APP_SCHEME__" "$APP_SCHEME"
+  replace_token "__AWS_REGION__" "$AWS_REGION"
+
+  if [[ "$GIT_INIT" == true && ! -d "$TARGET_PATH/.git" ]]; then
+    git -C "$TARGET_PATH" init -q
+  fi
+
+  printf 'Infrastructure repository scaffolded at %s\n' "$TARGET_PATH"
+  printf 'Next steps: review the plan, configure secrets outside Git, run terraform fmt and validate, then create the first component commit.\n'
+}
+
+COMMAND="${1:-help}"
+if [[ $# -gt 0 ]]; then
+  shift
+fi
+
+case "$COMMAND" in
+  components)
+    [[ $# -eq 0 ]] || die "components does not accept arguments"
+    list_components
+    ;;
+  cost)
+    cost_command "$@"
+    ;;
+  validate)
+    [[ $# -eq 1 ]] || die "validate requires exactly one repository path"
+    validate_repository "$1"
+    ;;
+  init)
+    REPOSITORY_PATH=""
+    TARGET_PATH=""
+    PROJECT_NAME=""
+    DISPLAY_NAME=""
+    CLIENT_SLUG=""
+    APP_SCHEME=""
+    AWS_REGION="us-east-1"
+    ENVIRONMENT="dev"
+    FORCE=false
+    GIT_INIT=true
+    NON_INTERACTIVE=false
+
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --repo)
+          [[ $# -ge 2 ]] || die "--repo requires a path"
+          REPOSITORY_PATH="$2"
+          shift 2
+          ;;
+        --create)
+          [[ $# -ge 2 ]] || die "--create requires a path"
+          TARGET_PATH="$2"
+          shift 2
+          ;;
+        --project-name)
+          [[ $# -ge 2 ]] || die "--project-name requires a value"
+          PROJECT_NAME="$2"
+          shift 2
+          ;;
+        --display-name)
+          [[ $# -ge 2 ]] || die "--display-name requires a value"
+          DISPLAY_NAME="$2"
+          shift 2
+          ;;
+        --client-slug)
+          [[ $# -ge 2 ]] || die "--client-slug requires a value"
+          CLIENT_SLUG="$2"
+          shift 2
+          ;;
+        --app-scheme)
+          [[ $# -ge 2 ]] || die "--app-scheme requires a value"
+          APP_SCHEME="$2"
+          shift 2
+          ;;
+        --region)
+          [[ $# -ge 2 ]] || die "--region requires a value"
+          AWS_REGION="$2"
+          shift 2
+          ;;
+        --environment)
+          [[ $# -ge 2 ]] || die "--environment requires a value"
+          ENVIRONMENT="$2"
+          shift 2
+          ;;
+        --force)
+          FORCE=true
+          shift
+          ;;
+        --no-git-init)
+          GIT_INIT=false
+          shift
+          ;;
+        --yes)
+          NON_INTERACTIVE=true
+          shift
+          ;;
+        -h|--help)
+          usage
+          exit 0
+          ;;
+        *)
+          die "unknown init option: $1"
+          ;;
+      esac
+    done
+
+    if [[ -n "$REPOSITORY_PATH" && -n "$TARGET_PATH" ]]; then
+      die "choose either --repo or --create, not both"
+    fi
+
+    if [[ -z "$REPOSITORY_PATH" && -z "$TARGET_PATH" ]]; then
+      if [[ "$NON_INTERACTIVE" == true ]]; then
+        die "--yes requires --repo or --create"
+      fi
+
+      read -r -p "Já existe um repositório de infraestrutura? [s/N]: " reuse_existing
+      if [[ "$reuse_existing" =~ ^[sS][iI]?$ ]]; then
+        REPOSITORY_PATH="$(prompt_required "Caminho do repositório existente")"
+      else
+        TARGET_PATH="$(prompt_required "Caminho para criar o novo repositório")"
+      fi
+    fi
+
+    if [[ -n "$REPOSITORY_PATH" ]]; then
+      validate_repository "$REPOSITORY_PATH"
+      exit 0
+    fi
+
+    if [[ "$NON_INTERACTIVE" != true ]]; then
+      PROJECT_NAME="${PROJECT_NAME:-$(prompt_default "Nome técnico do projeto" "infra-project")}"
+      DISPLAY_NAME="${DISPLAY_NAME:-$(prompt_default "Nome de apresentação" "Infrastructure Project")}"
+      CLIENT_SLUG="${CLIENT_SLUG:-$(prompt_default "Slug do cliente/cost center" "$PROJECT_NAME")}"
+      AWS_REGION="${AWS_REGION:-$(prompt_default "Região AWS" "us-east-1")}"
+      ENVIRONMENT="${ENVIRONMENT:-$(prompt_default "Ambiente inicial" "dev")}"
+    else
+      PROJECT_NAME="${PROJECT_NAME:-infra-project}"
+      DISPLAY_NAME="${DISPLAY_NAME:-Infrastructure Project}"
+      CLIENT_SLUG="${CLIENT_SLUG:-$PROJECT_NAME}"
+    fi
+
+    APP_SCHEME="${APP_SCHEME:-${CLIENT_SLUG//-/}}"
+    validate_slug "project-name" "$PROJECT_NAME"
+    validate_slug "client-slug" "$CLIENT_SLUG"
+    validate_environment "$ENVIRONMENT"
+    [[ "$AWS_REGION" =~ ^[a-z0-9-]+$ ]] || die "region must contain only lowercase letters, numbers, and hyphens"
+    [[ "$APP_SCHEME" =~ ^[a-z0-9][a-z0-9+.-]*$ ]] || die "app-scheme contains invalid characters"
+
+    scaffold_repository
+    ;;
+  -h|--help|help)
+    usage
+    ;;
+  *)
+    die "unknown command: $COMMAND"
+    ;;
+esac

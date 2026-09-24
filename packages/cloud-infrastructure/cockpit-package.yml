@@ -1,0 +1,78 @@
+name: "cloud-infrastructure"
+version: "0.5.0"
+description: "Cloud architecture and engineering with cost-aware, incremental infrastructure delivery."
+author: "lleitep3"
+license: "MIT"
+type: plugin
+category: infrastructure
+
+requirements:
+  cockpit: ">=0.1.0"
+
+features:
+  modules:
+    - path: "bin/cloud-infrastructure"
+      name: "cloud-infrastructure"
+      description: "CLI para validar ou gerar repositórios de infraestrutura a partir do boilerplate."
+  agents:
+    - path: "agents/cloud-architect.md"
+      name: "cloud-architect"
+      description: "Perfil para desenhar arquitetura cloud, fronteiras, custos e evolução."
+    - path: "agents/cloud-engineer.md"
+      name: "cloud-engineer"
+      description: "Perfil para implementar infraestrutura cloud com Terraform e entrega incremental."
+  skills:
+    - path: "skills/cloud-architecture"
+      name: "cloud-architecture"
+      description: "Planejamento de arquitetura cloud, componentes, custos, riscos e migração."
+    - path: "skills/cloud-engineering"
+      name: "cloud-engineering"
+      description: "Implementação segura e incremental de infraestrutura como código."
+    - path: "skills/aws-expert"
+      name: "aws-expert"
+      description: "Conhecimento aplicado de AWS, segurança, billing, custos e operação."
+    - path: "skills/infrastructure-critic"
+      name: "infrastructure-critic"
+      description: "Revisão crítica de PRs Terraform/IaC, integrações, flexibilidade e gaps operacionais."
+  kb:
+    - path: "kb/guides/infrastructure-review.md"
+      type: "guide"
+    - path: "kb/guides/terraform-pr-review-checklist.md"
+      type: "guide"
+    - path: "kb/guides/aws-static-frontend-hosting.md"
+      type: "guide"
+  rules:
+    - path: "rules/cloud-infrastructure.md"
+      name: "cloud-infrastructure"
+      description: "Postura obrigatória para trabalhos de cloud e infraestrutura."
+
+installation:
+  supported_providers:
+    - codex
+  provider_features:
+    codex:
+      - modules
+      - agents
+      - skills
+      - rules
+      - kb
+  method: "copy"
+
+metadata:
+  tags:
+    - cloud
+    - infrastructure
+    - terraform
+    - aws
+    - cost-management
+    - architecture
+  keywords:
+    - cloud architect
+    - cloud engineer
+    - aws expert
+    - infrastructure as code
+    - terraform
+    - cost allocation
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/aicockpit/issues"
