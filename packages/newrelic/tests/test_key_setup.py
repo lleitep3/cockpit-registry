@@ -173,6 +173,26 @@ class KeySetupTests(unittest.TestCase):
         with self.assertRaises(setup.nr.ClientError):
             setup.create_ingest("offline-user", 42, "US", "OTHER", "fixture")
 
+    def test_network_failure_never_creates_replacement_key(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as d,
+            patch.object(setup.nr, "vault_credential", return_value="offline-test"),
+            patch.object(
+                setup,
+                "check_account",
+                side_effect=setup.nr.ClientError("network failure"),
+            ),
+            patch.object(setup, "launch_user_bootstrap") as browser,
+        ):
+            with self.assertRaises(setup.nr.ClientError):
+                setup.provision(
+                    "dev",
+                    {"account_id": 42, "region": "US", "vault_key": "newrelic-dev"},
+                    ["user"],
+                    Path(d),
+                )
+            browser.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()

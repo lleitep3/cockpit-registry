@@ -345,7 +345,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="New Relic read-only analysis and Terraform scaffolding. Credentials never accepted as arguments."
+        prog="cockpit newrelic",
+        description="New Relic read-only analysis and Terraform scaffolding. Credentials never accepted as arguments.",
     )
     parser.add_argument("--account", type=positive)
     parser.add_argument("--region", choices=ENDPOINTS)
@@ -376,7 +377,11 @@ def main() -> int:
     keys = configure.add_parser(
         "keys", help="Login no navegador, criação de chaves e armazenamento no cofre"
     )
-    keys.add_argument("--profile", dest="setup_profile")
+    keys.add_argument(
+        "--profile",
+        dest="setup_profile",
+        help="Perfil de conta/região; sem opção, pergunta no terminal",
+    )
     keys.add_argument(
         "--types", nargs="+", choices=["user", "license", "browser"], default=["user"]
     )

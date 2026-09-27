@@ -299,11 +299,16 @@ def create_ingest(
 def execute(args: argparse.Namespace) -> dict[str, Any]:
     if any(os.environ.get(k) for k in ("DEBUG", "PWDEBUG")):
         raise nr.ClientError("Unset DEBUG/PWDEBUG to prevent credential traces.")
+    args.types = list(dict.fromkeys(args.types))
     profile_name = args.setup_profile or args.profile
     if not profile_name and sys.stdin.isatty():
         names = list(nr.load_profiles())
         print("Perfis disponíveis: " + (", ".join(names) or "nenhum"), file=sys.stderr)
-        profile_name = input("Perfil New Relic (novo ou existente): ").strip()
+        default = names[0] if len(names) == 1 else ""
+        profile_name = (
+            input(f"Perfil New Relic (novo ou existente) [{default}]: ").strip()
+            or default
+        )
     if not profile_name or not re.fullmatch(r"[a-z][a-z0-9-]{0,62}", profile_name):
         raise nr.ClientError("Select an existing --profile NAME.")
     if profile_name not in nr.load_profiles():
@@ -366,7 +371,6 @@ def provision(
         )
     try:
         key = nr.vault_credential(profile["vault_key"])
-        check_account(key, account, region)
     except nr.ClientError:
         if "user" not in types:
             raise nr.ClientError(
@@ -380,6 +384,8 @@ def provision(
             journal,
             {"status": "complete", "name": name, "type": "USER", "account_id": account},
         )
+    # A transport/access failure must never trigger credential creation.
+    check_account(key, account, region)
     saved = ["user"]
     for kind in types:
         if kind == "user":
