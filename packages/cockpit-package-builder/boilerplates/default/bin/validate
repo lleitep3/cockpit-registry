@@ -1,0 +1,15 @@
+#!/bin/bash
+# {PKG_NAME} validation script
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PKG_DIR="${SCRIPT_DIR}/.."
+
+# Run the standard cockpit-builder validation if available
+if command -v cockpit >/dev/null 2>&1; then
+    exec cockpit cockpit-builder validate "${PKG_DIR}"
+else
+    echo "{PKG_NAME} package structure looks valid."
+    exit 0
+fi

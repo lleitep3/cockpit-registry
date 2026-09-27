@@ -1,0 +1,73 @@
+name: cockpit-package-builder
+version: 0.2.0
+description: "Scaffold, validate, and configure AICockpit packages following official conventions"
+author: "AICockpit"
+license: "MIT"
+homepage: "https://github.com/lleitep3/aicockpit"
+repository: "https://github.com/lleitep3/aicockpit"
+
+type: plugin
+category: tooling
+
+requirements:
+  cockpit: ">=0.1.0"
+
+external-dependencies:
+  system:
+    - "bash"
+    - "python3"
+
+features:
+  modules:
+    - path: "bin/cockpit-builder"
+      name: "cockpit-builder"
+      description: "CLI for scaffolding and validating AICockpit packages"
+  skills:
+    - path: "skills/cockpit-package-builder"
+      name: "cockpit-package-builder"
+      description: "Teaches AI agents how to create AICockpit packages using cockpit-builder"
+  agents:
+    - path: "skills/cockpit-package-builder"
+      name: "cockpit-package-builder-agent"
+      description: "Agent instructions for package creation best practices"
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - antigravity
+    - codex
+  provider_features:
+    devin:
+      - modules
+      - skills
+      - agents
+    goose:
+      - modules
+      - skills
+    antigravity:
+      - modules
+      - skills
+      - agents
+    codex:
+      - modules
+      - skills
+  method: copy
+
+metadata:
+  tags:
+    - packages
+    - scaffolding
+    - validation
+    - cli
+    - cockpit
+  keywords:
+    - cockpit
+    - package
+    - builder
+    - scaffold
+    - boilerplate
+    - validate
+  status: "beta"
+  support:
+    issues: "https://github.com/lleitep3/aicockpit/issues"

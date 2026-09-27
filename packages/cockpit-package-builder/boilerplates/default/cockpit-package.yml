@@ -1,0 +1,60 @@
+name: "{PKG_NAME}"
+version: "0.1.0"
+description: "Describe what this AICockpit package does"
+author: "{PKG_AUTHOR}"
+license: "MIT"
+homepage: "https://github.com/lleitep3/aicockpit"
+repository: "https://github.com/lleitep3/aicockpit"
+
+type: plugin
+category: utilities
+
+requirements:
+  cockpit: ">=0.1.0"
+
+features:
+  modules:
+    - path: "bin/{PKG_NAME}"
+      name: "{PKG_NAME}"
+      description: "Main CLI command for this package"
+  skills:
+    - path: "skills/{PKG_NAME}"
+      name: "{PKG_NAME}"
+      description: "Skill that teaches AI agents to use this package"
+
+installation:
+  supported_providers:
+    - devin
+    - goose
+    - antigravity
+  provider_features:
+    devin:
+      - modules
+      - skills
+    goose:
+      - modules
+      - skills
+    antigravity:
+      - modules
+      - skills
+  method: copy
+
+configuration:
+  defaults:
+    example_option: "default_value"
+  options:
+    - name: "example_option"
+      type: "string"
+      description: "Example configuration option"
+      default: "default_value"
+      required: false
+
+metadata:
+  tags:
+    - {PKG_NAME}
+    - example
+  keywords:
+    - {PKG_NAME}
+  status: "alpha"
+  support:
+    issues: "https://github.com/lleitep3/aicockpit/issues"
