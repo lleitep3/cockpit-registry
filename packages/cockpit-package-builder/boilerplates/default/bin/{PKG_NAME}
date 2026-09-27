@@ -1,0 +1,35 @@
+#!/bin/bash
+# {PKG_NAME} wrapper
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+
+show_usage() {
+    cat <<'EOF'
+Usage: cockpit {PKG_NAME} <subcommand>
+
+Subcommands:
+  hello       Print a hello message
+  help        Show this help message
+EOF
+}
+
+SUBCOMMAND="${1:-}"
+shift || true
+
+case "${SUBCOMMAND}" in
+    hello)
+        exec "${LIB_DIR}/command.sh" "$@"
+        ;;
+    help|--help|-h|"")
+        show_usage
+        exit 0
+        ;;
+    *)
+        echo "Error: unknown subcommand '${SUBCOMMAND}'" >&2
+        show_usage >&2
+        exit 1
+        ;;
+esac

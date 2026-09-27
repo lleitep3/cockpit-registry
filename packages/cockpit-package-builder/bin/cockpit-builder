@@ -1,0 +1,95 @@
+#!/bin/bash
+# cockpit-package-builder wrapper
+# Scaffolds, validates, and configures AICockpit packages.
+
+set -uo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+
+show_usage() {
+    cat <<'EOF'
+Usage: cockpit cockpit-builder <subcommand> [args]
+
+Package commands:
+  create <package-name> [path]     Scaffold a new package
+  validate <package-path>          Validate an existing package
+  configure                        Configure the builder (placeholder)
+
+Registry commands:
+  registry create <path> [--remote URL]   Create a new package registry
+  registry validate <registry-path>       Validate a registry
+  publish <package-path> <registry-path>  Publish a package into a registry
+
+  help                             Show this help message
+
+Examples:
+  cockpit cockpit-builder create my-tool
+  cockpit cockpit-builder create my-tool /custom/output/path
+  cockpit cockpit-builder validate ~/.cockpit/local-registry/my-tool
+  cockpit cockpit-builder registry create /tmp/my-registry --remote https://github.com/user/my-registry
+  cockpit cockpit-builder publish ~/.cockpit/local-registry/my-tool /tmp/my-registry
+EOF
+}
+
+SUBCOMMAND="${1:-}"
+shift || true
+
+case "${SUBCOMMAND}" in
+    create)
+        if [[ ! -x "${LIB_DIR}/create.sh" ]]; then
+            chmod +x "${LIB_DIR}/create.sh"
+        fi
+        exec "${LIB_DIR}/create.sh" "$@"
+        ;;
+    validate)
+        if [[ ! -x "${LIB_DIR}/validate.sh" ]]; then
+            chmod +x "${LIB_DIR}/validate.sh"
+        fi
+        exec "${LIB_DIR}/validate.sh" "$@"
+        ;;
+    configure)
+        if [[ ! -x "${LIB_DIR}/configure.sh" ]]; then
+            chmod +x "${LIB_DIR}/configure.sh"
+        fi
+        exec "${LIB_DIR}/configure.sh" "$@"
+        ;;
+    registry)
+        REG_SUBCOMMAND="${1:-}"
+        shift || true
+        case "${REG_SUBCOMMAND}" in
+            create)
+                if [[ ! -x "${LIB_DIR}/registry_create.sh" ]]; then
+                    chmod +x "${LIB_DIR}/registry_create.sh"
+                fi
+                exec "${LIB_DIR}/registry_create.sh" "$@"
+                ;;
+            validate)
+                if [[ ! -x "${LIB_DIR}/registry_validate.sh" ]]; then
+                    chmod +x "${LIB_DIR}/registry_validate.sh"
+                fi
+                exec "${LIB_DIR}/registry_validate.sh" "$@"
+                ;;
+            *)
+                echo "Error: unknown registry subcommand '${REG_SUBCOMMAND}'" >&2
+                show_usage >&2
+                exit 1
+                ;;
+        esac
+        ;;
+    publish)
+        if [[ ! -x "${LIB_DIR}/publish.sh" ]]; then
+            chmod +x "${LIB_DIR}/publish.sh"
+        fi
+        exec "${LIB_DIR}/publish.sh" "$@"
+        ;;
+    help|--help|-h|"")
+        show_usage
+        exit 0
+        ;;
+    *)
+        echo "Error: unknown subcommand '${SUBCOMMAND}'" >&2
+        show_usage >&2
+        exit 1
+        ;;
+esac

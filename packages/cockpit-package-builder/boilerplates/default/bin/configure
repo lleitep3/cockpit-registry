@@ -1,0 +1,7 @@
+#!/bin/bash
+# {PKG_NAME} configuration script
+
+set -uo pipefail
+
+echo "No configuration required for {PKG_NAME}."
+exit 0

@@ -11,7 +11,7 @@ updated_at: "2026-09-23T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 17
+  total_packages: 18
   categories:
     - examples
     - productivity
@@ -650,6 +650,23 @@ packages:
     url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/newrelic"
     supported_providers: [codex]
     features: [modules, skills, rules]
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-27T00:00:00Z"
+
+  - name: "cockpit-package-builder"
+    version: "0.2.0"
+    description: "Scaffold and validate Cockpit packages with shared profile guidance"
+    author: "AICockpit"
+    license: "MIT"
+    category: "tooling"
+    tags: [cockpit, packages, scaffolding, validation]
+    path: "packages/cockpit-package-builder"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-package-builder"
+    supported_providers: [devin, goose, antigravity, codex]
+    features: [modules, skills, agents]
     requirements:
       cockpit: ">=0.1.0"
     installation_method: "copy"
