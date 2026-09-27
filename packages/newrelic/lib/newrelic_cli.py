@@ -265,6 +265,22 @@ def positive(value: str) -> int:
 
 
 def run(args: argparse.Namespace) -> dict[str, Any]:
+    if args.command == "configure":
+        if args.configure_action == "browser":
+            script = Path(__file__).resolve().parents[1] / "bin/setup-browser"
+            if subprocess.run([str(script)], check=False).returncode:
+                raise ClientError("Browser dependency setup failed.")
+            return {"browser_dependency_ready": True}
+        import key_setup
+
+        try:
+            return key_setup.execute(args)
+        except key_setup.ClientError as exc:
+            raise ClientError(str(exc)) from None
+        except Exception:  # noqa: BLE001 - fail closed without echoing browser/API secrets
+            raise ClientError(
+                "Key setup stopped. No automatic retry. Check browser login/policy, vault and local journal; raw errors are hidden to protect credentials."
+            ) from None
     if args.command == "scaffold":
         target = Path(args.directory)
         if target.exists():
@@ -329,7 +345,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="New Relic read-only analysis and Terraform scaffolding. Credentials never accepted as arguments."
+        prog="cockpit newrelic",
+        description="New Relic read-only analysis and Terraform scaffolding. Credentials never accepted as arguments.",
     )
     parser.add_argument("--account", type=positive)
     parser.add_argument("--region", choices=ENDPOINTS)
@@ -351,11 +368,35 @@ def main() -> int:
         "--region", dest="profile_region", required=True, choices=ENDPOINTS
     )
     add.add_argument("--vault-key", required=True)
+    configure = sub.add_parser(
+        "configure", help="Configuração guiada de navegador e chaves"
+    ).add_subparsers(dest="configure_action", required=True)
+    configure.add_parser(
+        "browser", help="Instalar dependência CDP em ambiente virtual privado"
+    )
+    keys = configure.add_parser(
+        "keys", help="Login no navegador, criação de chaves e armazenamento no cofre"
+    )
+    keys.add_argument(
+        "--profile",
+        dest="setup_profile",
+        help="Perfil de conta/região; sem opção, pergunta no terminal",
+    )
+    keys.add_argument(
+        "--types", nargs="+", choices=["user", "license", "browser"], default=["user"]
+    )
+    keys.add_argument(
+        "--plan",
+        action="store_true",
+        help="Prévia JSON sem navegador, cofre ou criação",
+    )
     args = parser.parse_args()
     try:
         print(json.dumps(run(args), ensure_ascii=False))
         return 0
     except (
+        KeyboardInterrupt,
+        EOFError,
         ClientError,
         OSError,
         subprocess.TimeoutExpired,

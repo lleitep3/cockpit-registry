@@ -58,6 +58,18 @@ chave distinta; privilégios reais pertencem ao usuário New Relic, não ao nome
 Não existe perfil padrão implícito. Perfil não combina com --account/--region nem
 variáveis NEW_RELIC_* legadas, evitando mistura involuntária de conta e chave.
 Metadados ficam em ~/.cockpit/newrelic/profiles.json (0600); token no cofre Cockpit.
-O pacote não altera permissões do token, nem cria/rotaciona chaves no New Relic.
+Perfis não alteram permissões. configure keys pode criar novas chaves com confirmação; não revoga chaves antigas.
 Perfis são usados pela CLI de análise; Terraform continua usando suas variáveis
 efêmeras e configuração de conta/região revisada, conforme o builder.
+
+## Bootstrap guiado
+
+Para configurar chaves use `cockpit newrelic configure keys --profile NAME --types user license --plan`
+para mostrar escopo sem efeitos. A criação deve ser executada em terminal interativo,
+sem --plan: o operador confirma a conta e autentica no Chrome dedicado. Dependência:
+`cockpit newrelic configure browser`. A chave vai diretamente ao vault, nunca ao chat.
+User dá acesso à API; license envia telemetria; browser é somente para o agente web.
+Não usar esse fluxo para contornar política de navegador ou acesso negado. Não reexecutar
+criação com journal pendente sem reconciliar o resultado; não reutilizar chave exposta.
+Consulte README.md do pacote instalado para limitações e recuperação. A IA pode
+preparar/verificar metadados e orientar o usuário; não automatize sua senha/MFA/CAPTCHA.
