@@ -1,0 +1,30 @@
+name: newrelic
+version: 0.1.0
+description: "New Relic Terraform builder and read-only NerdGraph analysis."
+author: lleitep3
+license: MIT
+type: plugin
+category: infrastructure
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  modules:
+    - path: bin/newrelic
+      name: newrelic
+      description: "Read-only New Relic queries and Terraform scaffold. Requires Python 3.10+."
+  skills:
+    - path: skills/newrelic-builder
+      name: newrelic-builder
+    - path: skills/newrelic-analyzer
+      name: newrelic-analyzer
+  rules:
+    - path: rules/newrelic.md
+      name: newrelic
+installation:
+  method: copy
+  supported_providers: [codex]
+  provider_features:
+    codex: [modules, skills, rules]
+metadata:
+  tags: [newrelic, observability, terraform, nrql]
+  status: beta
