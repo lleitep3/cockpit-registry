@@ -1,0 +1,10 @@
+newrelic_account_id = 12345 # Replace with verified New Relic account ID.
+newrelic_region = "US" # Confirm when creating the account.
+project_name = "partilhar-aba"
+environment = "dev"
+client = "Partilhar ABA"
+cost_center = "partilhar"
+endpoints = { api = "https://api.example.com/health", web = "https://example.com" }
+notification_email = "operator@example.com"
+location = "AWS_SA_EAST_1"
+free_plan_confirmed = false

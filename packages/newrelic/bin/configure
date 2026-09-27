@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' 'newrelic: configure NEW_RELIC_ACCOUNT_ID, NEW_RELIC_REGION and a User key via environment or private file. See README.md; no credentials are collected during installation.'

@@ -11,7 +11,7 @@ updated_at: "2026-09-23T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 16
+  total_packages: 17
   categories:
     - examples
     - productivity
@@ -638,3 +638,20 @@ packages:
     status: "beta"
     released_at: "2026-09-23T13:00:00Z"
 
+
+  - name: "newrelic"
+    version: "0.1.0"
+    description: "Terraform observability builder and read-only NerdGraph analysis."
+    author: "lleitep3"
+    license: "MIT"
+    category: "infrastructure"
+    tags: [newrelic, observability, terraform, nrql]
+    path: "packages/newrelic"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/newrelic"
+    supported_providers: [codex]
+    features: [modules, skills, rules]
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-27T00:00:00Z"

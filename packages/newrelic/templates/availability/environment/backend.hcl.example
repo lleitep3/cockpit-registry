@@ -1,0 +1,5 @@
+bucket = "REPLACE-WITH-DESTINATION-STATE-BUCKET"
+key = "dev/newrelic/terraform.tfstate"
+region = "sa-east-1"
+encrypt = true
+allowed_account_ids = ["123456789012"]

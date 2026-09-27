@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else "Python 3.10+ required")'
+"$(dirname -- "${BASH_SOURCE[0]}")/newrelic" --help >/dev/null
+printf '%s\n' 'newrelic: Python and CLI available; no live API access tested.'
