@@ -6,7 +6,9 @@ import os
 import re
 import shutil
 import stat
+import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -66,6 +68,125 @@ def credential() -> str:
             "Provide a User API key securely through environment or a private file."
         )
     return value
+
+
+def profiles_path() -> Path:
+    return Path.home() / ".cockpit" / "newrelic" / "profiles.json"
+
+
+def load_profiles() -> dict[str, Any]:
+    path = profiles_path()
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+        if not isinstance(data, dict):
+            raise ClientError("Invalid profile metadata.")
+        return data
+    except ValueError:
+        raise ClientError(
+            "Invalid profile file; restore its metadata before continuing."
+        ) from None
+
+
+def save_profile(name: str, account: int, region: str, vault_key: str) -> None:
+    if not re.fullmatch(r"[a-z][a-z0-9-]{0,62}", name):
+        raise ClientError(
+            "Profile name must use lowercase letters, digits and hyphens."
+        )
+    if not re.fullmatch(r"newrelic-[a-z0-9-]{1,100}", vault_key):
+        raise ClientError(
+            "Vault reference must start with newrelic- and contain no secret."
+        )
+    data = load_profiles()
+    if name in data:
+        raise ClientError("Profile exists; choose a new name. Nothing overwritten.")
+    data[name] = {"account_id": account, "region": region, "vault_key": vault_key}
+    path = profiles_path()
+    path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode="w", dir=path.parent, delete=False) as stream:
+        json.dump(data, stream)
+        temporary = stream.name
+    os.replace(temporary, path)
+
+
+def resolve_profile(args: argparse.Namespace) -> dict[str, Any]:
+    name = getattr(args, "profile", None)
+    if not name:
+        raise ClientError("Select --profile NAME.")
+    profile = load_profiles().get(name)
+    if not isinstance(profile, dict):
+        raise ClientError("Unknown profile.")
+    if (
+        not isinstance(profile.get("account_id"), int)
+        or profile["account_id"] <= 0
+        or profile.get("region") not in ENDPOINTS
+        or not re.fullmatch(
+            r"newrelic-[a-z0-9-]{1,100}", str(profile.get("vault_key", ""))
+        )
+    ):
+        raise ClientError("Invalid profile metadata.")
+    if (
+        args.account is not None
+        or args.region is not None
+        or any(
+            os.environ.get(x)
+            for x in [
+                "NEW_RELIC_API_KEY",
+                "NEW_RELIC_API_KEY_FILE",
+                "NEW_RELIC_ACCOUNT_ID",
+                "NEW_RELIC_REGION",
+            ]
+        )
+    ):
+        raise ClientError(
+            "Profile conflicts with explicit account/region or legacy environment; unset overrides."
+        )
+    args.account, args.region = profile["account_id"], profile["region"]
+    return profile
+
+
+def vault_credential(reference: str) -> str:
+    result = subprocess.run(
+        ["cockpit", "vault", "get", reference],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+    if result.returncode:
+        raise ClientError(
+            "Vault unavailable, locked or credential missing; no fallback used."
+        )
+    value = result.stdout.strip()
+    if (
+        not value.startswith("NRAK-")
+        or len(value) > 512
+        or any(c.isspace() for c in value)
+    ):
+        raise ClientError("Vault entry is not a User API key.")
+    return value
+
+
+def profile_command(args: argparse.Namespace) -> dict[str, Any]:
+    if args.profile_action == "list":
+        return {"profiles": load_profiles()}
+    if args.profile_action == "add":
+        save_profile(
+            args.name, args.profile_account, args.profile_region, args.vault_key
+        )
+        return {"profile": args.name, "credential_saved": False}
+    profile = resolve_profile(args)
+    if not sys.stdin.isatty():
+        raise ClientError(
+            "Auth requires an interactive terminal with hidden input; never paste a key into chat."
+        )
+    result = subprocess.run(
+        ["cockpit", "vault", "set", profile["vault_key"]], check=False
+    )
+    if result.returncode:
+        raise ClientError("Vault did not save credential.")
+    return {"profile": args.profile, "credential_saved": True}
 
 
 def scrub(value: Any, secret: str) -> Any:
@@ -158,9 +279,22 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "planned_resources": 9,
             "applied": False,
         }
+    if args.command == "profiles":
+        return profile_command(args)
+    if getattr(args, "profile", None):
+        key = vault_credential(resolve_profile(args)["vault_key"])
+    else:
+        args.account = (
+            args.account or positive(os.environ["NEW_RELIC_ACCOUNT_ID"])
+            if os.environ.get("NEW_RELIC_ACCOUNT_ID")
+            else args.account
+        )
+        args.region = args.region or os.environ.get("NEW_RELIC_REGION", "US")
+        key = credential()
+    if args.region not in ENDPOINTS:
+        raise ClientError("Unsupported region.")
     if not args.account:
         raise ClientError("Supply --account or NEW_RELIC_ACCOUNT_ID.")
-    key = credential()
     if args.command == "account":
         data = request(
             "query($id:Int!){actor{account(id:$id){id name}}}",
@@ -197,24 +331,37 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="New Relic read-only analysis and Terraform scaffolding. Credentials never accepted as arguments."
     )
-    parser.add_argument(
-        "--account", type=positive, default=os.environ.get("NEW_RELIC_ACCOUNT_ID")
-    )
-    parser.add_argument(
-        "--region", choices=ENDPOINTS, default=os.environ.get("NEW_RELIC_REGION", "US")
-    )
+    parser.add_argument("--account", type=positive)
+    parser.add_argument("--region", choices=ENDPOINTS)
+    parser.add_argument("--profile")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ["account", *QUERIES]:
         sub.add_parser(name)
     sub.add_parser("nrql").add_argument("--file", required=True)
     sub.add_parser("scaffold").add_argument("directory")
+    profiles = sub.add_parser("profiles").add_subparsers(
+        dest="profile_action", required=True
+    )
+    profiles.add_parser("list")
+    profiles.add_parser("auth")
+    add = profiles.add_parser("add")
+    add.add_argument("name")
+    add.add_argument("--account", dest="profile_account", required=True, type=positive)
+    add.add_argument(
+        "--region", dest="profile_region", required=True, choices=ENDPOINTS
+    )
+    add.add_argument("--vault-key", required=True)
     args = parser.parse_args()
     try:
-        if args.region not in ENDPOINTS:
-            raise ClientError("Unsupported region; choose US, EU or JP.")
         print(json.dumps(run(args), ensure_ascii=False))
         return 0
-    except (ClientError, OSError) as exc:
+    except (
+        ClientError,
+        OSError,
+        subprocess.TimeoutExpired,
+        UnicodeError,
+        argparse.ArgumentTypeError,
+    ) as exc:
         # Never echo transport bodies, environment, paths supplied as secrets, or NRQL.
         print(
             str(exc) if isinstance(exc, ClientError) else "Local file access failed.",
