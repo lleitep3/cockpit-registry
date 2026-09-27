@@ -33,7 +33,10 @@ class Tests(unittest.TestCase):
             {},
             {"NEW_RELIC_API_KEY": "NRAK-test", "NEW_RELIC_API_KEY_FILE": "any"},
         ]:
-            with patch.dict(os.environ, env, clear=True), self.assertRaises(nr.ClientError):
+            with (
+                patch.dict(os.environ, env, clear=True),
+                self.assertRaises(nr.ClientError),
+            ):
                 nr.credential()
 
     def test_nrql_requires_read_and_window(self) -> None:
@@ -126,6 +129,107 @@ class Tests(unittest.TestCase):
             with self.assertRaises(argparse.ArgumentTypeError):
                 nr.positive(value)
         self.assertEqual(nr.positive("42"), 42)
+
+    def test_profiles_store_metadata_only_and_refuse_overwrite(self) -> None:
+        with (
+            tempfile.TemporaryDirectory() as d,
+            patch.object(nr, "profiles_path", return_value=Path(d) / "profiles.json"),
+        ):
+            nr.save_profile("dev", 42, "US", "newrelic-dev")
+            self.assertEqual(nr.load_profiles()["dev"]["account_id"], 42)
+            self.assertEqual((Path(d) / "profiles.json").stat().st_mode & 0o777, 0o600)
+            with self.assertRaises(nr.ClientError):
+                nr.save_profile("dev", 99, "EU", "newrelic-prod")
+            with self.assertRaises(nr.ClientError):
+                nr.save_profile("../bad", 99, "EU", "newrelic-prod")
+            with self.assertRaises(nr.ClientError):
+                nr.save_profile("bad", 99, "EU", "NRAK-secret")
+
+    def test_profiles_select_distinct_accounts(self) -> None:
+        data = {
+            "dev": {"account_id": 42, "region": "US", "vault_key": "newrelic-dev"},
+            "prod": {"account_id": 99, "region": "EU", "vault_key": "newrelic-prod"},
+        }
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(nr, "load_profiles", return_value=data),
+        ):
+            for name, account in [("dev", 42), ("prod", 99)]:
+                args = argparse.Namespace(profile=name, account=None, region=None)
+                nr.resolve_profile(args)
+                self.assertEqual(args.account, account)
+            with self.assertRaises(nr.ClientError):
+                nr.resolve_profile(
+                    argparse.Namespace(profile="missing", account=None, region=None)
+                )
+
+    def test_profile_rejects_environment_and_explicit_override(self) -> None:
+        data = {"dev": {"account_id": 42, "region": "US", "vault_key": "newrelic-dev"}}
+        with patch.object(nr, "load_profiles", return_value=data):
+            with (
+                patch.dict(os.environ, {"NEW_RELIC_API_KEY": "NRAK-test"}, clear=True),
+                self.assertRaises(nr.ClientError),
+            ):
+                nr.resolve_profile(
+                    argparse.Namespace(profile="dev", account=None, region=None)
+                )
+            with (
+                patch.dict(os.environ, {}, clear=True),
+                self.assertRaises(nr.ClientError),
+            ):
+                nr.resolve_profile(
+                    argparse.Namespace(profile="dev", account=99, region=None)
+                )
+
+    def test_vault_failure_never_echoes_secret_or_falls_back(self) -> None:
+        with patch.object(nr.subprocess, "run") as run:
+            run.return_value.returncode = 1
+            run.return_value.stdout = "NRAK-do-not-print"
+            with self.assertRaises(nr.ClientError) as ctx:
+                nr.vault_credential("newrelic-dev")
+            self.assertNotIn("NRAK", str(ctx.exception))
+            run.return_value.returncode = 0
+            self.assertEqual(nr.vault_credential("newrelic-dev"), "NRAK-do-not-print")
+            self.assertEqual(
+                run.call_args.args[0], ["cockpit", "vault", "get", "newrelic-dev"]
+            )
+
+    def test_profile_auth_requires_hidden_terminal(self) -> None:
+        with (
+            patch.object(
+                nr, "resolve_profile", return_value={"vault_key": "newrelic-dev"}
+            ),
+            patch.object(nr.sys.stdin, "isatty", return_value=False),
+            self.assertRaises(nr.ClientError),
+        ):
+            nr.profile_command(argparse.Namespace(profile_action="auth"))
+
+    def test_profile_query_uses_selected_account(self) -> None:
+        args = argparse.Namespace(
+            command="account", profile="dev", account=None, region=None
+        )
+        with (
+            patch.dict(os.environ, {}, clear=True),
+            patch.object(
+                nr,
+                "load_profiles",
+                return_value={
+                    "dev": {
+                        "account_id": 42,
+                        "region": "EU",
+                        "vault_key": "newrelic-dev",
+                    }
+                },
+            ),
+            patch.object(nr, "vault_credential", return_value="NRAK-test"),
+            patch.object(
+                nr,
+                "request",
+                return_value={"actor": {"account": {"id": 42, "name": "dev"}}},
+            ) as request,
+        ):
+            self.assertEqual(nr.run(args)["region"], "EU")
+            self.assertEqual(request.call_args.args[1], {"id": 42})
 
 
 if __name__ == "__main__":

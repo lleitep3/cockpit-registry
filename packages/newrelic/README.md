@@ -39,3 +39,24 @@ API real e entrega de notificações precisam de validação após autorização
 
 Template derivado de partilhar-aba-infra PR #17; conta, email, URLs e credenciais são
 configuráveis. Não contém state, tfvars reais nem dados clínicos.
+
+## Perfis multi-conta
+
+`cockpit newrelic profiles add partilhar-dev --account 8554578 --region US --vault-key newrelic-partilhar-dev`
+registra somente metadados locais; não salva um token nem concede permissões New Relic.
+Para guardar uma chave válida, rode em terminal privado:
+`cockpit newrelic --profile partilhar-dev profiles auth` (entrada oculta pelo cofre).
+Nunca use --value ou cole chave no chat. Cofre bloqueado deve ser desbloqueado pelo
+proprietário; o pacote respeita o bloqueio, sem namespace alternativo ou fallback.
+
+`cockpit newrelic profiles list` lista metadados, sem consultar segredos.
+`cockpit newrelic --profile partilhar-dev account` verifica acesso real.
+`cockpit newrelic --profile partilhar-dev synthetics` consulta o ambiente selecionado.
+Crie outros perfis para outras contas/regiões. Cada referência de cofre pode ter uma
+chave distinta; privilégios reais pertencem ao usuário New Relic, não ao nome do perfil.
+Não existe perfil padrão implícito. Perfil não combina com --account/--region nem
+variáveis NEW_RELIC_* legadas, evitando mistura involuntária de conta e chave.
+Metadados ficam em ~/.cockpit/newrelic/profiles.json (0600); token no cofre Cockpit.
+O pacote não altera permissões do token, nem cria/rotaciona chaves no New Relic.
+Perfis são usados pela CLI de análise; Terraform continua usando suas variáveis
+efêmeras e configuração de conta/região revisada, conforme o builder.
