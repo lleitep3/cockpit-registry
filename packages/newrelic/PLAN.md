@@ -16,3 +16,10 @@ Não remover state nem destruir recursos como rollback padrão.
 | Componentes do pacote | 3 | 3 | Nenhum |
 | Recursos IaC no template | 9 | 9 | Nenhum |
 | Recursos criados em contas cloud | 0 | 0 | Nenhum |
+
+## Extensão 0.3.0
+Componente adicional: bootstrap interativo de chaves. Planejado/final: 1/1.
+Zero recursos Terraform adicionais; zero chaves reais criadas durante desenvolvimento.
+Validação local: fixture Chrome/CDP, cofre simulado com PTY, erros e isolamento.
+Criação real bloqueada até acesso administrativo permitido. Rollback: versão anterior
+do pacote; nenhuma revogação automática de credenciais ou exclusão de perfil.

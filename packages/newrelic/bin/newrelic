@@ -1,3 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-exec python3 "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)/lib/newrelic_cli.py" "$@"
+PACKAGE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON_BIN=python3
+if [[ -x "${HOME}/.cockpit/newrelic/runtime/bin/python" ]]; then
+  PYTHON_BIN="${HOME}/.cockpit/newrelic/runtime/bin/python"
+fi
+exec "$PYTHON_BIN" "$PACKAGE_DIR/lib/newrelic_cli.py" "$@"

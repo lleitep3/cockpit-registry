@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+PACKAGE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+RUNTIME_DIR="${HOME}/.cockpit/newrelic/runtime"
+umask 077
+python3 -m venv "$RUNTIME_DIR"
+"$RUNTIME_DIR/bin/python" -m pip install -r "$PACKAGE_DIR/requirements-browser.txt"
+printf '%s\n' 'Dependência CDP pronta. Use configure keys; Chrome/Chromium deve estar instalado.'

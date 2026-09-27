@@ -19,11 +19,12 @@ cockpit newrelic scaffold ./observability
 
 Autenticação: NEW_RELIC_API_KEY **ou** NEW_RELIC_API_KEY_FILE, nunca ambos.
 Arquivo deve pertencer ao usuário e ter modo 0600/0400. Use cofre para fornecer a
-User API key; o pacote não cria, rotaciona, armazena ou imprime credenciais.
+User API key; o modo de análise não cria nem imprime credenciais; configure keys salva no cofre.
 Conta/região podem vir de NEW_RELIC_ACCOUNT_ID/NEW_RELIC_REGION. Região padrão US.
 Não use credenciais expostas ou pendentes de rotação.
 
-CLI só envia operações de consulta com templates GraphQL fixos. Não é uma fronteira
+Os comandos de análise só enviam consultas com templates GraphQL fixos.
+O comando explícito configure keys cria credenciais após confirmação. Não é uma fronteira
 de autorização: use roles de leitura no servidor. Resultado pode conter informação
 sensível; prefira agregados e filtros. Não há retry automático, polling, logs HTTP ou
 redirect de credenciais. Respostas limitadas a 2 MB; timeout de transporte 45 segundos.
@@ -60,3 +61,47 @@ Metadados ficam em ~/.cockpit/newrelic/profiles.json (0600); token no cofre Cock
 O pacote não altera permissões do token, nem cria/rotaciona chaves no New Relic.
 Perfis são usados pela CLI de análise; Terraform continua usando suas variáveis
 efêmeras e configuração de conta/região revisada, conforme o builder.
+
+## Configuração guiada de chaves (Linux + Chrome)
+
+```sh
+cockpit newrelic configure browser
+cockpit newrelic configure keys
+# Ou com destino e tipos explícitos:
+cockpit newrelic configure keys --profile partilhar-dev --types user license
+# Para IA/automação: prévia sem efeitos externos
+cockpit newrelic configure keys --profile partilhar-dev --types user license --plan
+```
+
+`configure browser` instala Playwright em ~/.cockpit/newrelic/runtime (venv privado).
+Chrome/Chromium do sistema é necessário. `configure keys` pergunta o perfil, permite
+cadastrar conta/região, verifica cofre desbloqueado e exige digitar a confirmação
+CREATE <conta> <perfil>. User é o padrão; license/browser são opt-in. Não há --yes.
+O cofre deve ser desbloqueado pessoalmente; não são alteradas suas proteções.
+
+Sem uma User key válida, abre Chrome via CDP em loopback, porta efêmera e perfil
+persistente exclusivo por perfil Cockpit. O usuário completa login/MFA/CAPTCHA.
+A sessão é reutilizada nas próximas execuções. Não copia cookies, não conecta no
+Chrome pessoal e não consulta APIs internas autenticadas por cookies. Chrome 136+
+requer user-data-dir separado para depuração. O processo lançado é encerrado ao final.
+
+A UI cria apenas a User key, confirmando conta e tipo antes de submeter. Em seguida
+valida acesso pela API oficial. License/Browser são criadas pela API NerdGraph com
+essa User key, e suas referências/IDs são registrados no perfil. Chaves User válidas
+são reutilizadas; referências ingest existentes são conferidas no cofre. O fluxo não
+revoga chaves remotas antigas nem prova que a aplicação está enviando telemetria.
+
+Segredos são enviados ao prompt oculto do vault através de PTY (sem argumento --value),
+com conferência de leitura de volta; não ficam em JSON, prints, snapshots ou traces.
+DEBUG/PWDEBUG são recusados. Metadata/journal são 0600; navegador fica em diretório
+privado. Se houver falha após submissão, o journal bloqueia nova criação: conferir a
+chave no New Relic e recuperar/revogar manualmente antes de resolver o journal. Não
+apagar o journal cegamente para tentar de novo. Nenhuma repetição automática de mutation.
+
+Compatibilidade da UI foi testada numa fixture local por CDP; a tela real pode mudar.
+Login negado, políticas administrativas, captcha e mudança de seletor interrompem o
+fluxo. O comando não é alternativa para contornar bloqueios de acesso do navegador.
+Validação real de criação e ingestão ainda pendente no ambiente autorizado.
+
+Fontes: https://developer.chrome.com/blog/remote-debugging-port e
+https://docs.newrelic.com/docs/apis/nerdgraph/examples/use-nerdgraph-manage-license-keys-user-keys/
