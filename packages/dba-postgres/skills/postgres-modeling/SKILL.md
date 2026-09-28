@@ -20,3 +20,6 @@ FK composta com tenant pode justificar UNIQUE adicional. Uma tabela de IDs não
 prova que o cadastro inteiro existe. Exigir migrations e testes de invariantes,
 concorrência e isolamento para implementação. Articular backfill, compatibilidade
 e rollback antes da migração. Usar api-developer ao implementar o consumidor.
+
+Para qualquer DER ou diagrama, siga o [estilo visual padrão](../dba-postgres/references/diagram-style.md).
+Use o exemplo genérico dessa referência; não incorporar schemas de clientes no pacote.

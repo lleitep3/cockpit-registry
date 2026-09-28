@@ -17,3 +17,5 @@
 O coletor cobre um schema, 5000 tabelas/50000 itens por categoria, falhando ao atingir
 o limite para não rotular dados truncados como completos. Sem varredura de linhas.
 Timeout 10s por SQL, conexão 5s, processo 45s. Arquivos 0600 e relatório 0700 no Unix.
+
+Antes de entregar o DER, aplicar e conferir o [estilo visual padrão](diagram-style.md).

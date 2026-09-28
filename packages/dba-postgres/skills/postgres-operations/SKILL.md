@@ -25,3 +25,6 @@ restauração/exclusão muda dados. Confirmar apenas o que ainda não está auto
 Mapear responsabilidades com cloud-engineering/aws-expert para serviço gerenciado,
 api-developer para migrations/consumidores e newrelic-analyzer para evidências da aplicação.
 Não pressupor extensões, acesso a SO/superuser, backup do provedor ou réplica promovível.
+
+Para qualquer DER ou diagrama, siga o [estilo visual padrão](../dba-postgres/references/diagram-style.md).
+Use o exemplo genérico dessa referência; não incorporar schemas de clientes no pacote.
