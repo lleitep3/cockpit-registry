@@ -1,0 +1,49 @@
+name: dba-postgres
+version: 0.2.0
+description: "PostgreSQL DBA skills, evidence-based diagnostics, operational workflows and a local Compose laboratory."
+author: lleitep3
+license: MIT
+type: plugin
+category: development
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  modules:
+    - path: bin/dba-postgres
+      name: dba-postgres
+      description: "PostgreSQL metadata collection and offline analysis; Python 3.10+, psql and config exec."
+  skills:
+    - path: skills/dba-postgres
+      name: dba-postgres
+    - path: skills/postgres-modeling
+      name: postgres-modeling
+    - path: skills/postgres-performance
+      name: postgres-performance
+    - path: skills/postgres-operations
+      name: postgres-operations
+  kb:
+    - path: kb/guides/postgres-evidence.md
+      type: guide
+    - path: kb/guides/postgres-modeling.md
+      type: guide
+    - path: kb/guides/postgres-performance.md
+      type: guide
+    - path: kb/guides/postgres-operations.md
+      type: guide
+    - path: kb/guides/postgres-security.md
+      type: guide
+    - path: kb/guides/postgres-recovery.md
+      type: guide
+    - path: kb/guides/postgres-lifecycle.md
+      type: guide
+  boilerplate:
+    - path: boilerplates/local-postgres
+      name: postgres-local-lab
+installation:
+  method: copy
+  supported_providers: [codex]
+  provider_features:
+    codex: [modules, skills, kb, boilerplate]
+metadata:
+  tags: [postgresql, dba, database, performance, modeling, erd]
+  status: beta

@@ -11,7 +11,7 @@ updated_at: "2026-09-23T00:00:00Z"
 
 # Registry metadata
 metadata:
-  total_packages: 18
+  total_packages: 19
   categories:
     - examples
     - productivity
@@ -672,3 +672,23 @@ packages:
     installation_method: "copy"
     status: "beta"
     released_at: "2026-09-27T00:00:00Z"
+
+  - name: dba-postgres
+    version: 0.2.0
+    description: PostgreSQL DBA skills, evidence-based diagnostics, operational workflows
+      and a local Compose laboratory.
+    author: lleitep3
+    license: MIT
+    category: development
+    path: packages/dba-postgres
+    supported_providers:
+    - codex
+    features:
+    - modules
+    - skills
+    - kb
+    - boilerplate
+    requirements:
+      cockpit: '>=0.1.0'
+    installation_method: copy
+    status: beta
