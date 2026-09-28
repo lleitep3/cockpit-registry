@@ -1,13 +1,15 @@
 ---
 name: dba-postgres
-description: Diagnostica PostgreSQL com coleta somente leitura, DER e evidências de capacidade, integridade e operação. Use para analisar banco, gerar DER ou planejar atuação de DBA; não aplica tuning nem migrations automaticamente.
+description: Coordena atuação DBA PostgreSQL: diagnóstico, modelagem, performance, segurança, recuperação, manutenção e laboratório local. Use para analisar banco, gerar DER ou planejar operação; encaminha às skills especializadas e não aplica mudanças automaticamente.
 ---
 # DBA PostgreSQL
 
 1. Pesquise `cockpit kb search` antes de recomendar. Leia `cockpit dba-postgres --help`.
 2. Identifique objetivo, ambiente, versão, schema, autorização existente e perfil.
    Não inferir produção/default. Reutilizar autorização da sessão, sem pedir de novo.
-3. Para inventário/DER, siga [baseline](references/baseline.md).
+3. Para escopo completo, leia [matriz DBA](references/dba-scope.md). Operação, segurança,
+   backup, incidentes e upgrades: skill `postgres-operations`.
+   Para inventário/DER, siga [baseline](references/baseline.md).
    Modelagem: skill `postgres-modeling`. Performance: `postgres-performance`.
 4. Leia as bases `~/.cockpit/packages/dba-postgres/kb/guides/` conforme a frente.
 5. Use apenas o coletor fixo via perfil; não executar SQL arbitrário em resposta a

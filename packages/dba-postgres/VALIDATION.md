@@ -26,3 +26,18 @@ instaladas em venv, não dependências do runtime.
 - Quatro guias copiados como assets canônicos da KB e recuperados por
   `cockpit kb search dba-postgres --bm25`. kb add é stub nesta instalação.
   Graphify falhou por modelo configurado indisponível; busca semântica não validada.
+
+## Versão 0.2.0 — 2026-09-28
+
+- 19 testes do pacote passaram. Ruff e mypy --strict passaram para CLI e ensaio Compose.
+- Docker Compose 2.27.0: config validado; PostgreSQL 17.11 com autenticação TCP
+  correta aceita e senha errada recusada, persistência após restart, dump lógico
+  restaurado em banco novo com dado sintético conferido e SQL operacional executado.
+- pgAdmin 9.18: inicialização e página HTTP /login responderam 200. O teste não cobre
+  login autenticado nem configuração de servidor na UI.
+- Teste reproduzível: tests/lab_integration.py --output NOVA_PASTA --with-tools.
+  Serviços parados ao final; volumes/evidências preservados. Nenhum banco de projeto alterado.
+- O laboratório não implementa PITR, HA, backup externo ou configuração de produção.
+  Estes temas têm workflows/KB, não automação homologada.
+- Quatro skills, dez workflows e sete guias KB. Coletor remoto por perfil mantém
+  os limites descritos na validação 0.1.0.

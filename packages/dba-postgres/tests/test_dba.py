@@ -184,6 +184,48 @@ class DatabaseTests(unittest.TestCase):
                 self.assertNotIn("SECRET_SENTINEL", str(caught.exception))
                 self.assertFalse(out.exists())
 
+    def test_lab_generation_private_unique_and_preserves_existing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            lab = Path(tmp) / "lab"
+            dba.init_lab(lab)
+            self.assertTrue((lab / "compose.yaml").is_file())
+            a = (lab / ".secrets/postgres_password").read_text()
+            b = (lab / ".secrets/pgadmin_password").read_text()
+            self.assertNotEqual(a, b)
+            self.assertGreater(len(a), 32)
+            self.assertNotIn(a.strip(), (lab / ".env").read_text())
+            self.assertEqual(
+                0o600, (lab / ".secrets/postgres_password").stat().st_mode & 0o777
+            )
+            self.assertEqual(0o700, lab.stat().st_mode & 0o777)
+            self.assertEqual(0o700, (lab / ".secrets").stat().st_mode & 0o777)
+            self.assertEqual(
+                0o444, (lab / ".secrets/pgadmin_password").stat().st_mode & 0o777
+            )
+            with self.assertRaises(ValueError):
+                dba.init_lab(lab)
+            self.assertEqual(a, (lab / ".secrets/postgres_password").read_text())
+
+    def test_lab_symlink_and_cli_do_not_start_docker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "link"
+            target.symlink_to(Path(tmp) / "missing")
+            with self.assertRaises(ValueError):
+                dba.init_lab(target)
+            with patch.object(dba.subprocess, "run") as run:
+                self.assertEqual(
+                    0, dba.main(["lab-init", "--output", str(Path(tmp) / "new")])
+                )
+                run.assert_not_called()
+
+    def test_operations_sql_has_no_credential_settings(self) -> None:
+        output = io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(0, dba.main(["sql", "--kind", "operations"]))
+        self.assertIn("BEGIN READ ONLY", output.getvalue())
+        self.assertNotIn("primary_conninfo", output.getvalue())
+        self.assertNotIn("pg_authid", output.getvalue())
+
     def test_sql_is_bounded_readonly_without_query_text(self) -> None:
         sql = (ROOT / "sql/baseline.sql").read_text()
         self.assertIn("REPEATABLE READ READ ONLY", sql)

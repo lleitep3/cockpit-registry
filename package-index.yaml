@@ -674,9 +674,9 @@ packages:
     released_at: "2026-09-27T00:00:00Z"
 
   - name: dba-postgres
-    version: 0.1.0
-    description: Read-only PostgreSQL diagnostics, ER diagrams, modeling and evidence-based
-      performance reviews.
+    version: 0.2.0
+    description: PostgreSQL DBA skills, evidence-based diagnostics, operational workflows
+      and a local Compose laboratory.
     author: lleitep3
     license: MIT
     category: development
@@ -687,6 +687,7 @@ packages:
     - modules
     - skills
     - kb
+    - boilerplate
     requirements:
       cockpit: '>=0.1.0'
     installation_method: copy

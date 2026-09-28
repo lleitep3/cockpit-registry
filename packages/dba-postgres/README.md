@@ -1,7 +1,8 @@
 # DBA PostgreSQL — pacote Cockpit
 
-Versão 0.1.0. Diagnóstico somente leitura, DER e revisões de modelo/performance
-orientadas por evidências. Não aplica tuning, migrations ou exclusões.
+Versão 0.2.0. Insumos para atuação de DBA PostgreSQL: diagnóstico, modelagem,
+performance, segurança, manutenção, recuperação, incidentes e upgrades. O CLI coleta
+evidências e gera laboratório local; execução operacional segue workflows e escopo autorizado.
 
 ## Conteúdo
 
@@ -10,13 +11,32 @@ orientadas por evidências. Não aplica tuning, migrations ou exclusões.
 | dba-postgres | Skill coordenadora e diagnóstico |
 | postgres-modeling | Invariantes, tenant, histórico e migrations |
 | postgres-performance | Workload, planos, índices, locks e capacidade |
-| 4 workflows | Baseline, revisão física, investigação e mudança segura |
-| 4 guias KB | Evidências, modelagem, performance e operação, com fontes oficiais |
+| postgres-operations | Manutenção, segurança, recuperação, incidentes e upgrades |
+| 10 workflows | Quatro de análise/mudança e seis operacionais, incluindo laboratório |
+| 7 guias KB | Evidências, modelagem, performance, operação, segurança, recuperação e ciclo de vida |
 | CLI | Coleta fixa, análise offline, relatório, DER Mermaid e findings JSON |
-| Templates | Revisões de modelo e performance |
+| Templates | Revisões de modelo, performance e operação |
+| Boilerplate | PostgreSQL 17 + pgAdmin opcional, persistência e exercícios de backup/restore |
 
 [Demonstração sintética](examples/report.md) · [Plano](PLAN.md) · [Workflows](skills/dba-postgres/references/baseline.md) ·
 [Base de conhecimento](kb/guides/postgres-evidence.md) · [Validação](VALIDATION.md)
+
+## Laboratório local
+
+```sh
+cockpit dba-postgres lab-init --output ./meu-lab
+cd meu-lab
+docker compose up -d --wait db
+# Interface opcional:
+docker compose --profile tools up -d --wait
+```
+
+[Guia do laboratório](boilerplates/local-postgres/README.md): senhas geradas em arquivos
+privados, acesso loopback, volumes persistentes, backup/restore e coleta sem psql no host.
+Não configura produção nem remove volumes automaticamente.
+
+[Matriz completa de atuação](skills/dba-postgres/references/dba-scope.md) distingue
+automação, procedimento guiado e capacidades ainda não homologadas.
 
 ## Uso offline
 
@@ -54,7 +74,11 @@ cria perfil, concede privilégios ou usa credenciais implícitas. Não configura
 por conveniência. Falha do vault/acesso não tem fallback. `_collect` é detalhe interno,
 não fronteira de segurança; perfis Cockpit são controles cooperativos do mesmo usuário.
 
-`cockpit dba-postgres sql` exibe o SQL fixo para revisão. Não aceita SQL do usuário,
+`cockpit dba-postgres sql` exibe o SQL fixo para revisão.
+`cockpit dba-postgres sql --kind operations` fornece agregados operacionais (PostgreSQL 17):
+conexões, transações, freeze, slots e arquivamento. Sua saída é evidência complementar;
+não é entrada do comando analyze. Métricas cluster-wide podem ser parcialmente ocultas
+por privilégios e não demonstram sozinhas RPO, lag ou saúde. Não aceita SQL do usuário,
 não exporta linhas, query text, planos ou senhas. Não instala pg_stat_statements.
 Metadados continuam potencialmente sensíveis: revisar antes de compartilhar.
 
@@ -74,6 +98,8 @@ p95, economia ou tuning automático. Um relatório limpo não é auditoria compl
 ```sh
 cockpit cockpit-builder validate ~/.cockpit/local-registry/dba-postgres
 ~/.cockpit/local-registry/dba-postgres/tests/run_test.sh
+# Integração opcional, pasta nova; preserva volumes parados ao terminar:
+python3 ~/.cockpit/local-registry/dba-postgres/tests/lab_integration.py --output /tmp/meu-teste-dba --with-tools
 ```
 
 Staging em local-registry; instalação copia pacote e skills para assets canônicos,

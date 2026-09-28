@@ -1,0 +1,6 @@
+/.env
+/.secrets/
+/backups/
+/evidence/
+*.dump
+*.sql.gz

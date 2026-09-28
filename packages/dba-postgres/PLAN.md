@@ -26,3 +26,17 @@ Recuperação: coleta falha sem mudanças; novos arquivos somente, sem sobrescre
 Instalação adiciona assets próprios. Desativação via cockpit pkg uninstall, executada
 somente se solicitada; não desfazer outros pacotes nem apagar evidências automaticamente.
 Publicação em PR próprio, sem merge automático. Nenhuma alteração no Partilhar.
+
+## Evolução 0.2.0 — atuação de DBA e laboratório
+
+Adicionar skill operacional e cinco workflows: manutenção, segurança, recuperação,
+incidentes/replicação e upgrades. Matriz explicita o que é automatizado, guiado e não
+homologado. Expandir KB sem afirmar cobertura universal ou operação automática.
+
+Boilerplate local PostgreSQL 17 + pgAdmin opcional, acesso apenas loopback, volumes
+persistentes, healthcheck, secrets em arquivos privados e .env sem senhas. lab-init
+copia assets para diretório novo e gera segredos; não sobe serviços automaticamente.
+
+Testar geração sem sobrescrita, compose config, autenticação TCP, persistência após
+reinício, dump/restore em banco novo e interface opcional. Não instalar HA/PITR em
+produção nem alterar banco do projeto. Sem nova infraestrutura cloud.

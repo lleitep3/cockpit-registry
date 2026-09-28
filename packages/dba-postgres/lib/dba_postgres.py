@@ -7,6 +7,7 @@ import html
 import json
 import os
 import re
+import secrets
 import shutil
 import subprocess
 import sys
@@ -325,12 +326,37 @@ def collect_profile(profile: str, schema: str, output: Path) -> None:
         )
 
 
+def init_lab(output: Path) -> None:
+    """Create a private local lab without starting Docker or overwriting files."""
+    if output.exists() or output.is_symlink():
+        raise ValueError("Choose a new lab directory.")
+    output.mkdir(mode=0o700)
+    source = ROOT / "boilerplates/local-postgres"
+    shutil.copytree(source, output, dirs_exist_ok=True)
+    output.chmod(0o700)
+    private = output / ".secrets"
+    private.mkdir(mode=0o700)
+    for name in ("postgres_password", "pgadmin_password"):
+        write_new(private / name, secrets.token_urlsafe(32) + "\n")
+    # UID 5050 in pgAdmin must read the mount; host parent directories stay 0700.
+    (private / "pgadmin_password").chmod(0o444)
+    public = (
+        (source / ".env.example")
+        .read_text()
+        .replace(
+            "COMPOSE_PROJECT_NAME=dba-lab",
+            "COMPOSE_PROJECT_NAME=dba-lab-" + secrets.token_hex(4),
+        )
+    )
+    write_new(output / ".env", public)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="DBA PostgreSQL: read-only collection, offline DER and evidence reports."
     )
     subs = parser.add_subparsers(
-        dest="command", required=True, metavar="{collect,analyze,sql}"
+        dest="command", required=True, metavar="{collect,analyze,sql,lab-init}"
     )
     for name in ("collect", "_collect"):
         if name == "collect":
@@ -347,11 +373,18 @@ def main(argv: list[str] | None = None) -> int:
     )
     analysis.add_argument("snapshot", type=Path)
     analysis.add_argument("--output", type=Path, required=True)
-    subs.add_parser("sql", help="Print the fixed read-only collector SQL for review")
+    sql = subs.add_parser("sql", help="Print fixed read-only SQL for review")
+    sql.add_argument("--kind", choices=["baseline", "operations"], default="baseline")
+    lab = subs.add_parser(
+        "lab-init", help="Create a private PostgreSQL Compose lab in a new directory"
+    )
+    lab.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         if args.command == "sql":
-            print((ROOT / "sql/baseline.sql").read_text(), end="")
+            print((ROOT / "sql" / (args.kind + ".sql")).read_text(), end="")
+        elif args.command == "lab-init":
+            init_lab(args.output)
         elif args.command == "collect":
             collect_profile(args.profile, args.schema, args.output)
         elif args.command == "_collect":

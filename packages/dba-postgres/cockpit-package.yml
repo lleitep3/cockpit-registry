@@ -1,6 +1,6 @@
 name: dba-postgres
-version: 0.1.0
-description: "Read-only PostgreSQL diagnostics, ER diagrams, modeling and evidence-based performance reviews."
+version: 0.2.0
+description: "PostgreSQL DBA skills, evidence-based diagnostics, operational workflows and a local Compose laboratory."
 author: lleitep3
 license: MIT
 type: plugin
@@ -19,6 +19,8 @@ features:
       name: postgres-modeling
     - path: skills/postgres-performance
       name: postgres-performance
+    - path: skills/postgres-operations
+      name: postgres-operations
   kb:
     - path: kb/guides/postgres-evidence.md
       type: guide
@@ -28,11 +30,20 @@ features:
       type: guide
     - path: kb/guides/postgres-operations.md
       type: guide
+    - path: kb/guides/postgres-security.md
+      type: guide
+    - path: kb/guides/postgres-recovery.md
+      type: guide
+    - path: kb/guides/postgres-lifecycle.md
+      type: guide
+  boilerplate:
+    - path: boilerplates/local-postgres
+      name: postgres-local-lab
 installation:
   method: copy
   supported_providers: [codex]
   provider_features:
-    codex: [modules, skills, kb]
+    codex: [modules, skills, kb, boilerplate]
 metadata:
   tags: [postgresql, dba, database, performance, modeling, erd]
   status: beta
