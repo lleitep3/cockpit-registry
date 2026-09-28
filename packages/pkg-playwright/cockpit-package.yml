@@ -1,5 +1,5 @@
 name: pkg-playwright
-version: 0.1.1
+version: 0.1.2
 description: "Native Playwright integration for AICockpit"
 author: "AICockpit"
 license: "MIT"
@@ -27,5 +27,5 @@ installation:
     devin: []
     goose: []
   post_install:
-    - script: "npm install"
+    - script: scripts/install.sh
       description: "Install node dependencies"

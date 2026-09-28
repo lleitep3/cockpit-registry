@@ -97,3 +97,11 @@ pkg-playwright/
 ## License
 
 MIT
+
+## Instalação reproduzível
+
+O hook `scripts/install.sh` usa `npm ci` e o lockfile versionado, sem scripts
+de dependências. Uma falha aborta a instalação. Valide o runtime com
+`node -e 'require("playwright"); require("express")'` dentro do pacote.
+O download de browsers e a sessão gráfica são etapas separadas; este hook não
+abre navegador nem comprova autenticação ou compatibilidade de perfis.
