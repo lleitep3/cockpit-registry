@@ -73,3 +73,7 @@ Não usar esse fluxo para contornar política de navegador ou acesso negado. Nã
 criação com journal pendente sem reconciliar o resultado; não reutilizar chave exposta.
 Consulte README.md do pacote instalado para limitações e recuperação. A IA pode
 preparar/verificar metadados e orientar o usuário; não automatize sua senha/MFA/CAPTCHA.
+
+Todas as operações de credencial usam o namespace `newrelic`. Uma referência
+legada sem namespace exige migração pelo operador ou autenticação oculta; o
+pacote nunca tenta acesso global ou outro namespace como fallback.

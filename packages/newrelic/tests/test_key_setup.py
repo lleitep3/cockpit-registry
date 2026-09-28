@@ -137,6 +137,28 @@ class KeySetupTests(unittest.TestCase):
             ):
                 setup.vault_save("newrelic-test", "offline-private-value")
                 self.assertNotIn("offline-private-value", str(launch.call_args))
+                self.assertEqual(
+                    launch.call_args_list[0].args[0],
+                    [
+                        "cockpit",
+                        "vault",
+                        "set",
+                        "--namespace",
+                        "newrelic",
+                        "newrelic-test",
+                    ],
+                )
+                self.assertEqual(
+                    launch.call_args_list[1].args[0],
+                    [
+                        "cockpit",
+                        "vault",
+                        "get",
+                        "--namespace",
+                        "newrelic",
+                        "newrelic-test",
+                    ],
+                )
                 self.assertEqual((p / "secret").read_text(), "offline-private-value")
 
     def test_ingest_mutation_has_fixed_type_and_handles_partial_failure(self) -> None:

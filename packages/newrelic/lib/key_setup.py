@@ -63,7 +63,7 @@ def vault_save(reference: str, secret: str) -> None:
     """Send only after the real vault prompt has disabled terminal echo."""
     master, slave = pty.openpty()
     process = subprocess.Popen(
-        ["cockpit", "vault", "set", reference],
+        ["cockpit", "vault", "set", "--namespace", "newrelic", reference],
         stdin=slave,
         stdout=slave,
         stderr=slave,
@@ -92,7 +92,7 @@ def vault_save(reference: str, secret: str) -> None:
                 "Vault save failed; inspect the newly created key manually before retrying."
             )
         result = subprocess.run(
-            ["cockpit", "vault", "get", reference],
+            ["cockpit", "vault", "get", "--namespace", "newrelic", reference],
             capture_output=True,
             text=True,
             timeout=VAULT_TIMEOUT,
@@ -395,7 +395,7 @@ def provision(
         if reference:
             # Existing managed keys are not silently rotated; no raw value is read here.
             stored = subprocess.run(
-                ["cockpit", "vault", "get", reference],
+                ["cockpit", "vault", "get", "--namespace", "newrelic", reference],
                 capture_output=True,
                 text=True,
                 timeout=VAULT_TIMEOUT,
