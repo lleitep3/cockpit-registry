@@ -77,3 +77,13 @@ kb-graphify/
 ## License
 
 MIT
+
+## Runtime isolado
+
+A versão 0.1.2 instala Graphify 0.8.46 com `scripts/install.sh` em `.venv` dentro
+do pacote. Requer `uv`. Usa cópias do interpretador e preserva a instalação global
+existente. `kb-search` e `kb-index` usam exclusivamente esse runtime; ausência ou
+falha da instalação retorna erro. Credenciais e provider continuam no vault.
+
+Teste sem chamar LLM: `.venv/bin/graphify --help`. A versão direta está fixada;
+dependências transitivas ainda são resolvidas pelo uv e não constituem lock completo.
