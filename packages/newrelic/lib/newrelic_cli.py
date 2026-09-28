@@ -148,7 +148,7 @@ def resolve_profile(args: argparse.Namespace) -> dict[str, Any]:
 
 def vault_credential(reference: str) -> str:
     result = subprocess.run(
-        ["cockpit", "vault", "get", reference],
+        ["cockpit", "vault", "get", "--namespace", "newrelic", reference],
         capture_output=True,
         text=True,
         timeout=30,
@@ -182,7 +182,8 @@ def profile_command(args: argparse.Namespace) -> dict[str, Any]:
             "Auth requires an interactive terminal with hidden input; never paste a key into chat."
         )
     result = subprocess.run(
-        ["cockpit", "vault", "set", profile["vault_key"]], check=False
+        ["cockpit", "vault", "set", "--namespace", "newrelic", profile["vault_key"]],
+        check=False,
     )
     if result.returncode:
         raise ClientError("Vault did not save credential.")

@@ -191,7 +191,8 @@ class Tests(unittest.TestCase):
             run.return_value.returncode = 0
             self.assertEqual(nr.vault_credential("newrelic-dev"), "NRAK-do-not-print")
             self.assertEqual(
-                run.call_args.args[0], ["cockpit", "vault", "get", "newrelic-dev"]
+                run.call_args.args[0],
+                ["cockpit", "vault", "get", "--namespace", "newrelic", "newrelic-dev"],
             )
 
     def test_profile_auth_requires_hidden_terminal(self) -> None:

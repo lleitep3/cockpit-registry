@@ -105,3 +105,16 @@ Validação real de criação e ingestão ainda pendente no ambiente autorizado.
 
 Fontes: https://developer.chrome.com/blog/remote-debugging-port e
 https://docs.newrelic.com/docs/apis/nerdgraph/examples/use-nerdgraph-manage-license-keys-user-keys/
+
+## Namespace do vault (0.3.1)
+
+Todas as leituras/gravações usam explicitamente `--namespace newrelic`, inclusive
+autenticação de perfis e bootstrap de chaves. Não há fallback para o vault legado
+nem para outro pacote. O bloqueio do cofre e grants do core continuam valendo.
+
+Perfis antigos mantêm seus metadados, mas uma chave salva sem namespace precisa
+ser migrada pelo operador para `newrelic`, usando entrada oculta/`--stdin`, ou
+reautenticada com `cockpit newrelic --profile NOME profiles auth`. Não passar token
+em argumento ou chat, não apagar a referência anterior antes de verificar a nova.
+O pacote não pode fazer migração automática do vault global: isso violaria o
+contrato de isolamento. Após migração, verificar `account` e consulta agregada.
