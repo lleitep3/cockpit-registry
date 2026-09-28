@@ -105,3 +105,9 @@ python3 ~/.cockpit/local-registry/dba-postgres/tests/lab_integration.py --output
 Staging em local-registry; instalação copia pacote e skills para assets canônicos,
 seguida de cockpit deploy. KB declarada no manifesto; ver INSTALL.md. Nunca editar
 arquivos gerados por providers. Publicação em branch/PR próprio, sem merge automático.
+
+## Diagramas legíveis
+
+DERs usam fundo branco opaco, texto escuro e cabeçalhos azul-claro.
+[Paleta, exportação e exemplo genérico](skills/dba-postgres/references/diagram-style.md).
+O gerador inclui o tema no Mermaid; conferir a renderização no visualizador utilizado.

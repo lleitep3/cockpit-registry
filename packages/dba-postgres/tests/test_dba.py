@@ -21,6 +21,18 @@ FIXTURE = json.loads((ROOT / "tests/fixtures/example.json").read_text())
 
 
 class DatabaseTests(unittest.TestCase):
+    def test_diagram_theme_and_generic_example(self) -> None:
+        refs = ROOT / "skills/dba-postgres/references"
+        theme = json.loads((refs / "diagram-theme.json").read_text())
+        directive = "%%{init: " + json.dumps(theme) + "}%%"
+        self.assertTrue(dba.erd(FIXTURE).startswith(directive + "\n"))
+        self.assertTrue((refs / "diagram-example.mmd").read_text().startswith(directive))
+        colors = theme["themeVariables"]
+        self.assertEqual("#111827", colors["primaryTextColor"])
+        self.assertEqual("#ffffff", colors["attributeBackgroundColorOdd"])
+        self.assertEqual("#f1f5f9", colors["attributeBackgroundColorEven"])
+        self.assertFalse(colors["darkMode"])
+
     def test_optional_fk(self) -> None:
         self.assertIn("t0 |o--o{ t1", dba.erd(FIXTURE))
 

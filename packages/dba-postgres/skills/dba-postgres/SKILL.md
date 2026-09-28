@@ -26,3 +26,6 @@ description: Coordena atuação DBA PostgreSQL: diagnóstico, modelagem, perform
 
 Suporte: CLI Python 3.10+, psql e Cockpit com config exec. Falha de vault, permissão ou
 versão exige corrigir a causa; nunca substituir por conexão implícita ou elevar acesso.
+
+Para qualquer DER ou diagrama, siga o [estilo visual padrão](references/diagram-style.md).
+Use o exemplo genérico dessa referência; não incorporar schemas de clientes no pacote.

@@ -83,7 +83,9 @@ def markdown_text(value: Any) -> str:
 
 def erd(data: Snapshot) -> str:
     ids = {t["name"]: f"t{i}" for i, t in enumerate(data["tables"])}
-    lines = ["erDiagram"]
+    theme_path = ROOT / "skills/dba-postgres/references/diagram-theme.json"
+    theme = json.loads(theme_path.read_text())
+    lines = ["%%{init: " + json.dumps(theme) + "}%%", "erDiagram"]
     for name, identifier in ids.items():
         lines.append(f'  {identifier}["{safe_label(name)}"] {{')
         for i, col in enumerate(c for c in data["columns"] if c["table_name"] == name):
