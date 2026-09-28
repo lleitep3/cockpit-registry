@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cat <<'EOF'
+Explicit profiles required. See README.md. Store host, port, database, user and
+sslmode as public profile settings; password via cockpit config secret (hidden
+input). Never put credentials in argv. No configuration is changed by this command.
+EOF

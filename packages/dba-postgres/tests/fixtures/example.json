@@ -1,0 +1,83 @@
+{
+  "format_version": 1,
+  "schema": "public",
+  "server_version_num": 170009,
+  "collected_at": "2026-09-28T00:00:00Z",
+  "database": "synthetic_example",
+  "track_counts": "on",
+  "database_stats": {
+    "stats_reset": null
+  },
+  "tables": [
+    {
+      "name": "parent",
+      "total_bytes": 16384,
+      "index_bytes": 8192,
+      "n_live_tup": 0,
+      "n_dead_tup": 0
+    },
+    {
+      "name": "child",
+      "total_bytes": 16384,
+      "index_bytes": 8192,
+      "n_live_tup": 0,
+      "n_dead_tup": 0
+    }
+  ],
+  "columns": [
+    {
+      "table_name": "parent",
+      "name": "id",
+      "type": "uuid",
+      "required": true,
+      "primary_key": true
+    },
+    {
+      "table_name": "child",
+      "name": "id",
+      "type": "uuid",
+      "required": true,
+      "primary_key": true
+    },
+    {
+      "table_name": "child",
+      "name": "parent_id",
+      "type": "uuid",
+      "required": false,
+      "primary_key": false
+    }
+  ],
+  "constraints": [
+    {
+      "table_name": "parent",
+      "name": "parent_pkey",
+      "type": "p",
+      "columns": [
+        "id"
+      ],
+      "validated": true
+    },
+    {
+      "table_name": "child",
+      "name": "child_pkey",
+      "type": "p",
+      "columns": [
+        "id"
+      ],
+      "validated": true
+    },
+    {
+      "table_name": "child",
+      "name": "child_parent_fk",
+      "type": "f",
+      "columns": [
+        "parent_id"
+      ],
+      "parent": "parent",
+      "parent_schema": "public",
+      "validated": true,
+      "match_type": "s"
+    }
+  ],
+  "indexes": []
+}
