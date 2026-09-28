@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Use only the package-owned runtime; never depend on a global Python install.
-PACKAGE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PACKAGE_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 if [ ! -x "$PACKAGE_DIR/.venv/bin/graphify" ]; then
     echo "Graphify runtime missing. Reinstall kb-graphify to run its install hook." >&2
     exit 1

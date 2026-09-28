@@ -35,9 +35,30 @@ class GraphifyInstallTests(unittest.TestCase):
             with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
                 root = Path(tmp)
                 shutil.copytree(source / "bin", root / "bin")
-                result = subprocess.run(["bash", str(root / "bin" / name), "test"], capture_output=True, text=True)
+                result = subprocess.run(["sh", str(root / "bin" / name), "test"], capture_output=True, text=True)
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("Graphify runtime missing", result.stderr)
+
+    def test_extension_runs_private_runtime_under_sh(self):
+        source = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            shutil.copytree(source / "bin", root / "bin")
+            runtime = root / ".venv/bin"
+            runtime.mkdir(parents=True)
+            graphify = runtime / "graphify"
+            graphify.write_text('#!/bin/sh\nprintf "private-runtime-ok\\n"\n')
+            graphify.chmod(0o755)
+            fake = root / "fake"
+            fake.mkdir()
+            cockpit = fake / "cockpit"
+            cockpit.write_text('#!/bin/sh\nprintf "offline-test\\n"\n')
+            cockpit.chmod(0o755)
+            env = dict(os.environ, PATH=str(fake) + os.pathsep + os.environ["PATH"])
+            result = subprocess.run(["sh", str(root / "bin/kb-search"), "fixture"], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("private-runtime-ok", result.stdout)
+            self.assertNotIn("Bad substitution", result.stderr)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 name: kb-graphify
-version: 0.1.2
+version: 0.1.3
 description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
 author: "AICockpit"
 license: "MIT"
