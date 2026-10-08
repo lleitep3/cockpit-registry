@@ -91,7 +91,7 @@ Massa CLI 0.4.0 cadastra conexão por referência a .env/export Postman e extrai
 catálogo por `--environment` e `--table`. Nome do banco deve coincidir com cadastro;
 extração é somente leitura. Nunca imprimir/importar secrets nos artefatos.
 Extração parcial mantém FKs externas à seleção; incluir pais quando a receita
-exigir. Writable/resettable são preparação de política, não carga/reset prontos.
+exigir. Em 0.4.0 writable/resettable eram preparação de política; carga 0.5.0 é descrita abaixo.
 
 Antes de criar cenários de pendências, inventarie regras reais e fontes da
 aplicação. Diferencie contador, ocorrência e estado de conclusão. Para cada
@@ -103,3 +103,13 @@ Link genérico de cadastro pode ser insuficiente. Verifique abrir seção/editor
 foco no campo, contexto do subitem, reload, autorização e correção concorrente.
 Fixture especificada não é fixture injetada; consulta de catálogo não comprova
 pendência na API/UI. Clock fixo do Faker não congela clock_timestamp no banco.
+
+## Carga restrita 0.5.0
+
+`seed plan/apply/verify` usa projeto YAML, bundle JSONL manifestado, schema extraído
+atual, PK explícita e escopo por tabela. Plan/verify são somente leitura; apply
+exige environment writable, plano recalculado sob locks e confirmação do banco/hash.
+Não atualizar registros divergentes nem excluir dados para repetir. Recibo é
+pós-commit: em resultado desconhecido, reconciliar por verify/plan antes de repetir.
+Carga direta comprova fixture de banco; não comprova readiness, autoria/auditoria
+da aplicação ou UI. Reset/importação/up/init e assertions de domínio seguem futuros.

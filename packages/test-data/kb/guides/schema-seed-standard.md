@@ -19,10 +19,19 @@ da IA; não é treinamento de pesos.
 
 O pacote 0.4.0 inclui Massa CLI: `cockpit test-data schema inspect`, `validate` e
 `generate`, além de `schema diff`. Dependências fixadas e runtime isolado via post-install. Gera JSONL
-e manifesto; Comparação estrutural gera JSON e hashes, sem inferir renomeações. Sync de receitas
-e carga no banco ainda não estão implementados.
+e manifesto; Comparação estrutural gera JSON e hashes, sem inferir renomeações. Sync de receitas permanece manual; carga restrita disponível no incremento abaixo.
 
 Ambientes são referências a arquivo .env/export Postman, com banco esperado e
 extração por tabela. Catálogo parcial mantém FKs externas. Mapear cenários de
 pendência por regra real, destino exato e validação antes/depois na aplicação.
-Carga/reset seguem pendentes; não inferir autorização a partir de uma consulta.
+Em 0.4.0 carga/reset eram pendentes; veja carga 0.5.0 abaixo. Não inferir autorização a partir de consulta.
+
+## Carga restrita 0.5.0
+
+`seed plan/apply/verify` usa projeto YAML, bundle JSONL manifestado, schema extraído
+atual, PK explícita e escopo por tabela. Plan/verify são somente leitura; apply
+exige environment writable, plano recalculado sob locks e confirmação do banco/hash.
+Não atualizar registros divergentes nem excluir dados para repetir. Recibo é
+pós-commit: em resultado desconhecido, reconciliar por verify/plan antes de repetir.
+Carga direta comprova fixture de banco; não comprova readiness, autoria/auditoria
+da aplicação ou UI. Reset/importação/up/init e assertions de domínio seguem futuros.

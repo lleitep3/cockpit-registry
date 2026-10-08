@@ -41,3 +41,13 @@ o KB no contexto do projeto; confirme persistência e recuperação por busca.
 Melhore esta skill somente com evidência reutilizável. Isso melhora o contexto e
 as instruções da IA; não significa treinamento ou alteração dos pesos do modelo.
 Não criar agente paralelo, automação ou comunicação externa por consequência do QA.
+
+## Carga restrita 0.5.0
+
+`seed plan/apply/verify` usa projeto YAML, bundle JSONL manifestado, schema extraído
+atual, PK explícita e escopo por tabela. Plan/verify são somente leitura; apply
+exige environment writable, plano recalculado sob locks e confirmação do banco/hash.
+Não atualizar registros divergentes nem excluir dados para repetir. Recibo é
+pós-commit: em resultado desconhecido, reconciliar por verify/plan antes de repetir.
+Carga direta comprova fixture de banco; não comprova readiness, autoria/auditoria
+da aplicação ou UI. Reset/importação/up/init e assertions de domínio seguem futuros.

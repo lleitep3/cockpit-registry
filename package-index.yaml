@@ -694,7 +694,7 @@ packages:
     status: beta
 
   - name: test-data
-    version: 0.4.0
+    version: 0.5.0
     description: Padrões de schemas extraídos, seeds sintéticos reproduzíveis e QA com
       evidências.
     author: lleitep3
