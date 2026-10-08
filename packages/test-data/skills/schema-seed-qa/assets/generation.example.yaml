@@ -1,37 +1,29 @@
-# Contrato proposto: o CLI atual não executa geração.
 version: 1
-schema_file: schema.yaml
 seed: 42
 locale: pt_BR
 reference_time: "2026-10-08T12:00:00Z"
 entities:
+  pedidos:
+    count: 30
+    references:
+      - entity: clientes
+        fields:
+          clinic_id: clinic_id
+          cliente_id: id
+    fields:
+      id: {generator: sequence}
+      status:
+        generator: choice
+        weights: {pendente: 20, pago: 80}
+      criado_em: {generator: reference_time}
   clientes:
     count: 10
     fields:
-      id:
-        generator: sequence
-      nome:
-        generator: faker
-        provider: name
+      clinic_id:
+        generator: choice
+        weights: {clinica_a: 1, clinica_b: 1}
+      id: {generator: sequence}
+      nome: {generator: faker, provider: name}
       email:
         generator: template
         value: "cliente{{ id }}@example.test"
-  pedidos:
-    count: 20
-    fields:
-      id:
-        generator: sequence
-      cliente_id:
-        generator: reference
-        entity: clientes
-        field: id
-      status:
-        generator: choice
-        weights:
-          pendente: 20
-          pago: 80
-scenarios:
-  cliente_sem_pedidos:
-    description: "Fixture explícita de um cliente sem referências em pedidos."
-    expected: accepted
-# Cenários descrevem intenção; expansão/overrides ainda precisam de contrato executável.

@@ -1,47 +1,28 @@
-# test-data
+# test-data 0.2.0
 
-Pacote Cockpit 0.1.0: padrão reutilizável para schemas, seeds sintéticos e QA.
-Entrega a skill `schema-seed-qa`, referências e templates. Não instala um motor
-de geração nem opera bancos automaticamente. Suporte validado: Codex em Linux.
+Pacote Cockpit com Massa CLI 0.2.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
+
+## Instalação
+
+Requer Python >=3.12 com venv, acesso ao índice Python e PostgreSQL local via Docker para extração. O post-install instala dependências fixadas em ambiente exclusivo do pacote. Para instalação manual: `sh scripts/install.sh`. `PYTHON` seleciona o interpretador.
 
 ## Uso
 
-Invocar `$schema-seed-qa` para criar ou revisar schemas e seeds. A skill distingue
-capacidade implementada, contrato proposto e verificação não executada.
-Os detalhes estão em `skills/schema-seed-qa/references/`; os modelos são genéricos.
-
-## Fonte e instalação local
-
-Staging canônico: `~/.cockpit/local-registry/test-data/`.
-Copiar pacote para `~/.cockpit/packages/test-data/` e assets declarados aos
-diretórios canônicos de skills/KB, preservando arquivos alheios; executar
-`cockpit deploy`. Esse é o fluxo local de desenvolvimento, não publicação remota.
-
-Para publicação futura, colocar em `packages/test-data` de um registry, atualizar
-seu índice e validar uma PR exclusiva. Não executar `publish` sem revisar seu
-comportamento de commit/push/PR e o destino autorizado.
-
-## Validação
-
-```bash
-cockpit cockpit-builder validate ~/.cockpit/local-registry/test-data
-python tests/validate_assets.py
+```sh
+cockpit test-data --help
+cockpit test-data schema inspect --help
+cockpit test-data validate --schema schema.yaml --recipe generation.yaml
+cockpit test-data generate --schema schema.yaml --recipe generation.yaml --format jsonl --output runs/demo
 ```
 
-O teste de assets precisa de PyYAML em ambiente virtual; valida portabilidade,
-manifesto, referências e templates. Não comprova geração/carga de seeds.
+Copie `boilerplates/schema-seeds/schema.example.yaml` e `generation.example.yaml` para iniciar. A pasta de saída deve ser nova. Configure conexão em arquivo de ambiente ignorado pelo Git; nunca versione credenciais. A extração usa transação somente leitura.
 
-## Origem
+## Atualização e rollback
 
-Skill criada no projeto Massa em 08/10/2026, antes sem pacote proprietário.
-Este pacote incorpora o padrão genérico. Runbooks, catálogo e resultados do
-Partilhar pertencem ao projeto e não são distribuídos pelo pacote.
-`dba-postgres` continua responsável por suas quatro skills PostgreSQL;
-`backend-development` por `api-developer` e `use-case-planner`.
+Cada instalação cria um runtime novo em `${XDG_DATA_HOME:-~/.local/share}/cockpit/test-data/runtimes`, valida dependências e só então troca o link `.venv` atomicamente. Falhas preservam o runtime ativo. Runtimes anteriores são preservados: para rollback, aponte `.venv` para o runtime anterior. Dados do usuário devem ficar fora do diretório do pacote. O Cockpit substitui a pasta do pacote durante upgrade; os runtimes ficam fora dela. Se o post-install falhar após essa substituição, execute o instalador novamente ou restaure a versão do pacote pelo backup do Cockpit; o runtime anterior continua disponível. `TEST_DATA_RUNTIME_ROOT` permite definir outro diretório.
 
-## Dependências e recuperação
+## Limites e QA
 
-Sem dependência obrigatória de pacotes DBA/backend; recursos locais do projeto
-determinam acesso a banco e gerador. Não requer secrets nem configuração própria.
-Atualizações preservam receitas manuais. Em falha de distribuição, corrigir o
-staging e repetir cópia/deploy; não excluir receitas ou restaurar bancos.
+Suporta inteiros, booleanos, texto, UUID e timestamps; tipos restantes falham explicitamente. Checks SQL, triggers, índices parciais e collations exigem validação em banco descartável. Não carrega automaticamente o banco. Manifest registra hashes, versões e verificações executadas. Não inclui catálogo nem configuração privada do Partilhar.
+
+Validação de assets: `bin/validate` com `PYTHON` apontando para interpretador com PyYAML. Testes do CLI: `.venv/bin/python -m unittest discover -s cli/tests`. Integração opcional usa `MASSA_TEST_ENV_FILE` com banco local descartável. O padrão e relatório de QA ficam na skill e no boilerplate.
