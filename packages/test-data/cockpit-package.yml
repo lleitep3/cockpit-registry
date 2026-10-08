@@ -1,0 +1,27 @@
+name: test-data
+version: 0.1.0
+description: "Padrões de schemas extraídos, seeds sintéticos reproduzíveis e QA com evidências."
+author: lleitep3
+license: MIT
+type: plugin
+category: development
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  skills:
+    - path: skills/schema-seed-qa
+      name: schema-seed-qa
+  kb:
+    - path: kb/guides/schema-seed-standard.md
+      type: guide
+  boilerplate:
+    - path: boilerplates/schema-seeds
+      name: schema-seed-templates
+installation:
+  method: copy
+  supported_providers: [codex]
+  provider_features:
+    codex: [skills, kb, boilerplate]
+metadata:
+  tags: [testing, synthetic-data, schema, seeds, qa, postgresql]
+  status: beta
