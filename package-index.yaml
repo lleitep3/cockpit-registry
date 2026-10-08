@@ -1,559 +1,716 @@
-version: '1.0'
-name: AICockpit Official Packages
-description: Official package registry for AICockpit
-url: https://github.com/lleite/cockpit-registry
-maintainer: AICockpit Team
-maintainer_email: team@aicockpit.dev
-updated_at: '2026-10-08T21:42:57Z'
+# AICockpit Official Packages Registry Index
+version: "1.0"
+name: "AICockpit Official Packages"
+description: "Official package registry for AICockpit"
+url: "https://github.com/lleite/cockpit-registry"
+maintainer: "AICockpit Team"
+maintainer_email: "team@aicockpit.dev"
+
+# Last update timestamp
+updated_at: "2026-10-08T18:27:09Z"
+
+# Registry metadata
 metadata:
   total_packages: 20
   categories:
-  - examples
-  - productivity
-  - skills
-  - automation
-  - notifications
+    - examples
+    - productivity
+    - skills
+    - automation
+    - notifications
+
+# Packages in this registry
 packages:
-- name: hello-world
-  version: 1.0.0
-  description: A simple hello-world package that adds a hello command to AICockpit
-  author: AICockpit Team
-  license: MIT
-  category: examples
-  tags:
-  - hello-world
-  - example
-  - simple
-  path: packages/hello-world
-  url: https://github.com/lleite/cockpit-registry/tree/main/packages/hello-world
-  homepage: https://github.com/lleite/cockpit-registry
-  repository: https://github.com/lleite/cockpit-registry
-  supported_providers:
-  - devin
-  - goose
-  - claude-code
-  - github-copilot
-  features:
-  - modules
-  - kb
-  requirements:
-    cockpit: '>=0.2.0'
-  installation_method: symlink
-  status: stable
-  released_at: '2026-06-20T10:00:00Z'
-- name: rtk
-  version: 1.1.0
-  description: Installs RTK (Rust Token Killer) and configures token-optimized CLI
-    rules for all active AI providers
-  author: AICockpit Team
-  license: MIT
-  category: productivity
-  tags:
-  - rtk
-  - token-optimization
-  - productivity
-  - cli
-  path: packages/rtk
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/rtk
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - skills
-  - kb
-  requirements:
-    cockpit: '>=0.3.0'
-  installation_method: copy
-  status: stable
-  released_at: '2026-06-21T16:00:00Z'
-- name: kb-search
-  version: 1.1.0
-  description: Deploys KB search skills to all active AI providers so they automatically
-    search the local Knowledge Base before responding
-  author: AICockpit Team
-  license: MIT
-  category: skills
-  tags:
-  - kb
-  - knowledge-base
-  - search
-  - productivity
-  - skills
-  path: packages/kb-search
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-search
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - skills
-  - kb
-  requirements:
-    cockpit: '>=0.3.0'
-  installation_method: copy
-  status: stable
-  released_at: '2026-06-21T18:00:00Z'
-- name: caveman
-  version: 1.1.0
-  description: "Deploys the caveman skill to all active AI providers \u2014 cuts ~75%\
-    \ of output tokens by responding like caveman while keeping full technical accuracy"
-  author: AICockpit Team
-  license: MIT
-  category: productivity
-  tags:
-  - tokens
-  - productivity
-  - skills
-  - caveman
-  - compression
-  path: packages/caveman
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/caveman
-  homepage: https://github.com/JuliusBrussee/caveman
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - skills
-  requirements:
-    cockpit: '>=0.3.0'
-  installation_method: copy
-  status: stable
-  released_at: '2026-06-21T19:00:00Z'
-- name: code-gif
-  version: 1.0.0
-  path: packages/code-gif
-  description: Equips the AI with the ability to generate Mac-styled terminal GIFs
-    directly from text inputs using Python
-  category: productivity
-- name: video
-  version: 0.1.1
-  description: Video processing utilities including token-saving frame slicing with
-    ffmpeg
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - video
-  - token-optimization
-  - productivity
-  - ffmpeg
-  - slice
-  path: packages/video
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/video
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  - skills
-  - rules
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: stable
-  released_at: '2026-06-24T08:59:00Z'
-- name: kb-graphify
-  version: 0.1.3
-  description: Knowledge Base Integration with Graphify (Local LLM semantic graphs)
-  author: AICockpit
-  license: MIT
-  category: skills
-  tags:
-  - kb
-  - semantic
-  - knowledge-base
-  - graphify
-  - llm
-  path: packages/kb-graphify
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-graphify
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-06-24T09:15:00Z'
-- name: pkg-playwright
-  version: 0.1.2
-  description: Native Playwright integration for AICockpit
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - playwright
-  - browser
-  - automation
-  - headless
-  path: packages/pkg-playwright
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-playwright
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  requirements:
-    cockpit: '>=0.1.0'
-    node: '>=18.0.0'
-  installation_method: copy
-  status: stable
-  released_at: '2026-06-24T09:15:00Z'
-- name: article-creator
-  version: 1.0.1
-  description: "Cria artigos did\xE1ticos ricos em HTML a partir de arquivos Markdown\
-    \ estruturados"
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - article
-  - markdown
-  - html
-  - productivity
-  path: packages/article-creator
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/article-creator
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  - skills
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: symlink
-  status: stable
-  released_at: '2026-06-24T11:00:00Z'
-- name: cockpit-scheduler
-  version: 0.1.0
-  description: Scheduler para agendamento de comandos e scripts no AICockpit com persistencia,
-    cron, repeticoes e executor automatico
-  author: AICockpit
-  license: MIT
-  category: automation
-  tags:
-  - scheduler
-  - cron
-  - automation
-  - scripts
-  - commands
-  - timer
-  - systemd
-  - ubuntu-security
-  path: packages/cockpit-scheduler
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-scheduler
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  - skills
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-07-03T18:00:00Z'
-- name: pkg-notify
-  version: 0.1.0
-  description: Native and HTML notifications for AI agents
-  author: AICockpit
-  license: MIT
-  category: notifications
-  tags:
-  - notify
-  - notifications
-  - html
-  - native
-  - alert
-  path: packages/pkg-notify
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-notify
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-07-03T18:00:00Z'
-- name: pkg-scheduler
-  version: 0.1.0
-  description: Schedule commands and scripts from the AICockpit CLI
-  author: AICockpit
-  license: MIT
-  category: automation
-  tags:
-  - scheduler
-  - cron
-  - automation
-  - scripts
-  - commands
-  - timer
-  - systemd
-  path: packages/pkg-scheduler
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-scheduler
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-07-10T00:00:00Z'
-- name: cockpit-mini-apps
-  version: 0.1.0
-  description: "Plataforma base para cria\xE7\xE3o de mini-apps no workspace do cockpit\
-    \ (SvelteKit + FastAPI async + PostgreSQL)"
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - mini-apps
-  - poc
-  - boilerplate
-  - sveltekit
-  - fastapi
-  - docker
-  - podman
-  - productivity
-  path: packages/cockpit-mini-apps
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-mini-apps
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  - skills
-  - kb
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-07-11T00:00:00Z'
-- name: cockpit-dashboard
-  version: 0.4.0
-  description: Mini-app visual com dashboard do estado atual do AICockpit
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - dashboard
-  - mini-app
-  - cockpit
-  - sveltekit
-  - fastapi
-  - docker
-  - podman
-  path: packages/cockpit-dashboard
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-dashboard
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  features:
-  - modules
-  - kb
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-07-28T00:00:00Z'
-- name: github-tools
-  version: 0.2.1
-  description: GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication
-    and adds AI-friendly commands for Actions, commits, PRs and reviews.
-  author: AICockpit
-  license: MIT
-  category: productivity
-  tags:
-  - github
-  - gh
-  - cli
-  - pull-request
-  - actions
-  - ci/cd
-  path: packages/github-tools
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/github-tools
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - antigravity
-  - devin
-  - goose
-  - windsurf
-  - cursor
-  features:
-  - modules
-  - skills
-  - rules
-  requirements:
-    cockpit: '>=0.4.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-09-05T23:00:00Z'
-- name: backend-development
-  version: 0.2.0
-  description: Backend API development with Clean Architecture, explicit ports, test-first
-    use cases and production boundaries.
-  author: lleitep3
-  license: MIT
-  category: development
-  tags:
-  - backend
-  - api
-  - clean-architecture
-  - testing
-  - typescript
-  - nestjs
-  - use-case-planning
-  - product-flow
-  path: packages/backend-development
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/backend-development
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - codex
-  features:
-  - skills
-  - kb
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-09-23T13:00:00Z'
-- name: newrelic
-  version: 0.3.1
-  description: Terraform observability builder and read-only NerdGraph analysis.
-  author: lleitep3
-  license: MIT
-  category: infrastructure
-  tags:
-  - newrelic
-  - observability
-  - terraform
-  - nrql
-  path: packages/newrelic
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/newrelic
-  supported_providers:
-  - codex
-  features:
-  - modules
-  - skills
-  - rules
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-09-27T00:00:00Z'
-- name: cockpit-package-builder
-  version: 0.2.0
-  description: Scaffold and validate Cockpit packages with shared profile guidance
-  author: AICockpit
-  license: MIT
-  category: tooling
-  tags:
-  - cockpit
-  - packages
-  - scaffolding
-  - validation
-  path: packages/cockpit-package-builder
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-package-builder
-  supported_providers:
-  - devin
-  - goose
-  - antigravity
-  - codex
-  features:
-  - modules
-  - skills
-  - agents
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-09-27T00:00:00Z'
-- name: dba-postgres
-  version: 0.2.0
-  description: PostgreSQL DBA skills, evidence-based diagnostics, operational workflows
-    and a local Compose laboratory.
-  author: lleitep3
-  license: MIT
-  category: development
-  path: packages/dba-postgres
-  supported_providers:
-  - codex
-  features:
-  - modules
-  - skills
-  - kb
-  - boilerplate
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-- name: test-data
-  version: 0.5.0
-  description: "Padr\xF5es de schemas extra\xEDdos, seeds sint\xE9ticos reproduz\xED\
-    veis e QA com evid\xEAncias."
-  author: lleitep3
-  license: MIT
-  category: development
-  tags:
-  - testing
-  - synthetic-data
-  - schema
-  - seeds
-  - qa
-  - postgresql
-  path: packages/test-data
-  url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/test-data
-  homepage: https://github.com/lleitep3/cockpit-registry
-  repository: https://github.com/lleitep3/cockpit-registry
-  supported_providers:
-  - codex
-  features:
-  - skills
-  - modules
-  - kb
-  requirements:
-    cockpit: '>=0.1.0'
-  installation_method: copy
-  status: beta
-  released_at: '2026-10-08T21:42:57Z'
+  - name: "hello-world"
+    version: "1.0.0"
+    description: "A simple hello-world package that adds a hello command to AICockpit"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "examples"
+    tags:
+      - hello-world
+      - example
+      - simple
+    path: "packages/hello-world"
+    url: "https://github.com/lleite/cockpit-registry/tree/main/packages/hello-world"
+    homepage: "https://github.com/lleite/cockpit-registry"
+    repository: "https://github.com/lleite/cockpit-registry"
+    
+    # Supported providers
+    supported_providers:
+      - devin
+      - goose
+      - claude-code
+      - github-copilot
+    
+    # Features provided
+    features:
+      - modules
+      - kb
+    
+    # Requirements
+    requirements:
+      cockpit: ">=0.2.0"
+    
+    # Installation method
+    installation_method: "symlink"
+    
+    # Package status
+    status: "stable"
+    
+    # Release date
+    released_at: "2026-06-20T10:00:00Z"
+
+  - name: "rtk"
+    version: "1.1.0"
+    description: "Installs RTK (Rust Token Killer) and configures token-optimized CLI rules for all active AI providers"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - rtk
+      - token-optimization
+      - productivity
+      - cli
+    path: "packages/rtk"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/rtk"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T16:00:00Z"
+
+  - name: "kb-search"
+    version: "1.1.0"
+    description: "Deploys KB search skills to all active AI providers so they automatically search the local Knowledge Base before responding"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "skills"
+    tags:
+      - kb
+      - knowledge-base
+      - search
+      - productivity
+      - skills
+    path: "packages/kb-search"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-search"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T18:00:00Z"
+
+  - name: "caveman"
+    version: "1.1.0"
+    description: "Deploys the caveman skill to all active AI providers — cuts ~75% of output tokens by responding like caveman while keeping full technical accuracy"
+    author: "AICockpit Team"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - tokens
+      - productivity
+      - skills
+      - caveman
+      - compression
+    path: "packages/caveman"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/caveman"
+    homepage: "https://github.com/JuliusBrussee/caveman"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.3.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-21T19:00:00Z"
+  - name: "code-gif"
+    version: "1.0.0"
+    path: "packages/code-gif"
+    description: "Equips the AI with the ability to generate Mac-styled terminal GIFs directly from text inputs using Python"
+    category: "productivity"
+
+  - name: "video"
+    version: "0.1.1"
+    description: "Video processing utilities including token-saving frame slicing with ffmpeg"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - video
+      - token-optimization
+      - productivity
+      - ffmpeg
+      - slice
+    path: "packages/video"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/video"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - rules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T08:59:00Z"
+
+  - name: "kb-graphify"
+    version: "0.1.3"
+    description: "Knowledge Base Integration with Graphify (Local LLM semantic graphs)"
+    author: "AICockpit"
+    license: "MIT"
+    category: "skills"
+    tags:
+      - kb
+      - semantic
+      - knowledge-base
+      - graphify
+      - llm
+    path: "packages/kb-graphify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/kb-graphify"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-06-24T09:15:00Z"
+
+  - name: "pkg-playwright"
+    version: "0.1.2"
+    description: "Native Playwright integration for AICockpit"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - playwright
+      - browser
+      - automation
+      - headless
+    path: "packages/pkg-playwright"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-playwright"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+      node: ">=18.0.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T09:15:00Z"
+
+  - name: "article-creator"
+    version: "1.0.1"
+    description: "Cria artigos didáticos ricos em HTML a partir de arquivos Markdown estruturados"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - article
+      - markdown
+      - html
+      - productivity
+    path: "packages/article-creator"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/article-creator"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "symlink"
+
+    # Package status
+    status: "stable"
+
+    # Release date
+    released_at: "2026-06-24T11:00:00Z"
+
+  - name: "cockpit-scheduler"
+    version: "0.1.0"
+    description: "Scheduler para agendamento de comandos e scripts no AICockpit com persistencia, cron, repeticoes e executor automatico"
+    author: "AICockpit"
+    license: "MIT"
+    category: "automation"
+    tags:
+      - scheduler
+      - cron
+      - automation
+      - scripts
+      - commands
+      - timer
+      - systemd
+      - ubuntu-security
+    path: "packages/cockpit-scheduler"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-scheduler"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-03T18:00:00Z"
+
+  - name: "pkg-notify"
+    version: "0.1.0"
+    description: "Native and HTML notifications for AI agents"
+    author: "AICockpit"
+    license: "MIT"
+    category: "notifications"
+    tags:
+      - notify
+      - notifications
+      - html
+      - native
+      - alert
+    path: "packages/pkg-notify"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-notify"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-03T18:00:00Z"
+
+  - name: "pkg-scheduler"
+    version: "0.1.0"
+    description: "Schedule commands and scripts from the AICockpit CLI"
+    author: "AICockpit"
+    license: "MIT"
+    category: "automation"
+    tags:
+      - scheduler
+      - cron
+      - automation
+      - scripts
+      - commands
+      - timer
+      - systemd
+    path: "packages/pkg-scheduler"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/pkg-scheduler"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-10T00:00:00Z"
+
+  - name: "cockpit-mini-apps"
+    version: "0.1.0"
+    description: "Plataforma base para criação de mini-apps no workspace do cockpit (SvelteKit + FastAPI async + PostgreSQL)"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - mini-apps
+      - poc
+      - boilerplate
+      - sveltekit
+      - fastapi
+      - docker
+      - podman
+      - productivity
+    path: "packages/cockpit-mini-apps"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-mini-apps"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-11T00:00:00Z"
+
+  - name: "cockpit-dashboard"
+    version: "0.4.0"
+    description: "Mini-app visual com dashboard do estado atual do AICockpit"
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - dashboard
+      - mini-app
+      - cockpit
+      - sveltekit
+      - fastapi
+      - docker
+      - podman
+    path: "packages/cockpit-dashboard"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-dashboard"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+
+    # Features provided
+    features:
+      - modules
+      - kb
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.1.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-07-28T00:00:00Z"
+
+  - name: "github-tools"
+    version: "0.2.1"
+    description: "GitHub CLI integration for AICockpit. Wraps gh with vault-backed authentication and adds AI-friendly commands for Actions, commits, PRs and reviews."
+    author: "AICockpit"
+    license: "MIT"
+    category: "productivity"
+    tags:
+      - github
+      - gh
+      - cli
+      - pull-request
+      - actions
+      - ci/cd
+    path: "packages/github-tools"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/github-tools"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+
+    # Supported providers
+    supported_providers:
+      - antigravity
+      - devin
+      - goose
+      - windsurf
+      - cursor
+
+    # Features provided
+    features:
+      - modules
+      - skills
+      - rules
+
+    # Requirements
+    requirements:
+      cockpit: ">=0.4.0"
+
+    # Installation method
+    installation_method: "copy"
+
+    # Package status
+    status: "beta"
+
+    # Release date
+    released_at: "2026-09-05T23:00:00Z"
+
+  - name: "backend-development"
+    version: "0.2.0"
+    description: "Backend API development with Clean Architecture, explicit ports, test-first use cases and production boundaries."
+    author: "lleitep3"
+    license: "MIT"
+    category: "development"
+    tags:
+      - backend
+      - api
+      - clean-architecture
+      - testing
+      - typescript
+      - nestjs
+      - use-case-planning
+      - product-flow
+    path: "packages/backend-development"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/backend-development"
+    homepage: "https://github.com/lleitep3/cockpit-registry"
+    repository: "https://github.com/lleitep3/cockpit-registry"
+    supported_providers:
+      - codex
+    features:
+      - skills
+      - kb
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-23T13:00:00Z"
+
+
+  - name: "newrelic"
+    version: "0.3.1"
+    description: "Terraform observability builder and read-only NerdGraph analysis."
+    author: "lleitep3"
+    license: "MIT"
+    category: "infrastructure"
+    tags: [newrelic, observability, terraform, nrql]
+    path: "packages/newrelic"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/newrelic"
+    supported_providers: [codex]
+    features: [modules, skills, rules]
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-27T00:00:00Z"
+
+  - name: "cockpit-package-builder"
+    version: "0.2.0"
+    description: "Scaffold and validate Cockpit packages with shared profile guidance"
+    author: "AICockpit"
+    license: "MIT"
+    category: "tooling"
+    tags: [cockpit, packages, scaffolding, validation]
+    path: "packages/cockpit-package-builder"
+    url: "https://github.com/lleitep3/cockpit-registry/tree/main/packages/cockpit-package-builder"
+    supported_providers: [devin, goose, antigravity, codex]
+    features: [modules, skills, agents]
+    requirements:
+      cockpit: ">=0.1.0"
+    installation_method: "copy"
+    status: "beta"
+    released_at: "2026-09-27T00:00:00Z"
+
+  - name: dba-postgres
+    version: 0.2.0
+    description: PostgreSQL DBA skills, evidence-based diagnostics, operational workflows
+      and a local Compose laboratory.
+    author: lleitep3
+    license: MIT
+    category: development
+    path: packages/dba-postgres
+    supported_providers:
+    - codex
+    features:
+    - modules
+    - skills
+    - kb
+    - boilerplate
+    requirements:
+      cockpit: '>=0.1.0'
+    installation_method: copy
+    status: beta
+
+  - name: test-data
+    version: 0.5.0
+    description: Padrões de schemas extraídos, seeds sintéticos reproduzíveis e QA com
+      evidências.
+    author: lleitep3
+    license: MIT
+    category: development
+    path: packages/test-data
+    url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/test-data
+    supported_providers:
+    - codex
+    features:
+    - modules
+    - skills
+    - kb
+    - boilerplate
+    requirements:
+      cockpit: '>=0.1.0'
+    installation_method: copy
+    status: beta
+    released_at: '2026-10-08T18:27:09Z'
