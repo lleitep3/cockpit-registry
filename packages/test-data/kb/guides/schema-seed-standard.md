@@ -17,7 +17,12 @@ Aprovar extração não aprova geração. Consolidar causas/correções verifica
 do projeto, sem copiar secrets ou dados reais. Isso melhora instruções/contexto
 da IA; não é treinamento de pesos.
 
-O pacote 0.3.0 inclui Massa CLI: `cockpit test-data schema inspect`, `validate` e
+O pacote 0.4.0 inclui Massa CLI: `cockpit test-data schema inspect`, `validate` e
 `generate`, além de `schema diff`. Dependências fixadas e runtime isolado via post-install. Gera JSONL
 e manifesto; Comparação estrutural gera JSON e hashes, sem inferir renomeações. Sync de receitas
 e carga no banco ainda não estão implementados.
+
+Ambientes são referências a arquivo .env/export Postman, com banco esperado e
+extração por tabela. Catálogo parcial mantém FKs externas. Mapear cenários de
+pendência por regra real, destino exato e validação antes/depois na aplicação.
+Carga/reset seguem pendentes; não inferir autorização a partir de uma consulta.
