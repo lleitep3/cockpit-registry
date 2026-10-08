@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-09-23T00:00:00Z"
+updated_at: "2026-10-08T18:27:09Z"
 
 # Registry metadata
 metadata:
-  total_packages: 19
+  total_packages: 20
   categories:
     - examples
     - productivity
@@ -692,3 +692,24 @@ packages:
       cockpit: '>=0.1.0'
     installation_method: copy
     status: beta
+
+  - name: test-data
+    version: 0.1.0
+    description: Padrões de schemas extraídos, seeds sintéticos reproduzíveis e QA com
+      evidências.
+    author: lleitep3
+    license: MIT
+    category: development
+    path: packages/test-data
+    url: https://github.com/lleitep3/cockpit-registry/tree/main/packages/test-data
+    supported_providers:
+    - codex
+    features:
+    - skills
+    - kb
+    - boilerplate
+    requirements:
+      cockpit: '>=0.1.0'
+    installation_method: copy
+    status: beta
+    released_at: '2026-10-08T18:27:09Z'
