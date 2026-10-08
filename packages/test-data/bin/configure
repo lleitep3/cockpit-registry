@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+printf '%s\n' 'Sem configuração global. Use --env-file na extração; mantenha DATABASE_URL em arquivo ignorado pelo Git.' 'Para geração, forneça --schema, --recipe e --output. Execute cockpit test-data --help.'

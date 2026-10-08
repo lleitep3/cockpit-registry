@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "massa-cli"
+version = "0.2.0"
+description = "Extrai schemas PostgreSQL e gera dados sintéticos relacionais em JSONL"
+requires-python = ">=3.12"
+dependencies = ["psycopg[binary]>=3.2,<4", "PyYAML>=6,<7", "python-dotenv>=1,<2", "Faker>=40,<41", "pydantic>=2,<3"]
+
+[project.optional-dependencies]
+dev = ["ruff>=0.9", "mypy>=1.14", "types-PyYAML"]
+
+[project.scripts]
+massa = "massa.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.mypy]
+strict = true

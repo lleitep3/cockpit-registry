@@ -1,0 +1,266 @@
+{
+  "$defs": {
+    "ChoiceField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "choice",
+          "title": "Generator",
+          "type": "string"
+        },
+        "weights": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "minProperties": 1,
+          "title": "Weights",
+          "type": "object"
+        }
+      },
+      "required": [
+        "generator",
+        "weights"
+      ],
+      "title": "ChoiceField",
+      "type": "object"
+    },
+    "ConstantField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "constant",
+          "title": "Generator",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        }
+      },
+      "required": [
+        "generator",
+        "value"
+      ],
+      "title": "ConstantField",
+      "type": "object"
+    },
+    "EntityRecipe": {
+      "additionalProperties": false,
+      "properties": {
+        "count": {
+          "maximum": 100000,
+          "minimum": 0,
+          "title": "Count",
+          "type": "integer"
+        },
+        "fields": {
+          "additionalProperties": {
+            "discriminator": {
+              "mapping": {
+                "choice": "#/$defs/ChoiceField",
+                "constant": "#/$defs/ConstantField",
+                "faker": "#/$defs/FakerField",
+                "reference_time": "#/$defs/TimeField",
+                "sequence": "#/$defs/SequenceField",
+                "template": "#/$defs/TemplateField"
+              },
+              "propertyName": "generator"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/SequenceField"
+              },
+              {
+                "$ref": "#/$defs/FakerField"
+              },
+              {
+                "$ref": "#/$defs/ConstantField"
+              },
+              {
+                "$ref": "#/$defs/TemplateField"
+              },
+              {
+                "$ref": "#/$defs/ChoiceField"
+              },
+              {
+                "$ref": "#/$defs/TimeField"
+              }
+            ]
+          },
+          "title": "Fields",
+          "type": "object"
+        },
+        "references": {
+          "items": {
+            "$ref": "#/$defs/Reference"
+          },
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "required": [
+        "count",
+        "fields"
+      ],
+      "title": "EntityRecipe",
+      "type": "object"
+    },
+    "FakerField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "faker",
+          "title": "Generator",
+          "type": "string"
+        },
+        "provider": {
+          "enum": [
+            "name",
+            "first_name",
+            "last_name",
+            "email",
+            "uuid4",
+            "city"
+          ],
+          "title": "Provider",
+          "type": "string"
+        }
+      },
+      "required": [
+        "generator",
+        "provider"
+      ],
+      "title": "FakerField",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "entity": {
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "title": "Entity",
+          "type": "string"
+        },
+        "fields": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "minProperties": 1,
+          "title": "Fields",
+          "type": "object"
+        }
+      },
+      "required": [
+        "entity",
+        "fields"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
+    "SequenceField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "sequence",
+          "title": "Generator",
+          "type": "string"
+        },
+        "start": {
+          "default": 1,
+          "title": "Start",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "generator"
+      ],
+      "title": "SequenceField",
+      "type": "object"
+    },
+    "TemplateField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "template",
+          "title": "Generator",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "generator",
+        "value"
+      ],
+      "title": "TemplateField",
+      "type": "object"
+    },
+    "TimeField": {
+      "additionalProperties": false,
+      "properties": {
+        "generator": {
+          "const": "reference_time",
+          "title": "Generator",
+          "type": "string"
+        }
+      },
+      "required": [
+        "generator"
+      ],
+      "title": "TimeField",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "entities": {
+      "additionalProperties": {
+        "$ref": "#/$defs/EntityRecipe"
+      },
+      "minProperties": 1,
+      "title": "Entities",
+      "type": "object"
+    },
+    "locale": {
+      "title": "Locale",
+      "type": "string"
+    },
+    "reference_time": {
+      "title": "Reference Time",
+      "type": "string"
+    },
+    "seed": {
+      "title": "Seed",
+      "type": "integer"
+    },
+    "version": {
+      "const": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "seed",
+    "locale",
+    "reference_time",
+    "entities"
+  ],
+  "title": "Recipe",
+  "type": "object"
+}

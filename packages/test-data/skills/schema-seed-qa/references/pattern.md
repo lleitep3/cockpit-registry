@@ -44,8 +44,10 @@ Schemas seguem o banco pós-migrations do ref escolhido, não o nome da branch p
 
 `generation.yaml` deve declarar versão do contrato, seed, locale, relógio de
 referência, entidades, contagens, campos, geradores e cenários identificados.
-O exemplo em `../assets/generation.example.yaml` é contrato proposto, não executável
-no extrator atual. A sintaxe final depende de validação e implementação do motor.
+Os exemplos em `../assets/generation.example.yaml` e `../assets/schema.example.yaml`
+são executáveis no Massa CLI 0.2.0 distribuído pelo pacote. Cenários negativos
+e invariantes adicionais ficam em fixtures e testes próprios: não são campos do YAML.
+Use `cockpit test-data validate` antes de `cockpit test-data generate`.
 
 - FK composta é uma tupla selecionada do mesmo registro pai. `clinic_id` não pode
   ser sorteado independentemente dos demais componentes da FK.

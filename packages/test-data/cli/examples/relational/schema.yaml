@@ -1,0 +1,29 @@
+version: 1
+source:
+  dialect: postgresql
+  schema: public
+entities:
+  clientes:
+    fields:
+      clinic_id: {type: text, nullable: false}
+      id: {type: integer, nullable: false}
+      nome: {type: text, nullable: false}
+      email: {type: text, nullable: false}
+    constraints:
+      - {name: clientes_pkey, type: p, columns: [clinic_id, id]}
+      - {name: clientes_email_key, type: u, columns: [email]}
+  pedidos:
+    fields:
+      id: {type: integer, nullable: false}
+      clinic_id: {type: text, nullable: false}
+      cliente_id: {type: integer, nullable: false}
+      status: {type: text, nullable: false}
+      criado_em: {type: timestamp with time zone, nullable: false}
+    constraints:
+      - {name: pedidos_pkey, type: p, columns: [id]}
+      - name: pedidos_cliente_fk
+        type: f
+        columns: [clinic_id, cliente_id]
+        referenced_schema: public
+        referenced_table: clientes
+        referenced_columns: [clinic_id, id]

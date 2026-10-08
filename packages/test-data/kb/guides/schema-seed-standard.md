@@ -17,5 +17,6 @@ Aprovar extração não aprova geração. Consolidar causas/correções verifica
 do projeto, sem copiar secrets ou dados reais. Isso melhora instruções/contexto
 da IA; não é treinamento de pesos.
 
-O pacote entrega instruções e modelos; geração, diff/sync e carga dependem do CLI
-do projeto. Não presumir que comandos propostos estejam implementados.
+O pacote 0.2.0 inclui Massa CLI: `cockpit test-data schema inspect`, `validate` e
+`generate`. Dependências fixadas e runtime isolado via post-install. Gera JSONL
+e manifesto; diff/sync automático e carga no banco ainda não estão implementados.
