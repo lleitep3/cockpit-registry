@@ -27,7 +27,12 @@ class PackageAssetsTests(unittest.TestCase):
                     self.assertTrue((document.parent / target).exists(), target)
 
     def test_templates_and_skill_assets_match(self) -> None:
-        for name in ("generation.example.yaml", "schema.example.yaml", "qa-report.md"):
+        for name in (
+            "generation.example.yaml",
+            "schema.example.yaml",
+            "environments.example.yaml",
+            "qa-report.md",
+        ):
             original = PACKAGE_ROOT / "skills/schema-seed-qa/assets" / name
             copy = PACKAGE_ROOT / "boilerplates/schema-seeds" / name
             self.assertEqual(original.read_bytes(), copy.read_bytes())

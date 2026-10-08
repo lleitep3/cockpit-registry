@@ -66,7 +66,7 @@ WHERE n.nspname = %s GROUP BY t.typname ORDER BY t.typname
 
 
 def inspect_schema(
-    connection_url: str, schema: str, exclude: set[str]
+    connection_url: str, schema: str, exclude: set[str], include: set[str] | None = None
 ) -> dict[str, Any]:
     """Preserva FKs compostas, SQL original e ordem estável para revisão."""
     with psycopg.connect(
@@ -80,8 +80,14 @@ def inspect_schema(
             raise ValueError(f"Schema inexistente: {schema}")
         version = conn.execute("SHOW server_version").fetchone()
         tables: dict[str, Any] = {}
-        for table in conn.execute(TABLES, (schema,)).fetchall():
-            if table["name"] in exclude:
+        discovered = conn.execute(TABLES, (schema,)).fetchall()
+        available = {table["name"] for table in discovered} - exclude
+        if include is not None and not include.issubset(available):
+            raise ValueError("Tabela solicitada ausente ou excluída do catálogo")
+        for table in discovered:
+            if table["name"] in exclude or (
+                include is not None and table["name"] not in include
+            ):
                 continue
             tables[table["name"]] = inspect_table(conn, table)
         enums = conn.execute(ENUMS, (schema,)).fetchall()
@@ -92,6 +98,7 @@ def inspect_schema(
             "server_version": version["server_version"] if version else "unknown",
             "schema": schema,
             "excluded_tables": sorted(exclude),
+            **({"selected_tables": sorted(include)} if include is not None else {}),
         },
         "enums": enums,
         "entities": tables,

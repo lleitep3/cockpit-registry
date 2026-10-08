@@ -84,3 +84,22 @@ usar transação quando compatível, registrar sucesso/falha e estratégia de re
 Rerun usa namespace/chaves controladas ou idempotência definida. Não truncar tabelas
 para conseguir repetir. Rollback de transação não reverte efeitos externos nem
 necessariamente sequências; registrar esses limites quando relevantes.
+
+## Ambientes e cenários acionáveis
+
+Massa CLI 0.4.0 cadastra conexão por referência a .env/export Postman e extrai
+catálogo por `--environment` e `--table`. Nome do banco deve coincidir com cadastro;
+extração é somente leitura. Nunca imprimir/importar secrets nos artefatos.
+Extração parcial mantém FKs externas à seleção; incluir pais quando a receita
+exigir. Writable/resettable são preparação de política, não carga/reset prontos.
+
+Antes de criar cenários de pendências, inventarie regras reais e fontes da
+aplicação. Diferencie contador, ocorrência e estado de conclusão. Para cada
+código registre condição, caminho legítimo para produzi-la, destino exato de
+resolução (recurso/etapa/campo/subitem), permissão, relógio e resultado após salvar.
+Não inventar colunas pending=true: estado pode ser derivado de várias tabelas.
+
+Link genérico de cadastro pode ser insuficiente. Verifique abrir seção/editor,
+foco no campo, contexto do subitem, reload, autorização e correção concorrente.
+Fixture especificada não é fixture injetada; consulta de catálogo não comprova
+pendência na API/UI. Clock fixo do Faker não congela clock_timestamp no banco.

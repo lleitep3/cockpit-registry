@@ -13,6 +13,7 @@ from dotenv import dotenv_values
 from pydantic import ValidationError
 
 from massa.catalog import inspect_schema
+from massa.environments import Environment, add_environment, select_environment
 from massa.export import export_jsonl
 from massa.recipe import Recipe, load_mapping, validate_recipe
 from massa.schema_diff import diff_files
@@ -21,19 +22,10 @@ from massa.schema_diff import diff_files
 def parser() -> argparse.ArgumentParser:
     root = argparse.ArgumentParser(prog="massa")
     commands = root.add_subparsers(dest="command", required=True)
-    schema = commands.add_parser("schema")
-    actions = schema.add_subparsers(dest="action", required=True)
-    inspect = actions.add_parser("inspect", help="Extrair metadados PostgreSQL")
-    inspect.add_argument("--connection-env", default="DATABASE_URL")
-    inspect.add_argument("--env-file", type=Path)
-    inspect.add_argument("--schema", default="public")
-    inspect.add_argument("--exclude-table", action="append", default=["pgmigrations"])
-    inspect.add_argument("--output", type=Path, required=True)
-    diff = actions.add_parser("diff", help="Comparar catálogos sem alterar receitas")
-    diff.add_argument("--before", type=Path, required=True)
-    diff.add_argument("--after", type=Path, required=True)
-    diff.add_argument("--output", type=Path)
-    diff.add_argument("--fail-on-change", action="store_true")
+    configure_environment(
+        commands.add_parser("environment", help="Cadastrar conexões por referência")
+    )
+    configure_schema(commands.add_parser("schema"))
     for command in ("validate", "generate"):
         action = commands.add_parser(command)
         action.add_argument("--schema", type=Path, required=True)
@@ -42,6 +34,39 @@ def parser() -> argparse.ArgumentParser:
             action.add_argument("--format", choices=["jsonl"], default="jsonl")
             action.add_argument("--output", type=Path, required=True)
     return root
+
+
+def configure_environment(command: argparse.ArgumentParser) -> None:
+    env_actions = command.add_subparsers(dest="action", required=True)
+    add = env_actions.add_parser("add")
+    add.add_argument("--registry", type=Path, default=Path("environments.yaml"))
+    add.add_argument("--name", required=True)
+    source = add.add_mutually_exclusive_group(required=True)
+    source.add_argument("--env-file", type=Path)
+    source.add_argument("--postman", type=Path)
+    add.add_argument("--connection-env", default="DATABASE_URL")
+    add.add_argument("--database", required=True)
+    add.add_argument("--schema", default="public")
+    add.add_argument("--writable", action="store_true")
+    add.add_argument("--resettable", action="store_true")
+
+
+def configure_schema(command: argparse.ArgumentParser) -> None:
+    actions = command.add_subparsers(dest="action", required=True)
+    inspect = actions.add_parser("inspect", help="Extrair metadados PostgreSQL")
+    inspect.add_argument("--connection-env", default="DATABASE_URL")
+    inspect.add_argument("--env-file", type=Path)
+    inspect.add_argument("--schema")
+    inspect.add_argument("--environment")
+    inspect.add_argument("--registry", type=Path, default=Path("environments.yaml"))
+    inspect.add_argument("--table", action="append")
+    inspect.add_argument("--exclude-table", action="append", default=["pgmigrations"])
+    inspect.add_argument("--output", type=Path, required=True)
+    diff = actions.add_parser("diff", help="Comparar catálogos sem alterar receitas")
+    diff.add_argument("--before", type=Path, required=True)
+    diff.add_argument("--after", type=Path, required=True)
+    diff.add_argument("--output", type=Path)
+    diff.add_argument("--fail-on-change", action="store_true")
 
 
 def connection_url(variable: str, env_file: Path | None) -> str:
@@ -58,10 +83,23 @@ def connection_url(variable: str, env_file: Path | None) -> str:
 
 
 def extract_catalog(args: argparse.Namespace) -> None:
-    url = connection_url(args.connection_env, args.env_file)
+    schema_name = args.schema or "public"
+    if args.environment:
+        if args.env_file is not None:
+            raise ValueError("Selecione ambiente ou arquivo direto, sem misturar")
+        selected = select_environment(args.registry, args.environment)
+        url = selected.connection
+        schema_name = args.schema or selected.configuration.schema_name
+    else:
+        url = connection_url(args.connection_env, args.env_file)
     if args.output.exists():
         raise ValueError("Arquivo de saída já existe; escolha outro destino")
-    document = inspect_schema(url, args.schema, set(args.exclude_table))
+    if args.table:
+        document = inspect_schema(
+            url, schema_name, set(args.exclude_table), set(args.table)
+        )
+    else:
+        document = inspect_schema(url, schema_name, set(args.exclude_table))
     # Sem timestamps/OIDs: mesma estrutura produz um diff estável.
     serialized = yaml.safe_dump(document, sort_keys=False, allow_unicode=True)
     with args.output.open("x", encoding="utf-8") as output:
@@ -83,6 +121,22 @@ def execute_diff(args: argparse.Namespace) -> int:
 
 
 def execute(args: argparse.Namespace) -> int:
+    if args.command == "environment":
+        path = args.env_file if args.env_file else args.postman
+        environment = Environment.model_validate(
+            {
+                "source": "env-file" if args.env_file else "postman",
+                "path": os.path.relpath(path.resolve(), args.registry.resolve().parent),
+                "variable": args.connection_env,
+                "database": args.database,
+                "schema": args.schema,
+                "writable": args.writable,
+                "resettable": args.resettable,
+            }
+        )
+        add_environment(args.registry, args.name, environment)
+        print(f"Ambiente cadastrado: {args.name}; conexão permanece no arquivo privado")
+        return 0
     if args.command == "schema" and args.action == "diff":
         return execute_diff(args)
     if args.command == "validate":

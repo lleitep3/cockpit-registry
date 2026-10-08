@@ -15,7 +15,7 @@ from massa.cli import connection_url, main, parser
 class CliTests(unittest.TestCase):
     def test_defaults(self) -> None:
         args = parser().parse_args(["schema", "inspect", "--output", "schema.yaml"])
-        self.assertEqual(args.schema, "public")
+        self.assertIsNone(args.schema)
         self.assertEqual(args.exclude_table, ["pgmigrations"])
 
     def test_environment_file_wins(self) -> None:

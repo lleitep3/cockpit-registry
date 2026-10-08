@@ -1,6 +1,6 @@
-# test-data 0.3.0
+# test-data 0.4.0
 
-Pacote Cockpit com Massa CLI 0.3.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
+Pacote Cockpit com Massa CLI 0.4.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
 
 ## Instalação
 
@@ -40,3 +40,13 @@ são comparados. Não classifica compatibilidade nem altera schema/receita/banco
 `--fail-on-change` retorna código 2 no Massa CLI se houver alterações; erros de
 entrada retornam 1. O Cockpit instalado preservou o código 2 na verificação real. Para CI,
 use o status e o campo `changed` do JSON para distinguir drift de erro de execução.
+
+## Ambientes e catálogo por tabela
+
+Cadastre uma referência a .env ou export de environment Postman com
+`cockpit test-data environment add --name local --env-file .env.seed --database meu_banco`.
+Use `schema inspect --environment local --table minha_tabela --output tabela.yaml`.
+Conexão fica no arquivo privado; cadastro não copia secrets. Nome do banco deve
+coincidir. Extração permanece somente leitura. Veja
+[ambientes](cli/docs/environments.md) para fluxo, permissões e limites. Carga e
+reset ainda não implementados: flags de política não executam mutações.
