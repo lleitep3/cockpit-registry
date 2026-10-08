@@ -1,6 +1,7 @@
 """Interface inicial de extração; nunca registra credenciais."""
 
 import argparse
+import json
 import os
 import sys
 from collections.abc import Sequence
@@ -14,6 +15,7 @@ from pydantic import ValidationError
 from massa.catalog import inspect_schema
 from massa.export import export_jsonl
 from massa.recipe import Recipe, load_mapping, validate_recipe
+from massa.schema_diff import diff_files
 
 
 def parser() -> argparse.ArgumentParser:
@@ -27,6 +29,11 @@ def parser() -> argparse.ArgumentParser:
     inspect.add_argument("--schema", default="public")
     inspect.add_argument("--exclude-table", action="append", default=["pgmigrations"])
     inspect.add_argument("--output", type=Path, required=True)
+    diff = actions.add_parser("diff", help="Comparar catálogos sem alterar receitas")
+    diff.add_argument("--before", type=Path, required=True)
+    diff.add_argument("--after", type=Path, required=True)
+    diff.add_argument("--output", type=Path)
+    diff.add_argument("--fail-on-change", action="store_true")
     for command in ("validate", "generate"):
         action = commands.add_parser(command)
         action.add_argument("--schema", type=Path, required=True)
@@ -62,7 +69,22 @@ def extract_catalog(args: argparse.Namespace) -> None:
     print(f"Schema extraído: {len(document['entities'])} tabelas → {args.output}")
 
 
-def execute(args: argparse.Namespace) -> None:
+def execute_diff(args: argparse.Namespace) -> int:
+    if args.output is not None and args.output.exists():
+        raise ValueError("Arquivo de saída já existe; escolha outro destino")
+    report = diff_files(args.before, args.after)
+    serialized = json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    if args.output is None:
+        print(serialized, end="")
+    else:
+        with args.output.open("x", encoding="utf-8") as output:
+            output.write(serialized)
+    return 2 if report["changed"] and args.fail_on_change else 0
+
+
+def execute(args: argparse.Namespace) -> int:
+    if args.command == "schema" and args.action == "diff":
+        return execute_diff(args)
     if args.command == "validate":
         schema = load_mapping(args.schema)
         recipe = Recipe.model_validate(load_mapping(args.recipe))
@@ -70,21 +92,21 @@ def execute(args: argparse.Namespace) -> None:
         print(
             f"Estrutura da receita válida: {', '.join(order)}; regras SQL exigem QA em banco"
         )
-        return
+        return 0
     if args.command == "generate":
         manifest = export_jsonl(args.schema, args.recipe, args.output)
         print(
             f"Massa gerada: {sum(manifest['counts'].values())} registros → {args.output}"
         )
-        return
+        return 0
     extract_catalog(args)
+    return 0
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
-        execute(args)
-        return 0
+        return execute(args)
     except ValidationError as error:
         locations = [".".join(map(str, item["loc"])) for item in error.errors()]
         print(f"Contrato inválido nos campos: {', '.join(locations)}", file=sys.stderr)

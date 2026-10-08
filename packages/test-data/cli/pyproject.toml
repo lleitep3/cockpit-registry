@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "massa-cli"
-version = "0.2.0"
+version = "0.3.0"
 description = "Extrai schemas PostgreSQL e gera dados sintéticos relacionais em JSONL"
 requires-python = ">=3.12"
 dependencies = ["psycopg[binary]>=3.2,<4", "PyYAML>=6,<7", "python-dotenv>=1,<2", "Faker>=40,<41", "pydantic>=2,<3"]
@@ -20,3 +20,6 @@ where = ["src"]
 
 [tool.mypy]
 strict = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["massa"]

@@ -1,6 +1,6 @@
-# test-data 0.2.0
+# test-data 0.3.0
 
-Pacote Cockpit com Massa CLI 0.2.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
+Pacote Cockpit com Massa CLI 0.3.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
 
 ## Instalação
 
@@ -11,6 +11,7 @@ Requer Python >=3.12 com venv, acesso ao índice Python e PostgreSQL local via D
 ```sh
 cockpit test-data --help
 cockpit test-data schema inspect --help
+cockpit test-data schema diff --before schema.yaml --after schema-next.yaml --output schema-diff.json --fail-on-change
 cockpit test-data validate --schema schema.yaml --recipe generation.yaml
 cockpit test-data generate --schema schema.yaml --recipe generation.yaml --format jsonl --output runs/demo
 ```
@@ -26,3 +27,16 @@ Cada instalação cria um runtime novo em `${XDG_DATA_HOME:-~/.local/share}/cock
 Suporta inteiros, booleanos, texto, UUID e timestamps; tipos restantes falham explicitamente. Checks SQL, triggers, índices parciais e collations exigem validação em banco descartável. Não carrega automaticamente o banco. Manifest registra hashes, versões e verificações executadas. Não inclui catálogo nem configuração privada do Partilhar.
 
 Validação de assets: `bin/validate` com `PYTHON` apontando para interpretador com PyYAML. Testes do CLI: `.venv/bin/python -m unittest discover -s cli/tests`. Integração opcional usa `MASSA_TEST_ENV_FILE` com banco local descartável. O padrão e relatório de QA ficam na skill e no boilerplate.
+
+## Comparação de schemas
+
+`schema diff` compara catálogos v1 e produz JSON com alterações, caminhos, valores
+anteriores/novos e hashes das entradas. Sem `--output`, escreve JSON na saída padrão.
+Tabelas e campos renomeados aparecem como remoção/inclusão. Constraints, índices,
+triggers e enums são comparados por nome; ordem da FK, campos e valores do enum
+é preservada. Só `source.server_version` é ignorado. Metadados adicionais também
+são comparados. Não classifica compatibilidade nem altera schema/receita/banco.
+
+`--fail-on-change` retorna código 2 no Massa CLI se houver alterações; erros de
+entrada retornam 1. O Cockpit instalado preservou o código 2 na verificação real. Para CI,
+use o status e o campo `changed` do JSON para distinguir drift de erro de execução.

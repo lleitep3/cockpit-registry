@@ -36,8 +36,9 @@ alterações de tipo/default/nulabilidade e mudanças de chave/constraint/índic
 Renomeação exige mapeamento explícito, não inferência silenciosa.
 
 Receitas que usam campo removido ou tipo incompatível devem falhar na validação.
-Atualize schema e receita em mudanças revisáveis. O `diff/sync` automatizado só pode
-ser usado quando implementado; antes disso, comparar arquivos e revisar manualmente.
+Atualize schema e receita em mudanças revisáveis. Use `cockpit test-data schema diff --before schema.yaml --after schema-next.yaml`
+para comparar metadados. Revise remoções/inclusões como possíveis renomeações,
+sem inferência automática. Sync de receitas ainda exige edição e revisão manual.
 Schemas seguem o banco pós-migrations do ref escolhido, não o nome da branch por si só.
 
 ## Receitas e coerência
@@ -45,7 +46,7 @@ Schemas seguem o banco pós-migrations do ref escolhido, não o nome da branch p
 `generation.yaml` deve declarar versão do contrato, seed, locale, relógio de
 referência, entidades, contagens, campos, geradores e cenários identificados.
 Os exemplos em `../assets/generation.example.yaml` e `../assets/schema.example.yaml`
-são executáveis no Massa CLI 0.2.0 distribuído pelo pacote. Cenários negativos
+são executáveis no Massa CLI 0.3.0 distribuído pelo pacote. Cenários negativos
 e invariantes adicionais ficam em fixtures e testes próprios: não são campos do YAML.
 Use `cockpit test-data validate` antes de `cockpit test-data generate`.
 
