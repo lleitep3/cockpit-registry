@@ -17,6 +17,7 @@ from massa.environments import Environment, add_environment, select_environment
 from massa.export import export_jsonl
 from massa.recipe import Recipe, load_mapping, validate_recipe
 from massa.schema_diff import diff_files
+from massa.seed_project import digest, prepare_seed, run_seed
 
 
 def parser() -> argparse.ArgumentParser:
@@ -26,6 +27,9 @@ def parser() -> argparse.ArgumentParser:
         commands.add_parser("environment", help="Cadastrar conexões por referência")
     )
     configure_schema(commands.add_parser("schema"))
+    configure_seed(
+        commands.add_parser("seed", help="Planejar, carregar e verificar cenários")
+    )
     for command in ("validate", "generate"):
         action = commands.add_parser(command)
         action.add_argument("--schema", type=Path, required=True)
@@ -34,6 +38,43 @@ def parser() -> argparse.ArgumentParser:
             action.add_argument("--format", choices=["jsonl"], default="jsonl")
             action.add_argument("--output", type=Path, required=True)
     return root
+
+
+def configure_seed(command: argparse.ArgumentParser) -> None:
+    actions = command.add_subparsers(dest="action", required=True)
+    for name in ("plan", "apply", "verify"):
+        action = actions.add_parser(name)
+        action.add_argument("--project", type=Path, required=True)
+        action.add_argument("--scenario", required=True)
+        action.add_argument("--environment", required=True)
+        action.add_argument("--registry", type=Path, default=Path("environments.yaml"))
+        action.add_argument("--output", type=Path, required=True)
+        if name == "apply":
+            action.add_argument("--plan", type=Path, required=True)
+            action.add_argument("--confirm", required=True)
+            action.add_argument("--confirm-plan", required=True)
+
+
+def execute_seed(args: argparse.Namespace) -> int:
+    if args.output.exists() or not args.output.parent.is_dir():
+        raise ValueError("Escolha saída nova em diretório existente")
+    selected = select_environment(args.registry, args.environment)
+    seed = prepare_seed(args.project, args.scenario)
+    reviewed = None
+    if args.action == "apply":
+        if args.confirm != selected.configuration.database:
+            raise ValueError("Confirmação precisa ser o nome exato do banco")
+        reviewed = load_mapping(args.plan)
+        if digest(reviewed) != args.confirm_plan:
+            raise ValueError("Hash de confirmação diverge do plano revisado")
+    receipt = run_seed(selected, seed, args.action, reviewed)
+    with args.output.open("x", encoding="utf-8") as output:
+        json.dump(receipt, output, ensure_ascii=False, indent=2, sort_keys=True)
+        output.write("\n")
+    print(f"Seed {args.action}: {args.output}")
+    if args.action == "plan":
+        print(f"Hash do plano para confirmação: {digest(receipt)}")
+    return 0
 
 
 def configure_environment(command: argparse.ArgumentParser) -> None:
@@ -121,6 +162,8 @@ def execute_diff(args: argparse.Namespace) -> int:
 
 
 def execute(args: argparse.Namespace) -> int:
+    if args.command == "seed":
+        return execute_seed(args)
     if args.command == "environment":
         path = args.env_file if args.env_file else args.postman
         environment = Environment.model_validate(
@@ -171,6 +214,6 @@ def main(argv: Sequence[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
-    except (OSError, ValueError, TypeError) as error:
+    except (OSError, ValueError, TypeError, KeyError) as error:
         print(f"Erro: {error}", file=sys.stderr)
         return 1

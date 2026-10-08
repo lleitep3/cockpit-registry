@@ -36,19 +36,16 @@ alterações de tipo/default/nulabilidade e mudanças de chave/constraint/índic
 Renomeação exige mapeamento explícito, não inferência silenciosa.
 
 Receitas que usam campo removido ou tipo incompatível devem falhar na validação.
-Atualize schema e receita em mudanças revisáveis. Use `cockpit test-data schema diff --before schema.yaml --after schema-next.yaml`
-para comparar metadados. Revise remoções/inclusões como possíveis renomeações,
-sem inferência automática. Sync de receitas ainda exige edição e revisão manual.
+Atualize schema e receita em mudanças revisáveis. O `diff/sync` automatizado só pode
+ser usado quando implementado; antes disso, comparar arquivos e revisar manualmente.
 Schemas seguem o banco pós-migrations do ref escolhido, não o nome da branch por si só.
 
 ## Receitas e coerência
 
 `generation.yaml` deve declarar versão do contrato, seed, locale, relógio de
 referência, entidades, contagens, campos, geradores e cenários identificados.
-Os exemplos em `../assets/generation.example.yaml` e `../assets/schema.example.yaml`
-são executáveis no Massa CLI 0.3.0 distribuído pelo pacote. Cenários negativos
-e invariantes adicionais ficam em fixtures e testes próprios: não são campos do YAML.
-Use `cockpit test-data validate` antes de `cockpit test-data generate`.
+O exemplo em `../assets/generation.example.yaml` é contrato proposto, não executável
+no extrator atual. A sintaxe final depende de validação e implementação do motor.
 
 - FK composta é uma tupla selecionada do mesmo registro pai. `clinic_id` não pode
   ser sorteado independentemente dos demais componentes da FK.
@@ -85,21 +82,12 @@ Rerun usa namespace/chaves controladas ou idempotência definida. Não truncar t
 para conseguir repetir. Rollback de transação não reverte efeitos externos nem
 necessariamente sequências; registrar esses limites quando relevantes.
 
-## Ambientes e cenários acionáveis
+## Carga restrita 0.5.0
 
-Massa CLI 0.4.0 cadastra conexão por referência a .env/export Postman e extrai
-catálogo por `--environment` e `--table`. Nome do banco deve coincidir com cadastro;
-extração é somente leitura. Nunca imprimir/importar secrets nos artefatos.
-Extração parcial mantém FKs externas à seleção; incluir pais quando a receita
-exigir. Writable/resettable são preparação de política, não carga/reset prontos.
-
-Antes de criar cenários de pendências, inventarie regras reais e fontes da
-aplicação. Diferencie contador, ocorrência e estado de conclusão. Para cada
-código registre condição, caminho legítimo para produzi-la, destino exato de
-resolução (recurso/etapa/campo/subitem), permissão, relógio e resultado após salvar.
-Não inventar colunas pending=true: estado pode ser derivado de várias tabelas.
-
-Link genérico de cadastro pode ser insuficiente. Verifique abrir seção/editor,
-foco no campo, contexto do subitem, reload, autorização e correção concorrente.
-Fixture especificada não é fixture injetada; consulta de catálogo não comprova
-pendência na API/UI. Clock fixo do Faker não congela clock_timestamp no banco.
+`seed plan/apply/verify` usa projeto YAML, bundle JSONL manifestado, schema extraído
+atual, PK explícita e escopo por tabela. Plan/verify são somente leitura; apply
+exige environment writable, plano recalculado sob locks e confirmação do banco/hash.
+Não atualizar registros divergentes nem excluir dados para repetir. Recibo é
+pós-commit: em resultado desconhecido, reconciliar por verify/plan antes de repetir.
+Carga direta comprova fixture de banco; não comprova readiness, autoria/auditoria
+da aplicação ou UI. Reset/importação/up/init e assertions de domínio seguem futuros.

@@ -1,6 +1,6 @@
-# test-data 0.4.0
+# test-data 0.5.0
 
-Pacote Cockpit com Massa CLI 0.4.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
+Pacote Cockpit com Massa CLI 0.5.0, skill schema-seed-qa, workflow de QA e templates funcionais. PostgreSQL é a fonte de metadados; receitas YAML produzem JSONL reproduzível com chaves relacionadas coerentes.
 
 ## Instalação
 
@@ -48,5 +48,7 @@ Cadastre uma referência a .env ou export de environment Postman com
 Use `schema inspect --environment local --table minha_tabela --output tabela.yaml`.
 Conexão fica no arquivo privado; cadastro não copia secrets. Nome do banco deve
 coincidir. Extração permanece somente leitura. Veja
-[ambientes](cli/docs/environments.md) para fluxo, permissões e limites. Carga e
-reset ainda não implementados: flags de política não executam mutações.
+[ambientes](cli/docs/environments.md) para fluxo, permissões e limites. Carga restrita disponível em 0.5.0 com plano e confirmação; reset ainda não implementado.
+Flags de política sozinhas não executam mutações.
+
+[Projeto de seeds](cli/docs/seed-project.md): `cockpit test-data seed plan/apply/verify` com escopo, plano confirmado, PKs, locks e carga transacional. Verificação de banco; API/UI exigem adaptador. Sem reset/importação.

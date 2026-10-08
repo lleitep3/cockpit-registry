@@ -43,3 +43,5 @@ Registro salvo com permissão 0600 e sem segredo. Credenciais permanecem sob as
 permissões do arquivo de origem; a ferramenta não amplia permissões nem importa
 tokens API. Export de Postman é um formato de entrada, não execução de requests.
 Carga, reset, projeto de seed e validação HTTP ainda estão em evolução.
+
+Incremento 0.5.0: [seed plan/apply/verify](seed-project.md) implementa carga restrita por environment writable e confirmações de banco/plano. Reset segue futuro.

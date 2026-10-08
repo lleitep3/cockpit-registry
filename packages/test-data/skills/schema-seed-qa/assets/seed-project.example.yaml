@@ -1,0 +1,9 @@
+version: 1
+name: meu_projeto_qa
+schema_file: schema.yaml
+scenarios:
+  base:
+    bundle: data/base
+    scope:
+      clientes: {clinic_id: seed_clinic}
+      pedidos: {clinic_id: seed_clinic}
