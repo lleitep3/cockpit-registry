@@ -20,3 +20,6 @@ Sem reset conhecido/janela representativa, zero idx_scan não autoriza DROP INDE
 Bloat requer medição específica; n_dead_tup não é percentual de disco desperdiçado.
 Cada proposta deve ter evidência, confiança, benefício esperado, custo de escrita,
 lock/IO, experimento, critério de aceite e rollback. Uma mudança por experimento.
+
+Para qualquer DER ou diagrama, siga o [estilo visual padrão](../dba-postgres/references/diagram-style.md).
+Use o exemplo genérico dessa referência; não incorporar schemas de clientes no pacote.
