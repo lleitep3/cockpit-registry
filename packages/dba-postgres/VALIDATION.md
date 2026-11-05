@@ -41,3 +41,9 @@ instaladas em venv, não dependências do runtime.
   Estes temas têm workflows/KB, não automação homologada.
 - Quatro skills, dez workflows e sete guias KB. Coletor remoto por perfil mantém
   os limites descritos na validação 0.1.0.
+
+## Versão 0.2.1 — estilo de diagramas
+
+- 20 testes passaram, incluindo tema embutido no Mermaid e exemplo genérico sincronizado.
+- Paleta clara compartilhada pelas quatro skills; exemplo autores/livros sem schema de projeto.
+- Validação de manifesto e registry executada. Nenhuma alteração de banco.
