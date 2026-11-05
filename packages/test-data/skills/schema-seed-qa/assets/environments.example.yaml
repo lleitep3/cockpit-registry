@@ -1,0 +1,10 @@
+version: 1
+environments:
+  local:
+    source: env-file
+    path: .env.seed
+    variable: DATABASE_URL
+    database: massa_local
+    schema: public
+    writable: false
+    resettable: false

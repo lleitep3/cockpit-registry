@@ -1,0 +1,4 @@
+interface:
+  display_name: "Schemas e seeds com QA"
+  short_description: "Dados sintéticos reproduzíveis e QA com evidências"
+  default_prompt: "Use $schema-seed-qa para criar ou revisar schemas e seeds e consolidar evidências de qualidade."

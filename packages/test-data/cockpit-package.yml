@@ -1,0 +1,33 @@
+name: test-data
+version: 0.5.0
+description: "Padrões de schemas extraídos, seeds sintéticos reproduzíveis e QA com evidências."
+author: lleitep3
+license: MIT
+type: plugin
+category: development
+requirements:
+  cockpit: ">=0.1.0"
+features:
+  modules:
+    - path: bin/test-data
+      name: test-data
+  skills:
+    - path: skills/schema-seed-qa
+      name: schema-seed-qa
+  kb:
+    - path: kb/guides/schema-seed-standard.md
+      type: guide
+  boilerplate:
+    - path: boilerplates/schema-seeds
+      name: schema-seed-templates
+installation:
+  post_install:
+    - script: scripts/install.sh
+      description: Instala o Massa CLI em ambiente Python isolado
+  method: copy
+  supported_providers: [codex]
+  provider_features:
+    codex: [modules, skills, kb, boilerplate]
+metadata:
+  tags: [testing, synthetic-data, schema, seeds, qa, postgresql]
+  status: beta

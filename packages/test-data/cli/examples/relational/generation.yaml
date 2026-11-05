@@ -1,0 +1,29 @@
+version: 1
+seed: 42
+locale: pt_BR
+reference_time: "2026-10-08T12:00:00Z"
+entities:
+  pedidos:
+    count: 30
+    references:
+      - entity: clientes
+        fields:
+          clinic_id: clinic_id
+          cliente_id: id
+    fields:
+      id: {generator: sequence}
+      status:
+        generator: choice
+        weights: {pendente: 20, pago: 80}
+      criado_em: {generator: reference_time}
+  clientes:
+    count: 10
+    fields:
+      clinic_id:
+        generator: choice
+        weights: {clinica_a: 1, clinica_b: 1}
+      id: {generator: sequence}
+      nome: {generator: faker, provider: name}
+      email:
+        generator: template
+        value: "cliente{{ id }}@example.test"
