@@ -7,11 +7,11 @@ maintainer: "AICockpit Team"
 maintainer_email: "team@aicockpit.dev"
 
 # Last update timestamp
-updated_at: "2026-10-08T18:27:09Z"
+updated_at: "2026-11-05T22:08:43Z"
 
 # Registry metadata
 metadata:
-  total_packages: 20
+  total_packages: 21
   categories:
     - examples
     - productivity
@@ -714,3 +714,20 @@ packages:
     installation_method: copy
     status: beta
     released_at: '2026-10-08T18:27:09Z'
+
+  - name: vercel
+    version: 0.1.0
+    description: Vercel accounts, vault-backed tokens, API and CLI shortcuts.
+    author: lleitep3
+    license: MIT
+    category: infrastructure
+    path: packages/vercel
+    supported_providers:
+    - codex
+    features:
+    - modules
+    - skills
+    requirements:
+      cockpit: '>=0.1.0'
+    installation_method: copy
+    status: beta
